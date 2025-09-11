@@ -9,6 +9,8 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  sendEmailVerification,
+  updateProfile,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -32,9 +34,11 @@ import {
 } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
 import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const signupSchema = z
   .object({
+    username: z.string().min(3, "Username must be at least 3 characters."),
     email: z.string().email("Invalid email address."),
     password: z.string().min(6, "Password must be at least 6 characters."),
     confirmPassword: z.string(),
@@ -49,25 +53,41 @@ type SignupFormData = z.infer<typeof signupSchema>;
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
-    defaultValues: { email: "", password: "", confirmPassword: "" },
+    defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
   });
 
   const handleEmailSignup = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
-      toast({ title: "Account Created Successfully" });
-      // Redirect handled by AuthProvider
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      
+      await updateProfile(userCredential.user, {
+        displayName: data.username,
+      });
+
+      await sendEmailVerification(userCredential.user);
+
+      toast({ 
+          title: "Account Created",
+          description: "A verification email has been sent to your email address." 
+        });
+
+      router.push("/email-verification");
+
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Sign Up Failed",
         description: error.message,
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -78,6 +98,7 @@ export default function SignupPage() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast({ title: "Account Created Successfully" });
+      // Redirect handled by AuthProvider
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -107,6 +128,22 @@ export default function SignupPage() {
               onSubmit={form.handleSubmit(handleEmailSignup)}
               className="space-y-4"
             >
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., john-doe"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -225,4 +262,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

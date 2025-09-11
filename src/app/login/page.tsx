@@ -53,15 +53,14 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-      toast({ title: "Login Successful" });
+      // AuthProvider will handle redirection based on emailVerified status
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: error.message,
       });
-    } finally {
-      setIsLoading(false);
+       setIsLoading(false);
     }
   };
 

@@ -15,6 +15,7 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true }
 
 const PROTECTED_ROUTES = ['/dashboard', '/sales'];
 const PUBLIC_ROUTES = ['/login', '/signup'];
+const VERIFICATION_ROUTE = '/email-verification';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -36,20 +37,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
     const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
+    const isVerificationRoute = pathname === VERIFICATION_ROUTE;
 
+    // If no user, and trying to access a protected route, redirect to login
     if (!user && isProtectedRoute) {
       router.push('/login');
+      return;
+    }
+    
+    if (user) {
+        // If user exists but email is not verified
+        if (!user.emailVerified) {
+            // and they are not on the verification page, redirect them
+            if (!isVerificationRoute) {
+                router.push(VERIFICATION_ROUTE);
+            }
+        } else { // if email is verified
+            // and they are on a public or verification page, redirect to dashboard
+             if (isPublicRoute || isVerificationRoute) {
+                router.push('/dashboard');
+            }
+        }
     }
 
-    if (user && isPublicRoute) {
-      router.push('/dashboard');
-    }
+
   }, [user, loading, pathname, router]);
+
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+  
+  // To avoid flicker, we only render children if the routing logic is complete
+  const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+  if (!user && isProtectedRoute) {
+     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
+
+  if (user && !user.emailVerified && pathname !== VERIFICATION_ROUTE) {
+     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+  }
 
 
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {loading ? <div className="flex h-screen items-center justify-center">Loading...</div> : children}
+      {children}
     </AuthContext.Provider>
   );
 }

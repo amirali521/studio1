@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import ProductsTable from "@/components/dashboard/products-table";
 import ProductForm from "@/components/dashboard/product-form";
-import AppHeader from "@/components/layout/app-header";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 
@@ -70,13 +70,13 @@ export default function DashboardClient() {
 
   return (
     <>
-      <AppHeader title="Dashboard">
-        <Button onClick={handleAddProduct}>
-          <PlusCircle className="mr-2" />
-          Add Product
-        </Button>
-      </AppHeader>
       <main className="flex-1 p-4 sm:p-6">
+        <div className="flex items-center justify-end mb-4">
+            <Button onClick={handleAddProduct}>
+            <PlusCircle className="mr-2" />
+            Add Product
+            </Button>
+        </div>
         <ProductsTable
           products={products}
           onEdit={handleEditProduct}
