@@ -5,14 +5,20 @@ import { useEffect, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
 import QRCode from 'qrcode';
 
+interface BarcodeItem {
+  serialNumber: string;
+  productName: string;
+  price: number;
+}
 interface BarcodeDisplayProps {
-    serialNumber: string;
+    item: BarcodeItem;
     type: 'barcode' | 'qrcode';
 }
 
-export function BarcodeDisplay({ serialNumber, type }: BarcodeDisplayProps) {
+export function BarcodeDisplay({ item, type }: BarcodeDisplayProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const { serialNumber, productName, price } = item;
 
   useEffect(() => {
     if (type === 'barcode' && svgRef.current) {
@@ -29,7 +35,12 @@ export function BarcodeDisplay({ serialNumber, type }: BarcodeDisplayProps) {
         console.error("Barcode generation failed", e);
       }
     } else if (type === 'qrcode') {
-        QRCode.toDataURL(serialNumber, { errorCorrectionLevel: 'H', width: 128 })
+        const qrData = JSON.stringify({
+          productName,
+          price,
+          serialNumber,
+        });
+        QRCode.toDataURL(qrData, { errorCorrectionLevel: 'H', width: 128 })
             .then(url => {
                 setQrCodeUrl(url);
             })
@@ -37,7 +48,7 @@ export function BarcodeDisplay({ serialNumber, type }: BarcodeDisplayProps) {
                 console.error("QR Code generation failed", err);
             });
     }
-  }, [serialNumber, type]);
+  }, [serialNumber, productName, price, type]);
 
   return (
     <div className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square">
@@ -46,7 +57,7 @@ export function BarcodeDisplay({ serialNumber, type }: BarcodeDisplayProps) {
         ) : (
             qrCodeUrl ? (
                 <>
-                    <img src={qrCodeUrl} alt={`QR code for ${serialNumber}`} />
+                    <img src={qrCodeeUrl} alt={`QR code for ${serialNumber}`} />
                     <p className="text-xs mt-1 font-mono">{serialNumber}</p>
                 </>
             ) : <p>Generating QR...</p>

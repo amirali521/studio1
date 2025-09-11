@@ -26,6 +26,11 @@ export default function BarcodeClient() {
   const [generateQrCode, setGenerateQrCode] = useState(false);
   const { toast } = useToast();
 
+  const selectedProduct = useMemo(
+    () => products.find((p) => p.id === selectedProductId),
+    [products, selectedProductId]
+  );
+
   const itemsToDisplay = useMemo(() => {
     if (!selectedProductId) return [];
     return serializedItems
@@ -95,10 +100,18 @@ export default function BarcodeClient() {
       </div>
 
       {selectedProductId ? (
-        itemsToDisplay.length > 0 ? (
+        itemsToDisplay.length > 0 && selectedProduct ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {itemsToDisplay.map((item) => (
-              <BarcodeDisplay key={item.id} serialNumber={item.serialNumber} type={generateQrCode ? 'qrcode' : 'barcode'} />
+              <BarcodeDisplay 
+                key={item.id} 
+                item={{
+                  serialNumber: item.serialNumber,
+                  productName: selectedProduct.name,
+                  price: selectedProduct.price,
+                }}
+                type={generateQrCode ? 'qrcode' : 'barcode'} 
+              />
             ))}
           </div>
         ) : (
