@@ -123,6 +123,7 @@ export default function DashboardClient() {
           title: "Product Added",
           description: `${data.quantity} item(s) have been added to your inventory.`,
       });
+      setIsDialogOpen(false);
       router.push(`/products/${newProductId}/qrcodes`);
     } catch (error) {
          console.error("Error submitting product:", error);
@@ -131,8 +132,6 @@ export default function DashboardClient() {
             title: "Submission Error",
             description: "An unexpected error occurred while saving the product.",
         });
-    } finally {
-        setIsDialogOpen(false);
     }
   };
 
