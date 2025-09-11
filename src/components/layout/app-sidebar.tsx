@@ -13,7 +13,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import { LayoutGrid, ShoppingCart, LogOut, QrCode } from "lucide-react";
+import { LayoutGrid, ShoppingCart, LogOut, QrCode, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { auth } from "@/lib/firebase";
 import { Button } from "../ui/button";
@@ -22,6 +22,7 @@ const navItems = [
   { href: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
   { href: "/barcodes", icon: QrCode, label: "Barcodes" },
   { href: "/sales", icon: ShoppingCart, label: "POS" },
+  { href: "/settings", icon: Settings, label: "Settings"},
 ];
 
 export default function AppSidebar() {

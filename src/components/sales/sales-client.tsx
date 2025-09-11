@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Link from "next/link";
 import SalesHistoryDialog from "./sales-history-dialog";
+import { useCurrency } from "@/contexts/currency-context";
 
 export default function SalesClient() {
   const [sales, setSales] = useLocalStorage<Sale[]>("sales", []);
@@ -25,6 +27,8 @@ export default function SalesClient() {
   
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { currency } = useCurrency();
+
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -117,7 +121,7 @@ export default function SalesClient() {
     
     toast({
       title: "Sale Recorded",
-      description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total)} has been recorded.`,
+      description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
     });
 
     setCurrentSaleItems([]);
@@ -175,7 +179,7 @@ export default function SalesClient() {
                       <TableRow key={item.serialNumber}>
                         <TableCell>{item.productName}</TableCell>
                         <TableCell className="font-mono text-xs">{item.serialNumber}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.price, currency)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.serialNumber)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -195,7 +199,7 @@ export default function SalesClient() {
                     <TableFooter>
                         <TableRow>
                             <TableCell colSpan={2} className="font-bold text-lg">Total</TableCell>
-                            <TableCell colSpan={2} className="text-right font-bold text-lg">{formatCurrency(total)}</TableCell>
+                            <TableCell colSpan={2} className="text-right font-bold text-lg">{formatCurrency(total, currency)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 )}
@@ -211,7 +215,7 @@ export default function SalesClient() {
             <CardContent className="p-4 space-y-4">
                  <div className="flex justify-between items-center text-3xl font-bold">
                     <span>Total:</span>
-                    <span>{formatCurrency(total)}</span>
+                    <span>{formatCurrency(total, currency)}</span>
                 </div>
                 <Button 
                     className="w-full h-16 text-lg" 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -31,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useCurrency } from "@/contexts/currency-context";
 
 type ProductWithStock = Product & { quantity: number };
 type SortKey = keyof ProductWithStock;
@@ -48,6 +50,7 @@ export default function ProductsTable({
 }: ProductsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { currency } = useCurrency();
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -120,7 +123,7 @@ export default function ProductsTable({
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.quantity}</TableCell>
-                    <TableCell>{formatCurrency(product.price)}</TableCell>
+                    <TableCell>{formatCurrency(product.price, currency)}</TableCell>
                     <TableCell className="text-right">
                       <AlertDialog>
                         <DropdownMenu>

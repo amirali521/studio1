@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Sale } from "@/lib/types";
@@ -19,12 +20,14 @@ import {
 } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface SalesHistoryTableProps {
   sales: Sale[];
 }
 
 export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
+  const { currency } = useCurrency();
   return (
     <Card>
       <CardHeader>
@@ -60,7 +63,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatCurrency(sale.total)}
+                      {formatCurrency(sale.total, currency)}
                     </TableCell>
                   </TableRow>
                 ))}
