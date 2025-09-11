@@ -18,6 +18,7 @@ import { BarcodeDisplay } from "./barcode";
 import { Switch } from "@/components/ui/switch";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function BarcodeClient() {
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
@@ -55,6 +56,28 @@ export default function BarcodeClient() {
 
   const loading = productsLoading || itemsLoading;
 
+  if (loading) {
+    return (
+        <main className="flex-1 p-4 sm:p-6 flex justify-center items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </main>
+    );
+  }
+
+  if (products.length === 0) {
+      return (
+          <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
+              <div className="text-center">
+                  <h2 className="text-2xl font-bold mb-2">No Products Available</h2>
+                  <p className="text-muted-foreground mb-4">You need to add products to your inventory before you can generate barcodes.</p>
+                  <Button asChild>
+                      <Link href="/dashboard">Go to Dashboard</Link>
+                  </Button>
+              </div>
+          </main>
+      )
+  }
+
   return (
     <main className="flex-1 p-4 sm:p-6">
       <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center print:hidden">
@@ -63,7 +86,6 @@ export default function BarcodeClient() {
           <Select
             value={selectedProductId}
             onValueChange={setSelectedProductId}
-            disabled={loading}
           >
             <SelectTrigger id="product-select">
               <SelectValue placeholder="Select a product" />
@@ -84,7 +106,7 @@ export default function BarcodeClient() {
             placeholder="Filter by serial number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={!selectedProductId || loading}
+            disabled={!selectedProductId}
           />
         </div>
         <div className="flex items-center space-x-2 pt-6">
@@ -93,22 +115,17 @@ export default function BarcodeClient() {
                 id="code-type-switch"
                 checked={generateQrCode}
                 onCheckedChange={setGenerateQrCode}
-                disabled={loading}
             />
             <Label htmlFor="code-type-switch">QR Code</Label>
         </div>
         <div className="self-end">
-            <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0 || loading}>
+            <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
                 Print {generateQrCode ? 'QR Codes' : 'Barcodes'}
             </Button>
         </div>
       </div>
 
-       {loading ? (
-         <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-         </div>
-      ) : selectedProductId ? (
+      {selectedProductId ? (
         itemsToDisplay.length > 0 && selectedProduct ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {itemsToDisplay.map((item) => (
