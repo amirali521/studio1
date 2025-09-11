@@ -21,6 +21,9 @@ import {
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/contexts/currency-context";
+import { InvoiceDialog } from "./invoice-dialog";
+import { Button } from "../ui/button";
+import { Printer } from "lucide-react";
 
 interface SalesHistoryTableProps {
   sales: Sale[];
@@ -28,6 +31,8 @@ interface SalesHistoryTableProps {
 
 export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
   const { currency } = useCurrency();
+  const sortedSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   return (
     <Card>
       <CardHeader>
@@ -37,18 +42,19 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {sales.length > 0 ? (
+        {sortedSales.length > 0 ? (
           <div className="rounded-md border max-h-[60vh] overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Items Sold</TableHead>
-                  <TableHead className="text-right">Total Revenue</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sales.map((sale) => (
+                {sortedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium whitespace-nowrap">
                       {format(new Date(sale.date), "MMM d, yyyy, h:mm a")}
@@ -64,6 +70,14 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {formatCurrency(sale.total, currency)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                       <InvoiceDialog sale={sale}>
+                          <Button variant="ghost" size="icon">
+                            <Printer className="h-4 w-4" />
+                            <span className="sr-only">Print Invoice</span>
+                          </Button>
+                       </InvoiceDialog>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -82,3 +96,5 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
     </Card>
   );
 }
+
+    

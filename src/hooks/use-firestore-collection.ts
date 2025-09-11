@@ -18,7 +18,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { db } from "@/lib/firebase";
 
-export function useFirestoreCollection<T extends { id: string }>(
+export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
 ) {
   const { user } = useAuth();
@@ -72,14 +72,15 @@ export function useFirestoreCollection<T extends { id: string }>(
     await batch.commit();
   };
   
-  const addItem = async (item: Omit<T, "id" | "createdAt">) => {
+  const addItem = async (item: Omit<T, "id" | "createdAt" | "id">) => {
     if (!user) throw new Error("User not authenticated");
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);
-    await addDoc(dataCollectionRef, { 
+    const docRef = await addDoc(dataCollectionRef, { 
         ...item, 
         createdAt: new Date().toISOString()
     });
+    return docRef;
   };
 
   const updateItem = async (itemId: string, itemData: Partial<T>) => {
@@ -120,3 +121,5 @@ export function useFirestoreCollection<T extends { id: string }>(
 
   return { data, loading, addItem, updateItem, deleteItem, addItems, updateItems, deleteItemsByProduct };
 }
+
+    

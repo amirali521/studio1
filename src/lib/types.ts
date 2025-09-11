@@ -24,8 +24,11 @@ export interface SaleItem {
 
 export interface Sale {
   id:string; // This will be the Firestore document ID
+  saleId: string; // A unique readable ID for the invoice
   date: string;
   items: SaleItem[];
   total: number;
   createdAt?: string; // Optional for backwards compatibility, but new sales will have it
 }
+
+    

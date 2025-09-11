@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ScanLine, Trash2, XCircle, Loader2 } from "lucide-react";
+import { ScanLine, Trash2, XCircle, Loader2, Printer } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import Link from "next/link";
 import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
+import { InvoiceDialog } from "./invoice-dialog";
 
 export default function SalesClient() {
   const { data: sales, addItem: addSale, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
@@ -24,7 +25,8 @@ export default function SalesClient() {
   
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [scannedValue, setScannedValue] = useState("");
-  
+  const [lastSale, setLastSale] = useState<Sale | null>(null);
+
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const { currency } = useCurrency();
@@ -103,7 +105,9 @@ export default function SalesClient() {
       return;
     }
     
+    const saleId = uuidv4();
     const newSale: Omit<Sale, 'id' | 'createdAt'> = {
+      saleId: saleId,
       date: new Date().toISOString(),
       items: currentSaleItems,
       total,
@@ -123,6 +127,7 @@ export default function SalesClient() {
           description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
         });
 
+        setLastSale({ ...newSale, id: saleId });
         setCurrentSaleItems([]);
     } catch (error) {
         console.error("Error finalizing sale:", error);
@@ -262,6 +267,15 @@ export default function SalesClient() {
                     </AlertDialogContent>
                 </AlertDialog>
 
+                {lastSale && (
+                  <InvoiceDialog sale={lastSale}>
+                    <Button variant="secondary" className="w-full">
+                      <Printer className="mr-2" />
+                      Print Last Receipt
+                    </Button>
+                  </InvoiceDialog>
+                )}
+
                 <SalesHistoryDialog sales={sales} />
             </CardContent>
         </Card>
@@ -269,3 +283,5 @@ export default function SalesClient() {
     </main>
   );
 }
+
+    
