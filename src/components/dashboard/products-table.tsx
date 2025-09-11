@@ -27,6 +27,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCurrency } from "@/contexts/currency-context";
+import { doc, writeBatch } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 type ProductWithStock = Product & { quantity: number };
 type SortKey = keyof ProductWithStock;

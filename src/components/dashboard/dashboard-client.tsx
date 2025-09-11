@@ -17,11 +17,15 @@ import ProductForm from "@/components/dashboard/product-form";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { writeBatch, collection, query, where, getDocs } from "firebase/firestore";
+import { useAuth } from "@/contexts/auth-context";
 
 
 export default function DashboardClient() {
+  const { user } = useAuth();
   const { data: products, loading: productsLoading, addItem: addProduct, deleteItem: deleteProduct } = useFirestoreCollection<Product>("products");
-  const { data: serializedItems, loading: itemsLoading, addItems, deleteItemsByProduct } = useFirestoreCollection<SerializedProductItem>("serializedItems");
+  const { data: serializedItems, loading: itemsLoading, addItems } = useFirestoreCollection<SerializedProductItem>("serializedItems");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -31,6 +35,15 @@ export default function DashboardClient() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!user) {
+         toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to delete products.",
+        });
+        return;
+    }
+    
     const itemsOfProduct = serializedItems.filter(item => item.productId === productId);
     if (itemsOfProduct.some(item => item.status === 'sold')) {
       toast({
@@ -42,9 +55,22 @@ export default function DashboardClient() {
     }
 
     try {
-        // First delete the serialized items, then the product itself.
-        await deleteItemsByProduct(productId);
-        await deleteProduct(productId);
+        const batch = writeBatch(db);
+
+        // Reference to the product to be deleted
+        const productRef = doc(db, "users", user.uid, "products", productId);
+        batch.delete(productRef);
+
+        // Find and delete all associated serialized items
+        const serializedItemsRef = collection(db, "users", user.uid, "serializedItems");
+        const q = query(serializedItemsRef, where("productId", "==", productId));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
         toast({
             title: "Product Deleted",
             description: "The product and all its inventory have been successfully removed.",
