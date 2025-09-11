@@ -39,13 +39,13 @@ type SortKey = keyof ProductWithStock;
 
 interface ProductsTableProps {
   products: ProductWithStock[];
-  onEdit: (product: Product) => void;
+  onAdd: () => void;
   onDelete: (productId: string) => void;
 }
 
 export default function ProductsTable({
   products,
-  onEdit,
+  onAdd,
   onDelete,
 }: ProductsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -134,9 +134,6 @@ export default function ProductsTable({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEdit(product)}>
-                              Edit
-                            </DropdownMenuItem>
                             <AlertDialogTrigger asChild>
                               <DropdownMenuItem
                                 className="text-destructive focus:text-destructive"
@@ -180,7 +177,7 @@ export default function ProductsTable({
             <p className="text-muted-foreground">
               Add your first product to get started.
             </p>
-            <Button onClick={() => onEdit(null as any)}>
+            <Button onClick={onAdd}>
               <PlusCircle className="mr-2 h-4 w-4" />
               Add Product
             </Button>

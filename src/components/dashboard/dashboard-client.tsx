@@ -20,20 +20,13 @@ import { AlertCircle } from "lucide-react";
 
 
 export default function DashboardClient() {
-  const { data: products, loading: productsLoading, addItem: addProduct, updateItem: updateProduct, deleteItem: deleteProduct } = useFirestoreCollection<Product>("products");
+  const { data: products, loading: productsLoading, addItem: addProduct, deleteItem: deleteProduct } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading, addItems, deleteItemsByProduct } = useFirestoreCollection<SerializedProductItem>("serializedItems");
 
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleAddProduct = () => {
-    setEditingProduct(null);
-    setIsDialogOpen(true);
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
     setIsDialogOpen(true);
   };
 
@@ -70,48 +63,38 @@ export default function DashboardClient() {
   const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
     
     try {
-        if (editingProduct) {
-            // Logic for editing an existing product
-            const { quantity, ...productData } = data;
-            await updateProduct(editingProduct.id, productData);
-            toast({
-                title: "Product Updated",
-                description: "The product details have been successfully saved.",
-            });
-        } else {
-            // Logic for adding a new product
-            const newProductData: Omit<Product, "id" | "createdAt" > = {
-                name: data.name,
-                description: data.description,
-                price: data.price,
-                createdAt: new Date().toISOString()
-            };
+      // Logic for adding a new product
+      const newProductData: Omit<Product, "id" | "createdAt" > = {
+          name: data.name,
+          description: data.description,
+          price: data.price,
+          createdAt: new Date().toISOString()
+      };
 
-            // We add the product and get the Firestore-generated ID back.
-            const productDocRef = await addProduct(newProductData);
-            const newProductId = productDocRef.id;
+      // We add the product and get the Firestore-generated ID back.
+      const productDocRef = await addProduct(newProductData);
+      const newProductId = productDocRef.id;
 
-            const newItems: Omit<SerializedProductItem, "id" | "createdAt">[] = [];
-            const productCode = data.name.slice(0, 3).toUpperCase();
+      const newItems: Omit<SerializedProductItem, "id" | "createdAt">[] = [];
+      const productCode = data.name.slice(0, 3).toUpperCase();
 
-            for (let i = 0; i < data.quantity; i++) {
-                const uniquePart = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-                const serialNumber = `${productCode}-${uniquePart}-${i}`;
-                newItems.push({
-                    productId: newProductId,
-                    serialNumber: serialNumber,
-                    status: 'in_stock',
-                });
-            }
-            if (newItems.length > 0) {
-              await addItems(newItems);
-            }
+      for (let i = 0; i < data.quantity; i++) {
+          const uniquePart = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+          const serialNumber = `${productCode}-${uniquePart}-${i}`;
+          newItems.push({
+              productId: newProductId,
+              serialNumber: serialNumber,
+              status: 'in_stock',
+          });
+      }
+      if (newItems.length > 0) {
+        await addItems(newItems);
+      }
 
-            toast({
-                title: "Product Added",
-                description: `${data.quantity} item(s) have been added to your inventory.`,
-            });
-        }
+      toast({
+          title: "Product Added",
+          description: `${data.quantity} item(s) have been added to your inventory.`,
+      });
     } catch (error) {
          console.error("Error submitting product:", error);
         toast({
@@ -120,7 +103,6 @@ export default function DashboardClient() {
             description: "An unexpected error occurred while saving the product.",
         });
     } finally {
-        setEditingProduct(null);
         setIsDialogOpen(false);
     }
   };
@@ -156,26 +138,20 @@ export default function DashboardClient() {
         </div>
         <ProductsTable
           products={productsWithStock}
-          onEdit={handleEditProduct}
+          onAdd={handleAddProduct}
           onDelete={handleDeleteProduct}
         />
         <Dialog
           open={isDialogOpen}
-          onOpenChange={(open) => {
-            if (!open) {
-                setEditingProduct(null);
-            }
-            setIsDialogOpen(open);
-          }}
+          onOpenChange={setIsDialogOpen}
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-headline">
-                {editingProduct ? "Edit Product" : "Add New Product"}
+                Add New Product
               </DialogTitle>
             </DialogHeader>
             <ProductForm
-              product={editingProduct}
               onSubmit={handleFormSubmit}
               onCancel={() => setIsDialogOpen(false)}
             />
