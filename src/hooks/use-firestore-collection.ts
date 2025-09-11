@@ -14,6 +14,7 @@ import {
   where,
   orderBy,
   addDoc,
+  updateDoc
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { db } from "@/lib/firebase";
@@ -35,6 +36,8 @@ export function useFirestoreCollection<T extends { id?: string }>(
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);
     
+    // Fallback to ordering by a field that exists on all collections if 'createdAt' is not ideal for all.
+    // For this app, 'createdAt' is consistent.
     const q = query(dataCollectionRef, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(
@@ -48,7 +51,7 @@ export function useFirestoreCollection<T extends { id?: string }>(
         setLoading(false);
       },
       (error) => {
-        console.error("Error fetching collection:", error);
+        console.error(`Error fetching ${collectionName}:`, error);
         setLoading(false);
       }
     );
@@ -72,21 +75,18 @@ export function useFirestoreCollection<T extends { id?: string }>(
     await batch.commit();
   };
   
-  const addItem = async (item: Omit<T, "id" | "createdAt" | "id">) => {
+  const addItem = async (item: Omit<T, "id">) => {
     if (!user) throw new Error("User not authenticated");
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);
-    const docRef = await addDoc(dataCollectionRef, { 
-        ...item, 
-        createdAt: new Date().toISOString()
-    });
+    const docRef = await addDoc(dataCollectionRef, item);
     return docRef;
   };
 
   const updateItem = async (itemId: string, itemData: Partial<T>) => {
     if (!user) throw new Error("User not authenticated");
     const itemDocRef = doc(db, "users", user.uid, collectionName, itemId);
-    await setDoc(itemDocRef, itemData, { merge: true });
+    await updateDoc(itemDocRef, itemData);
   };
   
   const updateItems = async (updates: { id: string; data: Partial<T> }[]) => {
@@ -111,6 +111,11 @@ export function useFirestoreCollection<T extends { id?: string }>(
      const dataCollectionRef = collection(userDocRef, collectionName);
      const q = query(dataCollectionRef, where("productId", "==", productId));
      const querySnapshot = await getDocs(q);
+     
+     if (querySnapshot.empty) {
+        return; // Nothing to delete
+     }
+
      const batch = writeBatch(db);
      querySnapshot.forEach((doc) => {
         batch.delete(doc.ref);
@@ -121,5 +126,3 @@ export function useFirestoreCollection<T extends { id?: string }>(
 
   return { data, loading, addItem, updateItem, deleteItem, addItems, updateItems, deleteItemsByProduct };
 }
-
-    

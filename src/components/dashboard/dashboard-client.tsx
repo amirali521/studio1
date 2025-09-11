@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog";
 import ProductsTable from "@/components/dashboard/products-table";
 import ProductForm from "@/components/dashboard/product-form";
-import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -44,61 +43,64 @@ export default function DashboardClient() {
       toast({
         variant: "destructive",
         title: "Cannot Delete Product",
-        description: "This product has been sold and cannot be deleted.",
+        description: "This product has associated sales records and cannot be deleted to maintain historical data integrity.",
       });
       return;
     }
 
     try {
-        await deleteProduct(productId);
+        // First delete the serialized items, then the product itself.
         await deleteItemsByProduct(productId);
+        await deleteProduct(productId);
         toast({
             title: "Product Deleted",
-            description: "The product and its stock have been removed.",
+            description: "The product and all its inventory have been successfully removed.",
         });
     } catch(error) {
         console.error("Error deleting product:", error);
         toast({
             variant: "destructive",
             title: "Error",
-            description: "Failed to delete product.",
+            description: "Failed to delete the product. Please try again.",
         });
     }
 
   };
 
   const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
+    setIsDialogOpen(false);
     try {
         if (editingProduct) {
-            await updateProduct(editingProduct.id, data);
+            // Logic for editing an existing product
+            const { quantity, ...productData } = data;
+            await updateProduct(editingProduct.id, productData);
             toast({
                 title: "Product Updated",
-                description: "The product details have been saved.",
+                description: "The product details have been successfully saved.",
             });
-            // Note: Editing quantity of existing product is complex with serialization.
-            // For now, we only allow editing details, not adding/removing stock this way.
         } else {
-            const newProductId = uuidv4(); // We generate a client-side ID to link items
-            const newProduct: Omit<Product, "id"> = {
+            // Logic for adding a new product
+            const newProductData: Omit<Product, "id" | "createdAt"> = {
                 name: data.name,
                 description: data.description,
                 price: data.price,
-                createdAt: new Date().toISOString(),
-                // Use the client-side generated ID in a different field
-                // Firestore will generate its own document ID
+                createdAt: new Date().toISOString()
             };
 
-            const productDocRef = await addProduct({ ...newProduct, id: newProductId});
-            
+            // We add the product and get the Firestore-generated ID back.
+            const productDocRef = await addProduct(newProductData);
+            const newProductId = productDocRef.id;
+
             const newItems: Omit<SerializedProductItem, "id" | "createdAt">[] = [];
             const productCode = data.name.slice(0, 3).toUpperCase();
-            
+
             for (let i = 0; i < data.quantity; i++) {
-                const serialNumber = `${productCode}-${Date.now()}-${i + 1}`;
+                const uniquePart = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+                const serialNumber = `${productCode}-${uniquePart}-${i}`;
                 newItems.push({
-                productId: newProductId,
-                serialNumber: serialNumber,
-                status: 'in_stock',
+                    productId: newProductId,
+                    serialNumber: serialNumber,
+                    status: 'in_stock',
                 });
             }
             if (newItems.length > 0) {
@@ -107,18 +109,18 @@ export default function DashboardClient() {
 
             toast({
                 title: "Product Added",
-                description: `${data.quantity} items have been added to your inventory.`,
+                description: `${data.quantity} item(s) have been added to your inventory.`,
             });
         }
     } catch (error) {
          console.error("Error submitting product:", error);
         toast({
             variant: "destructive",
-            title: "Error",
-            description: "Failed to save product.",
+            title: "Submission Error",
+            description: "An unexpected error occurred while saving the product.",
         });
     } finally {
-        setIsDialogOpen(false);
+        setEditingProduct(null);
     }
   };
 
@@ -127,14 +129,16 @@ export default function DashboardClient() {
       quantity: serializedItems.filter(item => item.productId === product.id && item.status === 'in_stock').length
   }));
 
-  if (productsLoading || itemsLoading) {
+  const isLoading = productsLoading || itemsLoading;
+
+  if (isLoading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
 
   return (
     <>
       <main className="flex-1 p-4 sm:p-6">
-         {!productsLoading && !itemsLoading && products.length === 0 && (
+         {!isLoading && products.length === 0 && (
           <Alert className="mb-4 bg-primary/10 border-primary/20">
             <AlertCircle className="h-4 w-4 text-primary" />
             <AlertTitle className="text-primary">Welcome to Stockpile Scan!</AlertTitle>
@@ -157,8 +161,10 @@ export default function DashboardClient() {
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
+            if (!open) {
+                setEditingProduct(null);
+            }
             setIsDialogOpen(open);
-            if (!open) setEditingProduct(null);
           }}
         >
           <DialogContent className="sm:max-w-lg">

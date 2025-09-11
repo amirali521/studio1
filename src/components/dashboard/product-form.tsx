@@ -1,8 +1,10 @@
+
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useEffect } from "react";
 import type { Product } from "@/lib/types";
 import {
   Form,
@@ -17,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import BarcodeScanner from "@/components/dashboard/barcode-scanner";
 import { ScanProductInformationOutput } from "@/ai/flows/scan-product-information";
+import { Label } from "../ui/label";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -44,12 +47,30 @@ export default function ProductForm({
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: product?.name || "",
-      description: product?.description || "",
-      price: product?.price || 0,
-      quantity: product?.quantity || 0,
+      name: "",
+      description: "",
+      price: 0,
+      quantity: 1, // Default to 1 for new products
     },
   });
+
+  useEffect(() => {
+    if (product) {
+      form.reset({
+        name: product.name,
+        description: product.description || "",
+        price: product.price,
+        quantity: product.quantity || 0, // Quantity here is for display, not for editing
+      });
+    } else {
+        form.reset({
+            name: "",
+            description: "",
+            price: 0,
+            quantity: 1,
+        });
+    }
+  }, [product, form]);
 
   const handleScan = (scannedData: ScanProductInformationOutput) => {
     form.setValue("name", scannedData.productName);
@@ -57,10 +78,12 @@ export default function ProductForm({
     form.setValue("price", scannedData.productPrice);
   };
 
+  const isEditing = !!product;
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <BarcodeScanner onScan={handleScan} />
+        {!isEditing && <BarcodeScanner onScan={handleScan} />}
 
         <FormField
           control={form.control}
@@ -99,7 +122,7 @@ export default function ProductForm({
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price ($)</FormLabel>
+                <FormLabel>Price</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" {...field} />
                 </FormControl>
@@ -108,19 +131,23 @@ export default function ProductForm({
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="quantity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Quantity to Add</FormLabel>
-                <FormControl>
-                  <Input type="number" step="1" {...field} disabled={!!product} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <FormItem>
+            <FormLabel>{isEditing ? "Current Stock" : "Quantity to Add"}</FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                step="1" 
+                {...form.register("quantity")} 
+                disabled={isEditing}
+              />
+            </FormControl>
+             {isEditing && (
+                <p className="text-xs text-muted-foreground pt-1">
+                    Stock quantity can't be edited. To add stock, create a new product batch.
+                </p>
             )}
-          />
+            <FormMessage>{form.formState.errors.quantity?.message}</FormMessage>
+          </FormItem>
         </div>
 
         <div className="flex justify-end gap-2 pt-4">
@@ -135,3 +162,4 @@ export default function ProductForm({
     </Form>
   );
 }
+
