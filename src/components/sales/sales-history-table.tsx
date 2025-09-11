@@ -35,7 +35,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
       </CardHeader>
       <CardContent>
         {sales.length > 0 ? (
-          <div className="rounded-md border">
+          <div className="rounded-md border max-h-[60vh] overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -51,10 +51,10 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                       {format(new Date(sale.date), "MMM d, yyyy, h:mm a")}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-col gap-1 items-start">
                         {sale.items.map((item, index) => (
-                          <Badge key={index} variant="secondary">
-                            {item.quantity} x {item.productName}
+                          <Badge key={index} variant="secondary" className="font-normal">
+                             {item.productName} (SN: {item.serialNumber})
                           </Badge>
                         ))}
                       </div>

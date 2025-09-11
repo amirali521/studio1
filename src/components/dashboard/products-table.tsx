@@ -32,10 +32,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-type SortKey = keyof Product;
+type ProductWithStock = Product & { quantity: number };
+type SortKey = keyof ProductWithStock;
 
 interface ProductsTableProps {
-  products: Product[];
+  products: ProductWithStock[];
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
 }
@@ -61,6 +62,7 @@ export default function ProductsTable({
     const aValue = a[sortKey];
     const bValue = b[sortKey];
 
+    if (aValue === undefined || bValue === undefined) return 0;
     if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
     if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
     return 0;
@@ -99,7 +101,7 @@ export default function ProductsTable({
                     onClick={() => handleSort("quantity")}
                   >
                     <div className="flex items-center">
-                      Stock {renderSortArrow("quantity")}
+                      In Stock {renderSortArrow("quantity")}
                     </div>
                   </TableHead>
                   <TableHead
@@ -149,7 +151,7 @@ export default function ProductsTable({
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will
-                              permanently delete the product "{product.name}".
+                              permanently delete the product "{product.name}" and all its stock.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

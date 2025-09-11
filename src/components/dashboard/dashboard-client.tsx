@@ -4,14 +4,13 @@
 import { useState } from "react";
 import { PlusCircle } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import type { Product } from "@/lib/types";
+import type { Product, SerializedProductItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import ProductsTable from "@/components/dashboard/products-table";
 import ProductForm from "@/components/dashboard/product-form";
@@ -20,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardClient() {
   const [products, setProducts] = useLocalStorage<Product[]>("products", []);
+  const [serializedItems, setSerializedItems] = useLocalStorage<SerializedProductItem[]>("serializedItems", []);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -35,14 +35,26 @@ export default function DashboardClient() {
   };
 
   const handleDeleteProduct = (productId: string) => {
+    const itemsOfProduct = serializedItems.filter(item => item.productId === productId);
+    if (itemsOfProduct.some(item => item.status === 'sold')) {
+      toast({
+        variant: "destructive",
+        title: "Cannot Delete Product",
+        description: "This product has been sold and cannot be deleted.",
+      });
+      return;
+    }
+
     setProducts(products.filter((p) => p.id !== productId));
+    setSerializedItems(serializedItems.filter(item => item.productId !== productId));
+
     toast({
       title: "Product Deleted",
-      description: "The product has been removed from your inventory.",
+      description: "The product and its stock have been removed.",
     });
   };
 
-  const handleFormSubmit = (data: Omit<Product, "id" | "createdAt">) => {
+  const handleFormSubmit = (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
     if (editingProduct) {
       setProducts(
         products.map((p) =>
@@ -53,20 +65,48 @@ export default function DashboardClient() {
         title: "Product Updated",
         description: "The product details have been saved.",
       });
+      // Note: Editing quantity of existing product is complex with serialization.
+      // For now, we only allow editing details, not adding/removing stock this way.
     } else {
+      const newProductId = uuidv4();
       const newProduct: Product = {
-        ...data,
-        id: uuidv4(),
+        id: newProductId,
+        name: data.name,
+        description: data.description,
+        price: data.price,
         createdAt: new Date().toISOString(),
       };
       setProducts([...products, newProduct]);
+
+      const newItems: SerializedProductItem[] = [];
+      const productCode = data.name.slice(0, 3).toUpperCase();
+      const existingCount = serializedItems.filter(i => i.productId === newProductId).length;
+
+      for (let i = 0; i < data.quantity; i++) {
+        const serialNumber = `${productCode}-${Date.now()}-${existingCount + i + 1}`;
+        newItems.push({
+          id: uuidv4(),
+          productId: newProductId,
+          serialNumber: serialNumber,
+          status: 'in_stock',
+          createdAt: new Date().toISOString(),
+        });
+      }
+      setSerializedItems([...serializedItems, ...newItems]);
+
       toast({
         title: "Product Added",
-        description: "The new product has been added to your inventory.",
+        description: `${data.quantity} items have been added to your inventory.`,
       });
     }
     setIsDialogOpen(false);
   };
+
+  const productsWithStock = products.map(product => ({
+      ...product,
+      quantity: serializedItems.filter(item => item.productId === product.id && item.status === 'in_stock').length
+  }));
+
 
   return (
     <>
@@ -78,7 +118,7 @@ export default function DashboardClient() {
             </Button>
         </div>
         <ProductsTable
-          products={products}
+          products={productsWithStock}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
         />

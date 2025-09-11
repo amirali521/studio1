@@ -31,7 +31,7 @@ const productSchema = z.object({
 type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
-  product?: Product | null;
+  product?: (Product & { quantity?: number }) | null;
   onSubmit: (data: ProductFormData) => void;
   onCancel: () => void;
 }
@@ -113,9 +113,9 @@ export default function ProductForm({
             name="quantity"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantity in Stock</FormLabel>
+                <FormLabel>Quantity to Add</FormLabel>
                 <FormControl>
-                  <Input type="number" step="1" {...field} />
+                  <Input type="number" step="1" {...field} disabled={!!product} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

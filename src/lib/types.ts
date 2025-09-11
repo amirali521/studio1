@@ -3,19 +3,26 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  quantity: number;
+  createdAt: string;
+}
+
+export interface SerializedProductItem {
+  id: string; // Unique ID for this specific item
+  productId: string;
+  serialNumber: string; // The unique serial number for this item
+  status: 'in_stock' | 'sold';
   createdAt: string;
 }
 
 export interface SaleItem {
-  productId: string;
+  serializedProductId: string; // Reference to the specific sold item
   productName: string;
-  quantity: number;
+  serialNumber: string;
   price: number;
 }
 
 export interface Sale {
-  id: string;
+  id:string;
   date: string;
   items: SaleItem[];
   total: number;
