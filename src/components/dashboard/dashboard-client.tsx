@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { writeBatch, collection, query, where, getDocs } from "firebase/firestore";
+import { writeBatch, collection, query, where, getDocs, doc } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 
 
