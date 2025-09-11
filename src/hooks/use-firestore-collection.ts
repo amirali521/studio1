@@ -75,7 +75,7 @@ export function useFirestoreCollection<T extends { id?: string }>(
     await batch.commit();
   };
   
-  const addItem = async (item: Omit<T, "id">) => {
+  const addItem = async (item: Omit<T, "id" | 'createdAt'> & { createdAt: string }) => {
     if (!user) throw new Error("User not authenticated");
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);

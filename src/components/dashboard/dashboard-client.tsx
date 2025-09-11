@@ -24,7 +24,7 @@ import { useAuth } from "@/contexts/auth-context";
 
 export default function DashboardClient() {
   const { user } = useAuth();
-  const { data: products, loading: productsLoading, addItem: addProduct, deleteItem: deleteProduct } = useFirestoreCollection<Product>("products");
+  const { data: products, loading: productsLoading, addItem: addProduct } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading, addItems } = useFirestoreCollection<SerializedProductItem>("serializedItems");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -36,35 +36,36 @@ export default function DashboardClient() {
 
   const handleDeleteProduct = async (productId: string) => {
     if (!user) {
-         toast({
+        toast({
             variant: "destructive",
             title: "Authentication Error",
             description: "You must be logged in to delete products.",
         });
         return;
     }
-    
-    const itemsOfProduct = serializedItems.filter(item => item.productId === productId);
-    if (itemsOfProduct.some(item => item.status === 'sold')) {
-      toast({
-        variant: "destructive",
-        title: "Cannot Delete Product",
-        description: "This product has associated sales records and cannot be deleted to maintain historical data integrity.",
-      });
-      return;
-    }
 
     try {
+        const itemsOfProduct = serializedItems.filter(item => item.productId === productId);
+        if (itemsOfProduct.some(item => item.status === 'sold')) {
+            toast({
+                variant: "destructive",
+                title: "Cannot Delete Product",
+                description: "This product has associated sales records and cannot be deleted.",
+            });
+            return;
+        }
+
         const batch = writeBatch(db);
 
-        // Reference to the product to be deleted
+        // Delete the product itself
         const productRef = doc(db, "users", user.uid, "products", productId);
         batch.delete(productRef);
 
-        // Find and delete all associated serialized items
-        const serializedItemsRef = collection(db, "users", user.uid, "serializedItems");
-        const q = query(serializedItemsRef, where("productId", "==", productId));
+        // Delete all associated serialized items
+        const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
+        const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
         const querySnapshot = await getDocs(q);
+        
         querySnapshot.forEach((doc) => {
             batch.delete(doc.ref);
         });
@@ -73,24 +74,23 @@ export default function DashboardClient() {
 
         toast({
             title: "Product Deleted",
-            description: "The product and all its inventory have been successfully removed.",
+            description: "The product and all its stock have been removed.",
         });
-    } catch(error) {
+    } catch (error) {
         console.error("Error deleting product:", error);
         toast({
             variant: "destructive",
-            title: "Error",
-            description: "Failed to delete the product. Please try again.",
+            title: "Deletion Failed",
+            description: "An error occurred while trying to delete the product.",
         });
     }
-
   };
 
   const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
     
     try {
       // Logic for adding a new product
-      const newProductData: Omit<Product, "id" | "createdAt" > = {
+      const newProductData: Omit<Product, "id"> = {
           name: data.name,
           description: data.description,
           price: data.price,
