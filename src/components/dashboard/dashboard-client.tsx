@@ -20,10 +20,12 @@ import { AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { writeBatch, collection, query, where, getDocs, doc } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 
 export default function DashboardClient() {
   const { user } = useAuth();
+  const router = useRouter();
   const { data: products, loading: productsLoading, addItem: addProduct } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading, addItems } = useFirestoreCollection<SerializedProductItem>("serializedItems");
 
@@ -90,15 +92,14 @@ export default function DashboardClient() {
   const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
     
     try {
-      // Logic for adding a new product
       const newProductData: Omit<Product, "id"> = {
           name: data.name,
           description: data.description,
           price: data.price,
+          customFields: data.customFields,
           createdAt: new Date().toISOString()
       };
 
-      // We add the product and get the Firestore-generated ID back.
       const productDocRef = await addProduct(newProductData);
       const newProductId = productDocRef.id;
 
@@ -107,7 +108,7 @@ export default function DashboardClient() {
 
       for (let i = 0; i < data.quantity; i++) {
           const uniquePart = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
-          const serialNumber = `${productCode}-${uniquePart}-${i}`;
+          const serialNumber = `${productCode}-${uniquePart}-${i+1}`;
           newItems.push({
               productId: newProductId,
               serialNumber: serialNumber,
@@ -122,6 +123,7 @@ export default function DashboardClient() {
           title: "Product Added",
           description: `${data.quantity} item(s) have been added to your inventory.`,
       });
+      router.push(`/products/${newProductId}/qrcodes`);
     } catch (error) {
          console.error("Error submitting product:", error);
         toast({

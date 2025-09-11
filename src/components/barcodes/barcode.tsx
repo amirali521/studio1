@@ -1,67 +1,43 @@
 
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
-import JsBarcode from 'jsbarcode';
+import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
 interface BarcodeItem {
   serialNumber: string;
   productName: string;
   price: number;
+  description: string;
+  customFields?: Record<string, string>;
 }
 interface BarcodeDisplayProps {
     item: BarcodeItem;
-    type: 'barcode' | 'qrcode';
 }
 
-export function BarcodeDisplay({ item, type }: BarcodeDisplayProps) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
+export function BarcodeDisplay({ item }: BarcodeDisplayProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const { serialNumber, productName, price } = item;
+  const { serialNumber } = item;
 
   useEffect(() => {
-    if (type === 'barcode' && svgRef.current) {
-      try {
-        JsBarcode(svgRef.current, serialNumber, {
-          format: "CODE128",
-          lineColor: "#000",
-          width: 2,
-          height: 50,
-          displayValue: true,
-          fontSize: 14,
+    const qrData = JSON.stringify(item);
+    QRCode.toDataURL(qrData, { errorCorrectionLevel: 'H', width: 128 })
+        .then(url => {
+            setQrCodeUrl(url);
+        })
+        .catch(err => {
+            console.error("QR Code generation failed", err);
         });
-      } catch (e) {
-        console.error("Barcode generation failed", e);
-      }
-    } else if (type === 'qrcode') {
-        const qrData = JSON.stringify({
-          productName,
-          price,
-          serialNumber,
-        });
-        QRCode.toDataURL(qrData, { errorCorrectionLevel: 'H', width: 128 })
-            .then(url => {
-                setQrCodeUrl(url);
-            })
-            .catch(err => {
-                console.error("QR Code generation failed", err);
-            });
-    }
-  }, [serialNumber, productName, price, type]);
+  }, [item]);
 
   return (
     <div className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square">
-        {type === 'barcode' ? (
-             <svg ref={svgRef}></svg>
-        ) : (
-            qrCodeUrl ? (
-                <>
-                    <img src={qrCodeUrl} alt={`QR code for ${serialNumber}`} />
-                    <p className="text-xs mt-1 font-mono">{serialNumber}</p>
-                </>
-            ) : <p>Generating QR...</p>
-        )}
+        {qrCodeUrl ? (
+            <>
+                <img src={qrCodeUrl} alt={`QR code for ${serialNumber}`} />
+                <p className="text-xs mt-1 font-mono">{serialNumber}</p>
+            </>
+        ) : <p>Generating QR...</p>}
     </div>
   );
 }

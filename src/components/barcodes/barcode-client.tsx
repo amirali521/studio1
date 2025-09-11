@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeDisplay } from "./barcode";
-import { Switch } from "@/components/ui/switch";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +24,6 @@ export default function BarcodeClient() {
   const { data: serializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [generateQrCode, setGenerateQrCode] = useState(false);
   const { toast } = useToast();
 
   const selectedProduct = useMemo(
@@ -69,7 +67,7 @@ export default function BarcodeClient() {
           <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
               <div className="text-center">
                   <h2 className="text-2xl font-bold mb-2">No Products Available</h2>
-                  <p className="text-muted-foreground mb-4">You need to add products to your inventory before you can generate barcodes.</p>
+                  <p className="text-muted-foreground mb-4">You need to add products to your inventory before you can generate QR codes.</p>
                   <Button asChild>
                       <Link href="/dashboard">Go to Dashboard</Link>
                   </Button>
@@ -109,18 +107,9 @@ export default function BarcodeClient() {
             disabled={!selectedProductId}
           />
         </div>
-        <div className="flex items-center space-x-2 pt-6">
-            <Label htmlFor="code-type-switch">Barcode</Label>
-            <Switch
-                id="code-type-switch"
-                checked={generateQrCode}
-                onCheckedChange={setGenerateQrCode}
-            />
-            <Label htmlFor="code-type-switch">QR Code</Label>
-        </div>
         <div className="self-end">
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
-                Print {generateQrCode ? 'QR Codes' : 'Barcodes'}
+                Print QR Codes
             </Button>
         </div>
       </div>
@@ -132,11 +121,10 @@ export default function BarcodeClient() {
               <BarcodeDisplay 
                 key={item.id} 
                 item={{
+                  ...selectedProduct,
                   serialNumber: item.serialNumber,
                   productName: selectedProduct.name,
-                  price: selectedProduct.price,
                 }}
-                type={generateQrCode ? 'qrcode' : 'barcode'} 
               />
             ))}
           </div>
@@ -148,7 +136,7 @@ export default function BarcodeClient() {
         )
       ) : (
         <div className="text-center py-12 text-muted-foreground">
-          <p>Please select a product to see its codes.</p>
+          <p>Please select a product to see its QR codes.</p>
         </div>
       )}
 
