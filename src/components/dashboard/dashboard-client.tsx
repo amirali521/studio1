@@ -45,8 +45,13 @@ export default function DashboardClient() {
     }
 
     try {
-        const itemsOfProduct = serializedItems.filter(item => item.productId === productId);
-        if (itemsOfProduct.some(item => item.status === 'sold')) {
+        const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
+        const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
+        const querySnapshot = await getDocs(q);
+        
+        const productItems = querySnapshot.docs.map(doc => doc.data() as SerializedProductItem);
+
+        if (productItems.some(item => item.status === 'sold')) {
             toast({
                 variant: "destructive",
                 title: "Cannot Delete Product",
@@ -62,10 +67,6 @@ export default function DashboardClient() {
         batch.delete(productRef);
 
         // Delete all associated serialized items
-        const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
-        const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
-        const querySnapshot = await getDocs(q);
-        
         querySnapshot.forEach((doc) => {
             batch.delete(doc.ref);
         });
@@ -164,7 +165,6 @@ export default function DashboardClient() {
         </div>
         <ProductsTable
           products={productsWithStock}
-          onAdd={handleAddProduct}
           onDelete={handleDeleteProduct}
         />
         <Dialog

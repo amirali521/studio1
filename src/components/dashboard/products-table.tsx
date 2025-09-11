@@ -35,13 +35,11 @@ type SortKey = keyof ProductWithStock;
 
 interface ProductsTableProps {
   products: ProductWithStock[];
-  onAdd: () => void;
   onDelete: (productId: string) => void;
 }
 
 export default function ProductsTable({
   products,
-  onAdd,
   onDelete,
 }: ProductsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
@@ -159,12 +157,8 @@ export default function ProductsTable({
           <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed py-12 text-center">
             <h3 className="text-xl font-semibold">No Products Found</h3>
             <p className="text-muted-foreground">
-              Add your first product to get started.
+              You haven't added any products yet.
             </p>
-            <Button onClick={onAdd}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Product
-            </Button>
           </div>
         )}
       </CardContent>
