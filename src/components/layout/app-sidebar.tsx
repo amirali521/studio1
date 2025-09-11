@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -25,10 +25,12 @@ const navItems = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
 
   const handleLogout = async () => {
     await auth.signOut();
+    router.push('/login');
   };
   
   if (!user) {
