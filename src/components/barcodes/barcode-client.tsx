@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -14,13 +15,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Barcode } from "./barcode";
+import { BarcodeDisplay } from "./barcode";
+import { Switch } from "@/components/ui/switch";
 
 export default function BarcodeClient() {
   const [products] = useLocalStorage<Product[]>("products", []);
   const [serializedItems] = useLocalStorage<SerializedProductItem[]>( "serializedItems", []);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [generateQrCode, setGenerateQrCode] = useState(false);
   const { toast } = useToast();
 
   const itemsToDisplay = useMemo(() => {
@@ -36,7 +39,7 @@ export default function BarcodeClient() {
     if (itemsToDisplay.length === 0) {
       toast({
         variant: "destructive",
-        title: "No barcodes to print",
+        title: "No codes to print",
         description: "Please select a product with stock available.",
       });
       return;
@@ -75,9 +78,18 @@ export default function BarcodeClient() {
             disabled={!selectedProductId}
           />
         </div>
+        <div className="flex items-center space-x-2 pt-6">
+            <Label htmlFor="code-type-switch">Barcode</Label>
+            <Switch
+                id="code-type-switch"
+                checked={generateQrCode}
+                onCheckedChange={setGenerateQrCode}
+            />
+            <Label htmlFor="code-type-switch">QR Code</Label>
+        </div>
         <div className="self-end">
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
-                Print Barcodes
+                Print {generateQrCode ? 'QR Codes' : 'Barcodes'}
             </Button>
         </div>
       </div>
@@ -86,7 +98,7 @@ export default function BarcodeClient() {
         itemsToDisplay.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {itemsToDisplay.map((item) => (
-              <Barcode key={item.id} serialNumber={item.serialNumber} />
+              <BarcodeDisplay key={item.id} serialNumber={item.serialNumber} type={generateQrCode ? 'qrcode' : 'barcode'} />
             ))}
           </div>
         ) : (
@@ -97,7 +109,7 @@ export default function BarcodeClient() {
         )
       ) : (
         <div className="text-center py-12 text-muted-foreground">
-          <p>Please select a product to see its barcodes.</p>
+          <p>Please select a product to see its codes.</p>
         </div>
       )}
 

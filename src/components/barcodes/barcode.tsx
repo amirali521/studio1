@@ -1,17 +1,21 @@
+
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import JsBarcode from 'jsbarcode';
+import QRCode from 'qrcode';
 
-interface BarcodeProps {
+interface BarcodeDisplayProps {
     serialNumber: string;
+    type: 'barcode' | 'qrcode';
 }
 
-export function Barcode({ serialNumber }: BarcodeProps) {
+export function BarcodeDisplay({ serialNumber, type }: BarcodeDisplayProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   useEffect(() => {
-    if (svgRef.current) {
+    if (type === 'barcode' && svgRef.current) {
       try {
         JsBarcode(svgRef.current, serialNumber, {
           format: "CODE128",
@@ -24,12 +28,29 @@ export function Barcode({ serialNumber }: BarcodeProps) {
       } catch (e) {
         console.error("Barcode generation failed", e);
       }
+    } else if (type === 'qrcode') {
+        QRCode.toDataURL(serialNumber, { errorCorrectionLevel: 'H', width: 128 })
+            .then(url => {
+                setQrCodeUrl(url);
+            })
+            .catch(err => {
+                console.error("QR Code generation failed", err);
+            });
     }
-  }, [serialNumber]);
+  }, [serialNumber, type]);
 
   return (
-    <div className="p-2 border rounded-lg flex flex-col items-center break-inside-avoid">
-      <svg ref={svgRef}></svg>
+    <div className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square">
+        {type === 'barcode' ? (
+             <svg ref={svgRef}></svg>
+        ) : (
+            qrCodeUrl ? (
+                <>
+                    <img src={qrCodeUrl} alt={`QR code for ${serialNumber}`} />
+                    <p className="text-xs mt-1 font-mono">{serialNumber}</p>
+                </>
+            ) : <p>Generating QR...</p>
+        )}
     </div>
   );
 }
