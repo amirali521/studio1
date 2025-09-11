@@ -31,7 +31,10 @@ export default function SettingsClient() {
                 <SelectContent>
                   {currencies.map((c) => (
                     <SelectItem key={c.code} value={c.code}>
-                      {c.name} ({c.code})
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{c.flag}</span>
+                        <span>{c.name} ({c.code})</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
