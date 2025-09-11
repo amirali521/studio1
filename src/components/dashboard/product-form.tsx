@@ -143,7 +143,7 @@ export default function ProductForm({
             </FormControl>
              {isEditing && (
                 <p className="text-xs text-muted-foreground pt-1">
-                    Stock quantity can't be edited. To add stock, create a new product batch.
+                    Stock quantity can't be edited here.
                 </p>
             )}
             <FormMessage>{form.formState.errors.quantity?.message}</FormMessage>
@@ -162,4 +162,3 @@ export default function ProductForm({
     </Form>
   );
 }
-

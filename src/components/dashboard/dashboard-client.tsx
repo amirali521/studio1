@@ -68,7 +68,7 @@ export default function DashboardClient() {
   };
 
   const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
-    setIsDialogOpen(false);
+    
     try {
         if (editingProduct) {
             // Logic for editing an existing product
@@ -80,7 +80,7 @@ export default function DashboardClient() {
             });
         } else {
             // Logic for adding a new product
-            const newProductData: Omit<Product, "id" | "createdAt"> = {
+            const newProductData: Omit<Product, "id" | "createdAt" > = {
                 name: data.name,
                 description: data.description,
                 price: data.price,
@@ -121,6 +121,7 @@ export default function DashboardClient() {
         });
     } finally {
         setEditingProduct(null);
+        setIsDialogOpen(false);
     }
   };
 
