@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import type { Product, SerializedProductItem } from "@/lib/types";
 import {
   Select,
@@ -17,10 +16,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeDisplay } from "./barcode";
 import { Switch } from "@/components/ui/switch";
+import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
+import { Loader2 } from "lucide-react";
 
 export default function BarcodeClient() {
-  const [products] = useLocalStorage<Product[]>("products", []);
-  const [serializedItems] = useLocalStorage<SerializedProductItem[]>( "serializedItems", []);
+  const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
+  const { data: serializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [generateQrCode, setGenerateQrCode] = useState(false);
@@ -52,6 +53,8 @@ export default function BarcodeClient() {
     window.print();
   };
 
+  const loading = productsLoading || itemsLoading;
+
   return (
     <main className="flex-1 p-4 sm:p-6">
       <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center print:hidden">
@@ -60,6 +63,7 @@ export default function BarcodeClient() {
           <Select
             value={selectedProductId}
             onValueChange={setSelectedProductId}
+            disabled={loading}
           >
             <SelectTrigger id="product-select">
               <SelectValue placeholder="Select a product" />
@@ -80,7 +84,7 @@ export default function BarcodeClient() {
             placeholder="Filter by serial number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={!selectedProductId}
+            disabled={!selectedProductId || loading}
           />
         </div>
         <div className="flex items-center space-x-2 pt-6">
@@ -89,17 +93,22 @@ export default function BarcodeClient() {
                 id="code-type-switch"
                 checked={generateQrCode}
                 onCheckedChange={setGenerateQrCode}
+                disabled={loading}
             />
             <Label htmlFor="code-type-switch">QR Code</Label>
         </div>
         <div className="self-end">
-            <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
+            <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0 || loading}>
                 Print {generateQrCode ? 'QR Codes' : 'Barcodes'}
             </Button>
         </div>
       </div>
 
-      {selectedProductId ? (
+       {loading ? (
+         <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+         </div>
+      ) : selectedProductId ? (
         itemsToDisplay.length > 0 && selectedProduct ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {itemsToDisplay.map((item) => (

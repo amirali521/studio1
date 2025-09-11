@@ -1,5 +1,6 @@
+
 export interface Product {
-  id: string;
+  id: string; // This will be the Firestore document ID
   name: string;
   description: string;
   price: number;
@@ -7,23 +8,24 @@ export interface Product {
 }
 
 export interface SerializedProductItem {
-  id: string; // Unique ID for this specific item
-  productId: string;
+  id: string; // This will be the Firestore document ID
+  productId: string; // This ID should match the `id` of a Product document
   serialNumber: string; // The unique serial number for this item
   status: 'in_stock' | 'sold';
   createdAt: string;
 }
 
 export interface SaleItem {
-  serializedProductId: string; // Reference to the specific sold item
+  serializedProductId: string; // Reference to the specific sold item's Firestore ID
   productName: string;
   serialNumber: string;
   price: number;
 }
 
 export interface Sale {
-  id:string;
+  id:string; // This will be the Firestore document ID
   date: string;
   items: SaleItem[];
   total: number;
+  createdAt?: string; // Optional for backwards compatibility, but new sales will have it
 }

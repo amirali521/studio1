@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ScanLine, Trash2, XCircle } from "lucide-react";
-import { useLocalStorage } from "@/hooks/use-local-storage";
+import { ScanLine, Trash2, XCircle, Loader2 } from "lucide-react";
+import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,9 +18,9 @@ import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 
 export default function SalesClient() {
-  const [sales, setSales] = useLocalStorage<Sale[]>("sales", []);
-  const [products, setProducts] = useLocalStorage<Product[]>("products", []);
-  const [serializedItems, setSerializedItems] = useLocalStorage<SerializedProductItem[]>("serializedItems", []);
+  const { data: sales, addItem: addSale, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
+  const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
+  const { data: serializedItems, updateItems: updateSerializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [scannedValue, setScannedValue] = useState("");
@@ -93,7 +93,7 @@ export default function SalesClient() {
 
   const total = currentSaleItems.reduce((acc, item) => acc + item.price, 0);
 
-  const handleFinalizeSale = () => {
+  const handleFinalizeSale = async () => {
     if (currentSaleItems.length === 0) {
       toast({
         variant: "destructive",
@@ -103,34 +103,46 @@ export default function SalesClient() {
       return;
     }
     
-    const newSale: Sale = {
-      id: uuidv4(),
+    const newSale: Omit<Sale, 'id' | 'createdAt'> = {
       date: new Date().toISOString(),
       items: currentSaleItems,
       total,
     };
 
-    const soldItemIds = new Set(currentSaleItems.map(i => i.serializedProductId));
+    const soldItemUpdates = currentSaleItems.map(item => ({
+        id: item.serializedProductId,
+        data: { status: 'sold' as const }
+    }));
 
-    const updatedSerializedItems = serializedItems.map(item => 
-      soldItemIds.has(item.id) ? { ...item, status: 'sold' as const } : item
-    );
+    try {
+        await updateSerializedItems(soldItemUpdates);
+        await addSale(newSale);
+        
+        toast({
+          title: "Sale Recorded",
+          description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
+        });
 
-    setSerializedItems(updatedSerializedItems);
-    setSales([newSale, ...sales]);
-    
-    toast({
-      title: "Sale Recorded",
-      description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
-    });
-
-    setCurrentSaleItems([]);
+        setCurrentSaleItems([]);
+    } catch (error) {
+        console.error("Error finalizing sale:", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to finalize sale.",
+        });
+    }
   };
   
+  const loading = salesLoading || productsLoading || itemsLoading;
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
+  }
+
   const stockAvailable = serializedItems.some(item => item.status === 'in_stock');
 
-
-  if (!stockAvailable) {
+  if (!stockAvailable && !loading) {
     return (
         <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
             <div className="text-center">
