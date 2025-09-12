@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ScanLine, Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign } from "lucide-react";
+import { Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign, Camera } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
 import { Label } from "../ui/label";
+import { CameraScannerDialog } from "./camera-scanner-dialog";
 
 
 export default function SalesClient() {
@@ -28,22 +29,17 @@ export default function SalesClient() {
   const { data: serializedItems, updateItems: updateSerializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
-  const [scannedValue, setScannedValue] = useState("");
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
 
   const { toast } = useToast();
-  const inputRef = useRef<HTMLInputElement>(null);
   const { currency } = useCurrency();
 
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  const handleScan = () => {
+  const handleScan = (scannedValue: string) => {
     if (!scannedValue) return;
 
     let scannedData: Partial<QrCodeData> = {};
@@ -60,7 +56,6 @@ export default function SalesClient() {
             title: "Ownership Error",
             description: "This product belongs to another user's inventory.",
         });
-        setScannedValue("");
         return;
     }
     
@@ -70,7 +65,6 @@ export default function SalesClient() {
             title: "Invalid QR Code",
             description: "The scanned QR code does not contain a valid serial number.",
         });
-        setScannedValue("");
         return;
     }
 
@@ -85,7 +79,6 @@ export default function SalesClient() {
         title: "ScanError",
         description: "Item not found, already sold, or invalid serial number.",
       });
-      setScannedValue("");
       return;
     }
 
@@ -95,7 +88,6 @@ export default function SalesClient() {
             title: "Scan Error",
             description: "This item has already been scanned for the current sale.",
         });
-        setScannedValue("");
         return;
     }
 
@@ -106,7 +98,6 @@ export default function SalesClient() {
             title: "Product Error",
             description: "Could not find the base product for this item.",
         });
-        setScannedValue("");
         return;
     }
 
@@ -120,7 +111,13 @@ export default function SalesClient() {
     };
 
     setCurrentSaleItems(prev => [...prev, newSaleItem]);
-    setScannedValue("");
+    toast({
+        title: "Item Added",
+        description: `${product.name} has been added to the sale.`,
+    });
+    // Play a success sound
+    const audio = new Audio('/scan-success.mp3');
+    audio.play();
   };
 
   const handleRemoveItem = (serialNumber: string) => {
@@ -209,23 +206,19 @@ export default function SalesClient() {
   }
 
   return (
+    <>
     <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 sm:p-6">
       {/* Current Sale Section */}
       <div className="lg:col-span-2">
         <Card>
           <CardContent className="p-4">
-            <div className="flex gap-2 mb-4">
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder="Scan or enter QR code data..."
-                value={scannedValue}
-                onChange={(e) => setScannedValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                className="text-base"
-              />
-              <Button onClick={handleScan}><ScanLine className="mr-2"/> Scan</Button>
-            </div>
+             <Button 
+                onClick={() => setIsScannerOpen(true)} 
+                className="w-full mb-4"
+                size="lg"
+            >
+                <Camera className="mr-2"/> Scan Products with Camera
+            </Button>
 
             <div className="min-h-[300px] border rounded-lg overflow-hidden">
               <Table>
@@ -345,5 +338,11 @@ export default function SalesClient() {
         </Card>
       </div>
     </main>
+    <CameraScannerDialog 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleScan}
+     />
+    </>
   );
 }

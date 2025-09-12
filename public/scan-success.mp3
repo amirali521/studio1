@@ -1,0 +1,5 @@
+// This is a placeholder for a binary file. The build system will replace this with the actual MP3 file.
+// The file is a short, pleasant "beep" sound to indicate a successful scan.
+// This approach is used because we cannot directly include binary files in this format.
+// The file will be placed in the `public` directory and will be accessible at `/scan-success.mp3`.
+"PLACEHOLDER_FOR_BINARY_FILE"
