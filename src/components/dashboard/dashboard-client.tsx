@@ -129,7 +129,6 @@ export default function DashboardClient() {
           description: `${data.quantity} item(s) have been added to your inventory.`,
       });
       setIsAddDialogOpen(false);
-      router.push(`/products/${newProductId}/qrcodes`);
     } catch (error) {
          console.error("Error submitting product:", error);
         toast({
