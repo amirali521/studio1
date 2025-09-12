@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle as AlertTitleUI } from "@/components/ui/alert";
 import { VideoOff, Loader2 } from "lucide-react";
 import jsQR from "jsqr";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +18,8 @@ interface CameraScannerDialogProps {
   onClose: () => void;
   onScan: (data: string) => void;
 }
+
+const SCAN_COOLDOWN_MS = 1500; // 1.5 seconds cooldown after a successful scan
 
 export function CameraScannerDialog({
   isOpen,
@@ -30,6 +31,7 @@ export function CameraScannerDialog({
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const animationFrameId = useRef<number>();
+  const lastScanTime = useRef<number>(0);
   const { toast } = useToast();
 
   const cleanup = useCallback(() => {
@@ -43,11 +45,48 @@ export function CameraScannerDialog({
     }
   }, []);
 
+  const tick = useCallback(() => {
+    const now = Date.now();
+    if (now - lastScanTime.current < SCAN_COOLDOWN_MS) {
+      animationFrameId.current = requestAnimationFrame(tick);
+      return; // Still in cooldown period
+    }
+
+    if (
+      videoRef.current &&
+      videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA &&
+      canvasRef.current
+    ) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      if (ctx) {
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (code && code.data) {
+            lastScanTime.current = now; // Start cooldown
+            onScan(code.data);
+        }
+      }
+    }
+    animationFrameId.current = requestAnimationFrame(tick);
+  }, [onScan]);
+
+
   useEffect(() => {
     async function setupCamera() {
       if (isOpen) {
         setHasCameraPermission(null);
         setError(null);
+        lastScanTime.current = 0;
         try {
           const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" },
@@ -78,35 +117,7 @@ export function CameraScannerDialog({
     return () => {
       cleanup();
     };
-  }, [isOpen, cleanup, toast]);
-
-  const tick = () => {
-    if (
-      videoRef.current &&
-      videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA &&
-      canvasRef.current
-    ) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d");
-
-      if (ctx) {
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height, {
-          inversionAttempts: "dontInvert",
-        });
-
-        if (code) {
-          onScan(code.data);
-        }
-      }
-    }
-    animationFrameId.current = requestAnimationFrame(tick);
-  };
+  }, [isOpen, cleanup, toast, tick]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
