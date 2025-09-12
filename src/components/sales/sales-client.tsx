@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign, Camera } from "lucide-react";
+import { Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign, Camera, ScanLine } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ export default function SalesClient() {
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, updateItems: updateSerializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   
+  const [scannedValue, setScannedValue] = useState("");
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [discount, setDiscount] = useState(0);
@@ -56,6 +57,7 @@ export default function SalesClient() {
             title: "Ownership Error",
             description: "This product belongs to another user's inventory.",
         });
+        setScannedValue("");
         return;
     }
     
@@ -65,6 +67,7 @@ export default function SalesClient() {
             title: "Invalid QR Code",
             description: "The scanned QR code does not contain a valid serial number.",
         });
+        setScannedValue("");
         return;
     }
 
@@ -79,6 +82,7 @@ export default function SalesClient() {
         title: "ScanError",
         description: "Item not found, already sold, or invalid serial number.",
       });
+      setScannedValue("");
       return;
     }
 
@@ -88,6 +92,7 @@ export default function SalesClient() {
             title: "Scan Error",
             description: "This item has already been scanned for the current sale.",
         });
+        setScannedValue("");
         return;
     }
 
@@ -98,6 +103,7 @@ export default function SalesClient() {
             title: "Product Error",
             description: "Could not find the base product for this item.",
         });
+        setScannedValue("");
         return;
     }
 
@@ -115,6 +121,8 @@ export default function SalesClient() {
         title: "Item Added",
         description: `${product.name} has been added to the sale.`,
     });
+    setScannedValue("");
+
     // Play a success sound
     const audio = new Audio('/scan-success.mp3');
     audio.play();
@@ -211,14 +219,28 @@ export default function SalesClient() {
       {/* Current Sale Section */}
       <div className="lg:col-span-2">
         <Card>
-          <CardContent className="p-4">
-             <Button 
-                onClick={() => setIsScannerOpen(true)} 
-                className="w-full mb-4"
-                size="lg"
-            >
-                <Camera className="mr-2"/> Scan Products with Camera
-            </Button>
+          <CardContent className="p-4 space-y-4">
+             <div className="flex gap-2">
+                <Input
+                    type="text"
+                    placeholder="Scan or enter serial number..."
+                    value={scannedValue}
+                    onChange={(e) => setScannedValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleScan(scannedValue)}
+                    className="text-base"
+                />
+                 <Button onClick={() => handleScan(scannedValue)} disabled={!scannedValue}>
+                    <ScanLine className="mr-2"/> Add
+                </Button>
+                <Button 
+                    onClick={() => setIsScannerOpen(true)} 
+                    variant="outline"
+                    size="icon"
+                >
+                    <Camera />
+                    <span className="sr-only">Scan with camera</span>
+                </Button>
+            </div>
 
             <div className="min-h-[300px] border rounded-lg overflow-hidden">
               <Table>
