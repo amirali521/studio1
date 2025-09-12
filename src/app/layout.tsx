@@ -7,6 +7,7 @@ import AppSidebar from "@/components/layout/app-sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
 import { AuthProvider } from "@/contexts/auth-context";
 import { CurrencyProvider } from "@/contexts/currency-context";
+import { ShopSettingsProvider } from "@/contexts/shop-settings-context";
 
 export const metadata: Metadata = {
   title: "Stockpile Scan",
@@ -38,13 +39,15 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <AuthProvider>
-          <CurrencyProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>{children}</SidebarInset>
-              <Toaster />
-            </SidebarProvider>
-          </CurrencyProvider>
+          <ShopSettingsProvider>
+            <CurrencyProvider>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>{children}</SidebarInset>
+                <Toaster />
+              </SidebarProvider>
+            </CurrencyProvider>
+          </ShopSettingsProvider>
         </AuthProvider>
       </body>
     </html>

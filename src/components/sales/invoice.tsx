@@ -6,6 +6,7 @@ import { Logo } from "@/components/logo";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/currency-context";
 import { Separator } from "../ui/separator";
+import { useShopSettings } from "@/contexts/shop-settings-context";
 
 interface InvoiceProps {
   sale: Sale;
@@ -14,14 +15,17 @@ interface InvoiceProps {
 export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
   ({ sale }, ref) => {
     const { currency } = useCurrency();
+    const { shopDetails } = useShopSettings();
     const { saleId, date, items, subtotal, tax, discount, total } = sale;
 
     return (
       <div ref={ref} className="p-8 font-sans bg-white text-black w-[302px] mx-auto">
         <div className="text-center space-y-2">
           <Logo className="justify-center" />
-          <p className="text-xs">123 Main Street, Anytown, USA</p>
-          <p className="text-xs">{format(new Date(date), "MM/dd/yyyy, h:mm a")}</p>
+          {shopDetails.name && <p className="text-sm font-bold pt-2">{shopDetails.name}</p>}
+          {shopDetails.address && <p className="text-xs whitespace-pre-wrap">{shopDetails.address}</p>}
+          {shopDetails.phone && <p className="text-xs">{shopDetails.phone}</p>}
+          <p className="text-xs pt-2">{format(new Date(date), "MM/dd/yyyy, h:mm a")}</p>
         </div>
         
         <Separator className="my-4 bg-black/20" />
