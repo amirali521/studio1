@@ -46,44 +46,66 @@ export function CameraScannerDialog({
   }, []);
 
   useEffect(() => {
-    async function setupCamera() {
+    let stream: MediaStream | null = null;
+  
+    const setupCamera = async () => {
       if (isOpen) {
         setHasCameraPermission(null);
         setError(null);
         setScanStatus("idle");
         try {
-          const stream = await navigator.mediaDevices.getUserMedia({
+          stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment" },
           });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             videoRef.current.setAttribute("playsinline", "true"); // Required for iOS
-            await videoRef.current.play();
+            
+            // Wait for metadata to load to ensure dimensions are available
+             videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play().catch(err => {
+                console.error("Video play failed:", err);
+                setHasCameraPermission(false);
+                setError("Could not start camera. Please check permissions and try again.");
+              });
+            };
+
             setHasCameraPermission(true);
           }
         } catch (err) {
           console.error("Camera access error:", err);
           setHasCameraPermission(false);
-          setError(
-            "Camera permission was denied. Please enable it in your browser settings."
-          );
+          let message = "Camera permission was denied. Please enable it in your browser settings.";
+          if (err instanceof Error && err.name === 'NotAllowedError') {
+             message = "Camera permission was denied. Please enable it in your browser settings to use this feature.";
+          } else if (err instanceof Error) {
+            message = `An unexpected camera error occurred: ${err.message}`;
+          }
+          setError(message);
           toast({
             variant: "destructive",
             title: "Camera Access Denied",
-            description:
-              "Please enable camera permissions to use this feature.",
+            description: "Please enable camera permissions to use this feature.",
           });
         }
-      } else {
-        cleanup();
       }
-    }
-    setupCamera();
-
-    return () => {
-      cleanup();
     };
-  }, [isOpen, cleanup, toast]);
+  
+    setupCamera();
+  
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.onloadedmetadata = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      if (videoRef.current) {
+          videoRef.current.srcObject = null;
+      }
+    };
+  }, [isOpen, toast]);
+
 
   const showScanStatus = (status: ScanStatus) => {
     setScanStatus(status);
@@ -96,8 +118,13 @@ export function CameraScannerDialog({
     if (
       !videoRef.current ||
       !canvasRef.current ||
-      videoRef.current.readyState !== videoRef.current.HAVE_ENOUGH_DATA
+      videoRef.current.readyState < videoRef.current.HAVE_METADATA // Use HAVE_METADATA
     ) {
+      toast({
+        variant: "destructive",
+        title: "Camera Not Ready",
+        description: "Please wait a moment for the camera to initialize.",
+      });
       return;
     }
     setIsCapturing(true);
@@ -137,7 +164,7 @@ export function CameraScannerDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen p-0 m-0 !rounded-none">
-        <DialogHeader className="sr-only">
+        <DialogHeader className="hidden">
           <DialogTitle>QR Code Scanner</DialogTitle>
         </DialogHeader>
         <div className="relative w-full h-full bg-black flex items-center justify-center">
