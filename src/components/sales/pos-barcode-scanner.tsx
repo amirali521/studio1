@@ -78,7 +78,9 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
       });
     };
      // Reset file input to allow scanning the same file again
-    event.target.value = '';
+    if (event.target) {
+        event.target.value = '';
+    }
   };
 
   return (
