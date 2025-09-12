@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -110,7 +111,6 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
       <input
         type="file"
         accept="image/*"
-        capture="environment"
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
@@ -129,7 +129,7 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
         ) : (
           <Camera className="h-4 w-4" />
         )}
-        <span className="sr-only">Scan with camera</span>
+        <span className="sr-only">Scan with camera or from gallery</span>
       </Button>
     </>
   );
