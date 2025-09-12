@@ -157,7 +157,7 @@ export default function SalesClient() {
     }
     
     const saleId = uuidv4();
-    const newSaleData: Omit<Sale, 'id' | 'createdAt'> = {
+    const newSaleData: Omit<Sale, 'id'> = {
       saleId: saleId,
       date: new Date().toISOString(),
       items: currentSaleItems,
@@ -165,7 +165,8 @@ export default function SalesClient() {
       discount: totalDiscount,
       tax: totalTax,
       total,
-      profit: totalProfit
+      profit: totalProfit,
+      createdAt: new Date().toISOString()
     };
 
     const soldItemUpdates = currentSaleItems.map(item => ({
@@ -185,7 +186,6 @@ export default function SalesClient() {
         const finalSale: Sale = { 
           ...newSaleData, 
           id: saleDocRef.id, 
-          createdAt: new Date().toISOString() 
         };
         setLastSale(finalSale);
         handleClearSale();
@@ -231,7 +231,7 @@ export default function SalesClient() {
              <div className="flex gap-2">
                 <Input
                     type="text"
-                    placeholder="Enter serial number..."
+                    placeholder="Enter serial number to add item..."
                     value={scannedValue}
                     onChange={(e) => setScannedValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleScan(scannedValue)}
@@ -240,8 +240,9 @@ export default function SalesClient() {
                  <Button onClick={() => handleScan(scannedValue)} disabled={!scannedValue}>
                     Add
                 </Button>
-                 <PosBarcodeScanner onScan={handleScan} />
             </div>
+
+            <PosBarcodeScanner onScan={handleScan} />
 
             <div className="min-h-[300px] border rounded-lg overflow-hidden">
               <Table>

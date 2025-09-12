@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Camera, Loader2, AlertCircle, ScanLine } from "lucide-react";
+import { Camera, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import jsQR from "jsqr";
@@ -13,7 +13,8 @@ interface PosBarcodeScannerProps {
 
 export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
 
@@ -35,13 +36,13 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
       image.onload = () => {
         const canvas = canvasRef.current;
         if (!canvas) {
-            setIsLoading(false);
-            return;
+          setIsLoading(false);
+          return;
         }
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
         if (!ctx) {
-            setIsLoading(false);
-            return;
+          setIsLoading(false);
+          return;
         }
 
         canvas.height = image.height;
@@ -61,38 +62,40 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
             toast({
               variant: "destructive",
               title: "Scan Failed",
-              description: "No valid QR code was found in the image. Please ensure the code is clear and fully visible.",
+              description:
+                "No valid QR code was found in the image. Please ensure the code is clear and fully visible.",
             });
           }
         } catch (error) {
-            console.error("Error decoding QR code:", error);
-            toast({
-              variant: "destructive",
-              title: "Scan Error",
-              description: "Could not process the image. The file might be corrupted or in an unsupported format.",
-            });
+          console.error("Error decoding QR code:", error);
+          toast({
+            variant: "destructive",
+            title: "Scan Error",
+            description:
+              "Could not process the image. The file might be corrupted or in an unsupported format.",
+          });
         } finally {
-           setIsLoading(false);
-           // Reset file input to allow scanning the same file again
-           if (event.target) {
-               event.target.value = '';
-           }
+          setIsLoading(false);
+          // Reset file input to allow scanning the same file again
+          if (event.target) {
+            event.target.value = "";
+          }
         }
       };
 
       image.onerror = () => {
-         toast({
-            variant: "destructive",
-            title: "Image Load Error",
-            description: "Could not load the selected image file.",
-          });
-         setIsLoading(false);
-         if (event.target) {
-            event.target.value = '';
-         }
-      }
+        toast({
+          variant: "destructive",
+          title: "Image Load Error",
+          description: "Could not load the selected image file.",
+        });
+        setIsLoading(false);
+        if (event.target) {
+          event.target.value = "";
+        }
+      };
     };
-    
+
     reader.onerror = () => {
       setIsLoading(false);
       toast({
@@ -101,7 +104,7 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
         description: "Failed to read the selected file.",
       });
       if (event.target) {
-        event.target.value = '';
+        event.target.value = "";
       }
     };
   };
@@ -111,26 +114,51 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
       <input
         type="file"
         accept="image/*"
-        ref={fileInputRef}
+        capture="environment"
+        ref={cameraInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        disabled={isLoading}
+      />
+      <input
+        type="file"
+        accept="image/*"
+        ref={galleryInputRef}
         onChange={handleFileChange}
         className="hidden"
         disabled={isLoading}
       />
       <canvas ref={canvasRef} className="hidden" />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={() => fileInputRef.current?.click()}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Camera className="h-4 w-4" />
-        )}
-        <span className="sr-only">Scan with camera or from gallery</span>
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          onClick={() => cameraInputRef.current?.click()}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Camera className="mr-2 h-4 w-4" />
+          )}
+          Camera
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
+          onClick={() => galleryInputRef.current?.click()}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="mr-2 h-4 w-4" />
+          )}
+          Gallery
+        </Button>
+      </div>
     </>
   );
 }
