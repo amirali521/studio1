@@ -16,7 +16,13 @@ export function BarcodeDisplay({ item }: BarcodeDisplayProps) {
 
   useEffect(() => {
     const qrData = JSON.stringify(item);
-    QRCode.toDataURL(qrData, { errorCorrectionLevel: 'H', width: 128 })
+    QRCode.toDataURL(qrData, { 
+      errorCorrectionLevel: 'H', 
+      type: 'image/png',
+      quality: 0.9,
+      margin: 2,
+      scale: 8, // Generate a larger image
+    })
         .then(url => {
             setQrCodeUrl(url);
         })
@@ -29,7 +35,11 @@ export function BarcodeDisplay({ item }: BarcodeDisplayProps) {
     <div className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square">
         {qrCodeUrl ? (
             <>
-                <img src={qrCodeUrl} alt={`QR code for ${serialNumber}`} />
+                <img 
+                  src={qrCodeUrl} 
+                  alt={`QR code for ${serialNumber}`} 
+                  className="w-full h-full object-contain"
+                />
                 <p className="text-xs mt-1 font-mono">{serialNumber}</p>
             </>
         ) : <p>Generating QR...</p>}
