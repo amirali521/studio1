@@ -55,7 +55,7 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
           toast({
             variant: "destructive",
             title: "Scan Failed",
-            description: "No QR code could be read from the image.",
+            description: "No valid QR code was found in the image. Please ensure the code is clear and fully visible.",
           });
         }
         setIsLoading(false);
