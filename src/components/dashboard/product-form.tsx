@@ -122,7 +122,7 @@ export default function ProductForm({
             <FormItem>
               <FormLabel>Product Name</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Organic Apples" {...field} />
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -137,7 +137,6 @@ export default function ProductForm({
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="e.g., Freshly picked, crisp and juicy."
                   {...field}
                 />
               </FormControl>
@@ -201,7 +200,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Discount (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="e.g. 10" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -214,7 +213,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Tax (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="e.g. 5" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -229,14 +228,14 @@ export default function ProductForm({
                         control={form.control}
                         name={`customFields.${index}.key`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="Field Name (e.g. Color)" className="w-1/3"/>
+                           <Input {...field} placeholder="Field Name" className="w-1/3"/>
                         )}
                     />
                      <FormField
                         control={form.control}
                         name={`customFields.${index}.value`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="Field Value (e.g. Red)" className="w-2/3"/>
+                           <Input {...field} placeholder="Field Value" className="w-2/3"/>
                         )}
                     />
                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
