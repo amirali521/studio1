@@ -2,10 +2,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, VideoOff, Loader2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle as AlertTitleUI } from "@/components/ui/alert";
+import { VideoOff, Loader2 } from "lucide-react";
 import jsQR from "jsqr";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,7 +78,7 @@ export function CameraScannerDialog({
     return () => {
       cleanup();
     };
-  }, [isOpen]);
+  }, [isOpen, cleanup, toast]);
 
   const tick = () => {
     if (
@@ -106,6 +111,9 @@ export function CameraScannerDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen p-0 m-0 !rounded-none">
+        <DialogHeader className="sr-only">
+          <DialogTitle>QR Code Scanner</DialogTitle>
+        </DialogHeader>
         <div className="relative w-full h-full bg-black flex items-center justify-center">
           {hasCameraPermission === null && (
             <div className="text-white flex flex-col items-center">
