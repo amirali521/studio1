@@ -14,7 +14,7 @@ interface InvoiceProps {
 export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
   ({ sale }, ref) => {
     const { currency } = useCurrency();
-    const { saleId, date, items, total } = sale;
+    const { saleId, date, items, subtotal, tax, discount, total } = sale;
 
     return (
       <div ref={ref} className="p-8 font-sans bg-white text-black w-[302px] mx-auto">
@@ -49,11 +49,15 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
         <div className="space-y-2 text-xs">
             <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatCurrency(total, currency)}</span>
+                <span>{formatCurrency(subtotal, currency)}</span>
+            </div>
+             <div className="flex justify-between text-destructive">
+                <span>Discount</span>
+                <span>-{formatCurrency(discount, currency)}</span>
             </div>
             <div className="flex justify-between">
                 <span>Taxes</span>
-                <span>{formatCurrency(0, currency)}</span>
+                <span>{formatCurrency(tax, currency)}</span>
             </div>
         </div>
 
@@ -74,5 +78,3 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
   }
 );
 Invoice.displayName = "Invoice";
-
-    

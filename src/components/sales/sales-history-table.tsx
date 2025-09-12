@@ -49,6 +49,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Items Sold</TableHead>
+                  <TableHead>Profit</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -72,6 +73,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                         ))}
                       </div>
                     </TableCell>
+                    <TableCell className="font-mono text-green-600">{formatCurrency(sale.profit, currency)}</TableCell>
                     <TableCell className="text-right font-mono">
                       {formatCurrency(sale.total, currency)}
                     </TableCell>
@@ -100,5 +102,3 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
     </Card>
   );
 }
-
-    

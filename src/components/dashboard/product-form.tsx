@@ -23,7 +23,8 @@ import { PlusCircle, Trash2 } from "lucide-react";
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
   description: z.string().min(1, "Description is required."),
-  price: z.coerce.number().min(0, "Price must be a non-negative number."),
+  purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
+  price: z.coerce.number().min(0, "Selling price must be non-negative."),
   quantity: z.coerce
     .number()
     .int("Quantity must be a whole number.")
@@ -50,6 +51,7 @@ export default function ProductForm({
     defaultValues: {
       name: "",
       description: "",
+      purchasePrice: 0,
       price: 0,
       quantity: 1,
       customFields: [],
@@ -113,12 +115,12 @@ export default function ProductForm({
         />
 
         <div className="grid grid-cols-2 gap-4">
-          <FormField
+           <FormField
             control={form.control}
-            name="price"
+            name="purchasePrice"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price</FormLabel>
+                <FormLabel>Purchase Price</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" {...field} />
                 </FormControl>
@@ -126,7 +128,22 @@ export default function ProductForm({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Selling Price</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
+         <div className="grid grid-cols-1 gap-4">
           <FormField
             control={form.control}
             name="quantity"

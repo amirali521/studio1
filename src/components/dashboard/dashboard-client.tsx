@@ -97,6 +97,7 @@ export default function DashboardClient() {
           name: data.name,
           description: data.description,
           price: data.price,
+          purchasePrice: data.purchasePrice,
           customFields: data.customFields,
           createdAt: new Date().toISOString()
       };

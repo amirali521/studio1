@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ScanLine, Trash2, XCircle, Loader2, Printer } from "lucide-react";
+import { ScanLine, Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
+import { Label } from "../ui/label";
 
 
 export default function SalesClient() {
@@ -29,6 +30,9 @@ export default function SalesClient() {
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [scannedValue, setScannedValue] = useState("");
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [discount, setDiscount] = useState(0);
+  const [tax, setTax] = useState(0);
+
 
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +82,7 @@ export default function SalesClient() {
     if (!item) {
       toast({
         variant: "destructive",
-        title: "Scan Error",
+        title: "ScanError",
         description: "Item not found, already sold, or invalid serial number.",
       });
       setScannedValue("");
@@ -111,6 +115,7 @@ export default function SalesClient() {
       productName: product.name,
       serialNumber: item.serialNumber,
       price: product.price,
+      purchasePrice: product.purchasePrice,
       status: 'sold'
     };
 
@@ -124,9 +129,14 @@ export default function SalesClient() {
   
   const handleClearSale = () => {
     setCurrentSaleItems([]);
+    setDiscount(0);
+    setTax(0);
   }
 
-  const total = currentSaleItems.reduce((acc, item) => acc + item.price, 0);
+  const subtotal = currentSaleItems.reduce((acc, item) => acc + item.price, 0);
+  const total = subtotal + tax - discount;
+  const totalProfit = currentSaleItems.reduce((acc, item) => acc + (item.price - item.purchasePrice), 0) - discount;
+
 
   const handleFinalizeSale = async () => {
     if (currentSaleItems.length === 0) {
@@ -143,7 +153,11 @@ export default function SalesClient() {
       saleId: saleId,
       date: new Date().toISOString(),
       items: currentSaleItems,
+      subtotal,
+      discount,
+      tax,
       total,
+      profit: totalProfit
     };
 
     const soldItemUpdates = currentSaleItems.map(item => ({
@@ -160,8 +174,8 @@ export default function SalesClient() {
           description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
         });
 
-        setLastSale({ ...newSale, id: saleId });
-        setCurrentSaleItems([]);
+        setLastSale({ ...newSale, id: saleId, createdAt: new Date().toISOString() });
+        handleClearSale();
     } catch (error) {
         console.error("Error finalizing sale:", error);
         toast({
@@ -248,8 +262,8 @@ export default function SalesClient() {
                  {currentSaleItems.length > 0 && (
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={2} className="font-bold text-lg">Total</TableCell>
-                            <TableCell colSpan={2} className="text-right font-bold text-lg">{formatCurrency(total, currency)}</TableCell>
+                            <TableCell colSpan={2} className="font-bold">Subtotal</TableCell>
+                            <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(subtotal, currency)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 )}
@@ -263,7 +277,24 @@ export default function SalesClient() {
       <div className="lg:col-span-1">
         <Card>
             <CardContent className="p-4 space-y-4">
-                 <div className="flex justify-between items-center text-3xl font-bold">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="discount">Discount</Label>
+                        <div className="relative">
+                            <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} className="pl-8"/>
+                        </div>
+                    </div>
+                     <div>
+                        <Label htmlFor="tax">Tax</Label>
+                        <div className="relative">
+                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input id="tax" type="number" value={tax} onChange={(e) => setTax(parseFloat(e.target.value) || 0)} className="pl-8"/>
+                        </div>
+                    </div>
+                </div>
+
+                 <div className="flex justify-between items-center text-3xl font-bold pt-4">
                     <span>Total:</span>
                     <span>{formatCurrency(total, currency)}</span>
                 </div>

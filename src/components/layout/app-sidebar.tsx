@@ -13,13 +13,14 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import { LayoutGrid, ShoppingCart, LogOut, QrCode, Settings, Undo2 } from "lucide-react";
+import { LayoutGrid, ShoppingCart, LogOut, QrCode, Settings, Undo2, AreaChart } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { auth } from "@/lib/firebase";
 import { Button } from "../ui/button";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutGrid, label: "Dashboard" },
+  { href: "/analytics", icon: AreaChart, label: "Analytics" },
   { href: "/barcodes", icon: QrCode, label: "Barcodes" },
   { href: "/sales", icon: ShoppingCart, label: "POS" },
   { href: "/returns", icon: Undo2, label: "Returns" },
