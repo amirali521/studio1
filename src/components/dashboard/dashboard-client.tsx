@@ -174,7 +174,7 @@ export default function DashboardClient() {
   return (
     <>
       <main className="flex-1 p-4 sm:p-6">
-         {!isLoading && products.length === 0 && (
+         {products.length === 0 && (
           <Alert className="mb-4 bg-primary/10 border-primary/20">
             <AlertCircle className="h-4 w-4 text-primary" />
             <AlertTitle className="text-primary">Welcome to Stockpile Scan!</AlertTitle>

@@ -22,11 +22,16 @@ import { db } from "@/lib/firebase";
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
 ) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) {
+      // Still waiting for auth status to resolve
+      return;
+    }
+
     if (!user) {
       setData([]);
       setLoading(false);
@@ -57,7 +62,7 @@ export function useFirestoreCollection<T extends { id?: string }>(
     );
 
     return () => unsubscribe();
-  }, [user, collectionName]);
+  }, [user, authLoading, collectionName]);
 
   const addItems = async (items: Omit<T, "id" | "createdAt">[]) => {
     if (!user) throw new Error("User not authenticated");
