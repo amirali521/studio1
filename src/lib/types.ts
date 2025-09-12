@@ -21,6 +21,7 @@ export interface SaleItem {
   productName: string;
   serialNumber: string;
   price: number;
+  status?: 'sold' | 'returned';
 }
 
 export interface Sale {

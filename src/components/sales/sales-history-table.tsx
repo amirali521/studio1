@@ -62,8 +62,12 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                     <TableCell>
                       <div className="flex flex-col gap-1 items-start">
                         {sale.items.map((item, index) => (
-                          <Badge key={index} variant="secondary" className="font-normal">
-                             {item.productName} (SN: {item.serialNumber})
+                          <Badge 
+                            key={index} 
+                            variant={item.status === 'returned' ? 'destructive' : 'secondary'} 
+                            className="font-normal"
+                          >
+                             {item.productName} (SN: {item.serialNumber}) {item.status === 'returned' && '(Returned)'}
                           </Badge>
                         ))}
                       </div>

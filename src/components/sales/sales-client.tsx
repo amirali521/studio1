@@ -79,6 +79,7 @@ export default function SalesClient() {
       productName: product.name,
       serialNumber: item.serialNumber,
       price: product.price,
+      status: 'sold'
     };
 
     setCurrentSaleItems(prev => [...prev, newSaleItem]);
@@ -283,5 +284,3 @@ export default function SalesClient() {
     </main>
   );
 }
-
-    
