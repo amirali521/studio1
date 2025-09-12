@@ -109,11 +109,11 @@ export default function DashboardClient() {
       const newProductId = productDocRef.id;
 
       const newItems: Omit<SerializedProductItem, "id" | "createdAt">[] = [];
-      const productCode = data.name.slice(0, 3).toUpperCase();
+      const productCode = data.name.slice(0, 3).toLowerCase();
 
       for (let i = 0; i < data.quantity; i++) {
           const uniquePart = uuidv4().split('-')[0]; // Use a portion of a UUID for uniqueness
-          const serialNumber = `${productCode}-${uniquePart}-${i+1}`;
+          const serialNumber = `${productCode}${uniquePart}${i+1}`;
           newItems.push({
               productId: newProductId,
               serialNumber: serialNumber,
