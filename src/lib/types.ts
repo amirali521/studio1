@@ -5,6 +5,8 @@ export interface Product {
   description: string;
   price: number; // This is the selling price
   purchasePrice: number; // This is the cost of the product
+  discount?: number; // Optional discount percentage
+  tax?: number; // Optional tax percentage
   customFields?: Record<string, string>;
   createdAt: string;
 }
@@ -23,6 +25,8 @@ export interface SaleItem {
   serialNumber: string;
   price: number; // Selling price at time of sale
   purchasePrice: number; // Purchase price at time of sale
+  discount: number; // Discount amount for this item
+  tax: number; // Tax amount for this item
   status?: 'sold' | 'returned';
 }
 

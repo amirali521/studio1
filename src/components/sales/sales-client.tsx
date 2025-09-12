@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Trash2, XCircle, Loader2, Printer, Percent, BadgeDollarSign, Camera, ScanLine } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Trash2, XCircle, Loader2, Printer, Camera, ScanLine } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
-import { Label } from "../ui/label";
 import { CameraScannerDialog } from "./camera-scanner-dialog";
 
 
@@ -31,8 +30,6 @@ export default function SalesClient() {
   const [scannedValue, setScannedValue] = useState("");
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
-  const [discount, setDiscount] = useState(0);
-  const [tax, setTax] = useState(0);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
 
@@ -47,7 +44,6 @@ export default function SalesClient() {
     try {
         scannedData = JSON.parse(scannedValue);
     } catch(e) {
-        // This is not a JSON QR code, so we'll assume it's just a serial number
         scannedData = { serialNumber: scannedValue };
     }
 
@@ -107,12 +103,18 @@ export default function SalesClient() {
         return;
     }
 
+    const discountAmount = product.price * ((product.discount || 0) / 100);
+    const priceAfterDiscount = product.price - discountAmount;
+    const taxAmount = priceAfterDiscount * ((product.tax || 0) / 100);
+
     const newSaleItem: SaleItem = {
       serializedProductId: item.id,
       productName: product.name,
       serialNumber: item.serialNumber,
       price: product.price,
       purchasePrice: product.purchasePrice,
+      discount: discountAmount,
+      tax: taxAmount,
       status: 'sold'
     };
 
@@ -123,7 +125,6 @@ export default function SalesClient() {
     });
     setScannedValue("");
 
-    // Play a success sound
     const audio = new Audio('/scan-success.mp3');
     audio.play();
   };
@@ -134,13 +135,16 @@ export default function SalesClient() {
   
   const handleClearSale = () => {
     setCurrentSaleItems([]);
-    setDiscount(0);
-    setTax(0);
   }
 
-  const subtotal = currentSaleItems.reduce((acc, item) => acc + item.price, 0);
-  const total = subtotal + tax - discount;
-  const totalProfit = currentSaleItems.reduce((acc, item) => acc + (item.price - item.purchasePrice), 0) - discount;
+  const { subtotal, totalDiscount, totalTax, total, totalProfit } = useMemo(() => {
+    const subtotal = currentSaleItems.reduce((acc, item) => acc + item.price, 0);
+    const totalDiscount = currentSaleItems.reduce((acc, item) => acc + item.discount, 0);
+    const totalTax = currentSaleItems.reduce((acc, item) => acc + item.tax, 0);
+    const total = subtotal - totalDiscount + totalTax;
+    const totalProfit = currentSaleItems.reduce((acc, item) => acc + (item.price - item.purchasePrice - item.discount), 0);
+    return { subtotal, totalDiscount, totalTax, total, totalProfit };
+  }, [currentSaleItems]);
 
 
   const handleFinalizeSale = async () => {
@@ -159,8 +163,8 @@ export default function SalesClient() {
       date: new Date().toISOString(),
       items: currentSaleItems,
       subtotal,
-      discount,
-      tax,
+      discount: totalDiscount,
+      tax: totalTax,
       total,
       profit: totalProfit
     };
@@ -277,8 +281,20 @@ export default function SalesClient() {
                  {currentSaleItems.length > 0 && (
                     <TableFooter>
                         <TableRow>
-                            <TableCell colSpan={2} className="font-bold">Subtotal</TableCell>
-                            <TableCell colSpan={2} className="text-right font-bold">{formatCurrency(subtotal, currency)}</TableCell>
+                            <TableCell colSpan={2}>Subtotal</TableCell>
+                            <TableCell colSpan={2} className="text-right">{formatCurrency(subtotal, currency)}</TableCell>
+                        </TableRow>
+                         <TableRow>
+                            <TableCell colSpan={2} className="text-destructive">Discount</TableCell>
+                            <TableCell colSpan={2} className="text-right text-destructive">-{formatCurrency(totalDiscount, currency)}</TableCell>
+                        </TableRow>
+                         <TableRow>
+                            <TableCell colSpan={2}>Tax</TableCell>
+                            <TableCell colSpan={2} className="text-right">{formatCurrency(totalTax, currency)}</TableCell>
+                        </TableRow>
+                         <TableRow className="font-bold text-lg">
+                            <TableCell colSpan={2}>Total</TableCell>
+                            <TableCell colSpan={2} className="text-right">{formatCurrency(total, currency)}</TableCell>
                         </TableRow>
                     </TableFooter>
                 )}
@@ -292,23 +308,6 @@ export default function SalesClient() {
       <div className="lg:col-span-1">
         <Card>
             <CardContent className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <Label htmlFor="discount">Discount</Label>
-                        <div className="relative">
-                            <BadgeDollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="discount" type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} className="pl-8"/>
-                        </div>
-                    </div>
-                     <div>
-                        <Label htmlFor="tax">Tax</Label>
-                        <div className="relative">
-                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input id="tax" type="number" value={tax} onChange={(e) => setTax(parseFloat(e.target.value) || 0)} className="pl-8"/>
-                        </div>
-                    </div>
-                </div>
-
                  <div className="flex justify-between items-center text-3xl font-bold pt-4">
                     <span>Total:</span>
                     <span>{formatCurrency(total, currency)}</span>

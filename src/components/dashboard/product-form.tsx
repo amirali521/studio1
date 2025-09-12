@@ -29,6 +29,8 @@ const productSchema = z.object({
     .number()
     .int("Quantity must be a whole number.")
     .min(1, "Quantity must be at least 1."),
+  discount: z.coerce.number().min(0, "Discount must be non-negative.").optional(),
+  tax: z.coerce.number().min(0, "Tax must be non-negative.").optional(),
   customFields: z.array(z.object({
     key: z.string().min(1, "Field name is required."),
     value: z.string().min(1, "Field value is required."),
@@ -54,6 +56,8 @@ export default function ProductForm({
       purchasePrice: 0,
       price: 0,
       quantity: 1,
+      discount: 0,
+      tax: 0,
       customFields: [],
     },
   });
@@ -143,13 +147,13 @@ export default function ProductForm({
           />
         </div>
 
-         <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <FormField
             control={form.control}
             name="quantity"
             render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Quantity to Add</FormLabel>
+                    <FormLabel>Quantity</FormLabel>
                     <FormControl>
                     <Input 
                         type="number" 
@@ -159,6 +163,32 @@ export default function ProductForm({
                     </FormControl>
                     <FormMessage />
                 </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="discount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Discount (%)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="e.g. 10" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="tax"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tax (%)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" placeholder="e.g. 5" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
           />
         </div>

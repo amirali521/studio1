@@ -1,7 +1,7 @@
 
 import { forwardRef } from "react";
 import { format } from "date-fns";
-import { Sale } from "@/lib/types";
+import { Sale, SaleItem } from "@/lib/types";
 import { Logo } from "@/components/logo";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/currency-context";
@@ -10,6 +10,26 @@ import { useShopSettings } from "@/contexts/shop-settings-context";
 
 interface InvoiceProps {
   sale: Sale;
+}
+
+const renderSaleItem = (item: SaleItem, currency: string) => {
+    return (
+        <div key={item.serialNumber}>
+            <div className="grid grid-cols-5 gap-2">
+                <div className="col-span-3 truncate">{item.productName}</div>
+                <div className="col-span-2 text-right">{formatCurrency(item.price, currency)}</div>
+                <div className="col-span-5 text-gray-500 font-mono text-[10px]">
+                    SN: {item.serialNumber}
+                </div>
+            </div>
+            {item.discount > 0 && (
+                <div className="grid grid-cols-5 gap-2 text-destructive">
+                    <div className="col-span-3 pl-4 text-xs">Discount</div>
+                    <div className="col-span-2 text-right text-xs">-{formatCurrency(item.discount, currency)}</div>
+                </div>
+            )}
+        </div>
+    )
 }
 
 export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
@@ -37,15 +57,7 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
         <Separator className="my-4 bg-black/20" />
 
         <div className="space-y-2 text-xs">
-          {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-5 gap-2">
-              <div className="col-span-3 truncate">{item.productName}</div>
-              <div className="col-span-2 text-right">{formatCurrency(item.price, currency)}</div>
-              <div className="col-span-5 text-gray-500 font-mono text-[10px]">
-                SN: {item.serialNumber}
-              </div>
-            </div>
-          ))}
+          {items.map((item) => renderSaleItem(item, currency))}
         </div>
 
         <Separator className="my-4 bg-black/20" />
@@ -56,7 +68,7 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
                 <span>{formatCurrency(subtotal, currency)}</span>
             </div>
              <div className="flex justify-between text-destructive">
-                <span>Discount</span>
+                <span>Total Discount</span>
                 <span>-{formatCurrency(discount, currency)}</span>
             </div>
             <div className="flex justify-between">

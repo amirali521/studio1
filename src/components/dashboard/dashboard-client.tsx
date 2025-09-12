@@ -50,15 +50,12 @@ export default function DashboardClient() {
     try {
         const batch = writeBatch(db);
 
-        // 1. Reference the main product document to be deleted
         const productRef = doc(db, "users", user.uid, "products", productId);
         
-        // 2. Query for all associated serialized items (both in_stock and sold)
         const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
         const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
         const querySnapshot = await getDocs(q);
 
-        // 3. Delete the product and ONLY the 'in_stock' items. Leave 'sold' items for historical records.
         batch.delete(productRef);
         querySnapshot.forEach((doc) => {
             if (doc.data().status === 'in_stock') {
@@ -66,7 +63,6 @@ export default function DashboardClient() {
             }
         });
 
-        // 4. Commit the batch
         await batch.commit();
 
         toast({
@@ -92,6 +88,8 @@ export default function DashboardClient() {
           description: data.description,
           price: data.price,
           purchasePrice: data.purchasePrice,
+          discount: data.discount,
+          tax: data.tax,
           customFields: data.customFields,
           createdAt: new Date().toISOString()
       };
