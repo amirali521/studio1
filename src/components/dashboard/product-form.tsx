@@ -147,7 +147,6 @@ export default function ProductForm({
         </div>
         
         <div className="space-y-4">
-            <FormLabel>Custom Fields</FormLabel>
             {fields.map((field, index) => (
                 <div key={field.id} className="flex items-center gap-2">
                     <FormField
