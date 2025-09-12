@@ -58,7 +58,10 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                 {sortedSales.map((sale) => (
                   <TableRow key={sale.id}>
                     <TableCell className="font-medium whitespace-nowrap">
-                      {format(new Date(sale.date), "MMM d, yyyy, h:mm a")}
+                      <div className="flex flex-col">
+                        <span>{format(new Date(sale.date), "MMM d, yyyy")}</span>
+                        <span className="text-xs text-muted-foreground">{format(new Date(sale.date), "h:mm a")}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col gap-1 items-start">
@@ -68,14 +71,14 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                             variant={item.status === 'returned' ? 'destructive' : 'secondary'} 
                             className="font-normal"
                           >
-                             {item.productName} (SN: {item.serialNumber}) {item.status === 'returned' && '(Returned)'}
+                             {item.productName} {item.status === 'returned' && '(Returned)'}
                           </Badge>
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-green-600">{formatCurrency(sale.profit, currency)}</TableCell>
+                    <TableCell className="font-mono text-green-600">{sale.profit.toFixed(2)}</TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatCurrency(sale.total, currency)}
+                      {sale.total.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
                        <InvoiceDialog sale={sale}>
