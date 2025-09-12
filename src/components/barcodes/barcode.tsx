@@ -8,9 +8,10 @@ import type { QrCodeData } from '@/lib/types';
 
 interface BarcodeDisplayProps {
     item: Omit<QrCodeData, 'id' | 'createdAt'>;
+    size?: number;
 }
 
-export function BarcodeDisplay({ item }: BarcodeDisplayProps) {
+export function BarcodeDisplay({ item, size = 150 }: BarcodeDisplayProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const { serialNumber } = item;
 
@@ -32,7 +33,10 @@ export function BarcodeDisplay({ item }: BarcodeDisplayProps) {
   }, [item]);
 
   return (
-    <div className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square">
+    <div 
+      className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid aspect-square"
+      style={{ width: `${size}px`, height: `${size}px` }}
+    >
         {qrCodeUrl ? (
             <>
                 <img 

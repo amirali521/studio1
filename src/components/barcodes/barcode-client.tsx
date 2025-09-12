@@ -18,12 +18,14 @@ import { BarcodeDisplay } from "./barcode";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { Slider } from "@/components/ui/slider";
 
 export default function BarcodeClient() {
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [qrSize, setQrSize] = useState(150);
   const { toast } = useToast();
 
   const selectedProduct = useMemo(
@@ -107,6 +109,18 @@ export default function BarcodeClient() {
             disabled={!selectedProductId}
           />
         </div>
+        <div className="w-full sm:w-64">
+           <Label htmlFor="size-slider">QR Code Size</Label>
+           <Slider
+            id="size-slider"
+            min={50}
+            max={300}
+            step={10}
+            value={[qrSize]}
+            onValueChange={(value) => setQrSize(value[0])}
+            disabled={itemsToDisplay.length === 0}
+          />
+        </div>
         <div className="self-end">
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
                 Print QR Codes
@@ -116,7 +130,7 @@ export default function BarcodeClient() {
 
       {selectedProductId ? (
         itemsToDisplay.length > 0 && selectedProduct ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+           <div className="flex flex-wrap gap-4 justify-center">
             {itemsToDisplay.map((item) => (
               <BarcodeDisplay 
                 key={item.id} 
@@ -125,6 +139,7 @@ export default function BarcodeClient() {
                   serialNumber: item.serialNumber,
                   productName: selectedProduct.name,
                 }}
+                size={qrSize}
               />
             ))}
           </div>
