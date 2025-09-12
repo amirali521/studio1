@@ -4,7 +4,7 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
-interface ShopDetails {
+export interface ShopDetails {
     name: string;
     address: string;
     phone: string;
