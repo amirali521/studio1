@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import BarcodeScanner from "@/components/dashboard/barcode-scanner";
 import { ScanProductInformationOutput } from "@/ai/flows/scan-product-information";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { Product } from "@/lib/types";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -28,7 +29,8 @@ const productSchema = z.object({
   quantity: z.coerce
     .number()
     .int("Quantity must be a whole number.")
-    .min(1, "Quantity must be at least 1."),
+    .min(1, "Quantity must be at least 1.")
+    .optional(),
   discount: z.coerce.number().min(0, "Discount must be non-negative.").optional(),
   tax: z.coerce.number().min(0, "Tax must be non-negative.").optional(),
   customFields: z.array(z.object({
@@ -38,19 +40,29 @@ const productSchema = z.object({
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
+type ProductSubmitData = Omit<Product, "id" | "createdAt"> & { quantity?: number };
+
 
 interface ProductFormProps {
-  onSubmit: (data: ProductFormData & { customFields?: Record<string, string> }) => void;
+  onSubmit: (data: any) => void;
   onCancel: () => void;
+  initialData?: Product;
+  isEditing?: boolean;
 }
 
 export default function ProductForm({
   onSubmit,
   onCancel,
+  initialData,
+  isEditing = false
 }: ProductFormProps) {
-  const form = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
+
+  const transformedInitialData = initialData ? {
+    ...initialData,
+    customFields: initialData.customFields 
+      ? Object.entries(initialData.customFields).map(([key, value]) => ({ key, value })) 
+      : []
+  } : {
       name: "",
       description: "",
       purchasePrice: 0,
@@ -59,8 +71,24 @@ export default function ProductForm({
       discount: 0,
       tax: 0,
       customFields: [],
-    },
+  };
+  
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
+    defaultValues: transformedInitialData
   });
+  
+  useEffect(() => {
+    if (initialData) {
+       const transformedData = {
+        ...initialData,
+        customFields: initialData.customFields 
+          ? Object.entries(initialData.customFields).map(([key, value]) => ({ key, value })) 
+          : []
+      };
+      form.reset(transformedData);
+    }
+  }, [initialData, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -85,7 +113,7 @@ export default function ProductForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        <BarcodeScanner onScan={handleScan} />
+        {!isEditing && <BarcodeScanner onScan={handleScan} />}
 
         <FormField
           control={form.control}
@@ -159,6 +187,7 @@ export default function ProductForm({
                         type="number" 
                         step="1" 
                         {...field}
+                        disabled={isEditing}
                     />
                     </FormControl>
                     <FormMessage />
@@ -172,7 +201,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Discount (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="e.g. 10" {...field} />
+                  <Input type="number" step="0.01" placeholder="e.g. 10" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -185,7 +214,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Tax (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" placeholder="e.g. 5" {...field} />
+                  <Input type="number" step="0.01" placeholder="e.g. 5" {...field} value={field.value ?? ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -226,7 +255,7 @@ export default function ProductForm({
             Cancel
           </Button>
           <Button type="submit">
-            Save Product
+            {isEditing ? 'Save Changes' : 'Save Product'}
           </Button>
         </div>
       </form>

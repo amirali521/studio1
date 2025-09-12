@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, PlusCircle, ArrowUpDown } from "lucide-react";
+import { Trash2, Edit, ArrowUpDown } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,11 +36,13 @@ type SortKey = keyof ProductWithStock;
 interface ProductsTableProps {
   products: ProductWithStock[];
   onDelete: (productId: string) => void;
+  onEdit: (product: Product) => void;
 }
 
 export default function ProductsTable({
   products,
   onDelete,
+  onEdit,
 }: ProductsTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
@@ -118,7 +120,11 @@ export default function ProductsTable({
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.quantity}</TableCell>
                     <TableCell>{formatCurrency(product.price, currency)}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-1">
+                       <Button variant="ghost" size="icon" onClick={() => onEdit(product)}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit Product</span>
+                        </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                            <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
@@ -132,8 +138,7 @@ export default function ProductsTable({
                               Are you sure?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete the product "{product.name}" and all its stock.
+                              This action will permanently delete the product "{product.name}" and any remaining stock. Sold items will remain in your sales history. This cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

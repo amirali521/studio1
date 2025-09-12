@@ -27,14 +27,27 @@ import { v4 as uuidv4 } from "uuid";
 export default function DashboardClient() {
   const { user } = useAuth();
   const router = useRouter();
-  const { data: products, loading: productsLoading, addItem: addProduct } = useFirestoreCollection<Product>("products");
+  const { 
+    data: products, 
+    loading: productsLoading, 
+    addItem: addProduct,
+    updateItem: updateProduct,
+   } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading, addItems } = useFirestoreCollection<SerializedProductItem>("serializedItems");
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
   const { toast } = useToast();
 
   const handleAddProduct = () => {
-    setIsDialogOpen(true);
+    setIsAddDialogOpen(true);
+  };
+  
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteProduct = async (productId: string) => {
@@ -53,14 +66,12 @@ export default function DashboardClient() {
         const productRef = doc(db, "users", user.uid, "products", productId);
         
         const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
-        const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
+        const q = query(serializedItemsCollectionRef, where("productId", "==", productId), where("status", "==", "in_stock"));
         const querySnapshot = await getDocs(q);
 
         batch.delete(productRef);
         querySnapshot.forEach((doc) => {
-            if (doc.data().status === 'in_stock') {
-                batch.delete(doc.ref);
-            }
+            batch.delete(doc.ref);
         });
 
         await batch.commit();
@@ -80,7 +91,7 @@ export default function DashboardClient() {
     }
   };
 
-  const handleFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
+  const handleAddFormSubmit = async (data: Omit<Product, "id" | "createdAt"> & { quantity: number }) => {
     
     try {
       const newProductData: Omit<Product, "id"> = {
@@ -117,7 +128,7 @@ export default function DashboardClient() {
           title: "Product Added",
           description: `${data.quantity} item(s) have been added to your inventory.`,
       });
-      setIsDialogOpen(false);
+      setIsAddDialogOpen(false);
       router.push(`/products/${newProductId}/qrcodes`);
     } catch (error) {
          console.error("Error submitting product:", error);
@@ -128,6 +139,27 @@ export default function DashboardClient() {
         });
     }
   };
+
+  const handleEditFormSubmit = async (data: Omit<Product, "id" | "createdAt">) => {
+    if (!editingProduct) return;
+
+    try {
+      await updateProduct(editingProduct.id, data);
+      toast({
+        title: "Product Updated",
+        description: `${data.name} has been successfully updated.`,
+      });
+      setIsEditDialogOpen(false);
+      setEditingProduct(null);
+    } catch(error) {
+       console.error("Error updating product:", error);
+        toast({
+            variant: "destructive",
+            title: "Update Error",
+            description: "An unexpected error occurred while saving the product.",
+        });
+    }
+  }
 
   const productsWithStock = products.map(product => ({
       ...product,
@@ -161,10 +193,11 @@ export default function DashboardClient() {
         <ProductsTable
           products={productsWithStock}
           onDelete={handleDeleteProduct}
+          onEdit={handleEditProduct}
         />
         <Dialog
-          open={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
         >
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
@@ -173,11 +206,38 @@ export default function DashboardClient() {
               </DialogTitle>
             </DialogHeader>
             <ProductForm
-              onSubmit={handleFormSubmit}
-              onCancel={() => setIsDialogOpen(false)}
+              onSubmit={handleAddFormSubmit}
+              onCancel={() => setIsAddDialogOpen(false)}
             />
           </DialogContent>
         </Dialog>
+
+        {editingProduct && (
+          <Dialog
+            open={isEditDialogOpen}
+            onOpenChange={(isOpen) => {
+              setIsEditDialogOpen(isOpen);
+              if (!isOpen) setEditingProduct(null);
+            }}
+          >
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="font-headline">
+                  Edit {editingProduct.name}
+                </DialogTitle>
+              </DialogHeader>
+              <ProductForm
+                onSubmit={handleEditFormSubmit}
+                onCancel={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingProduct(null);
+                }}
+                initialData={editingProduct}
+                isEditing
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </main>
     </>
   );
