@@ -52,9 +52,9 @@ export default function DashboardClient() {
         const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
         const querySnapshot = await getDocs(q);
         
-        const productItems = querySnapshot.docs.map(doc => doc.data() as SerializedProductItem);
+        const productHasSoldItems = querySnapshot.docs.some(doc => doc.data().status === 'sold');
 
-        if (productItems.some(item => item.status === 'sold')) {
+        if (productHasSoldItems) {
             toast({
                 variant: "destructive",
                 title: "Cannot Delete Product",
