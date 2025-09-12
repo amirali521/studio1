@@ -6,7 +6,7 @@ import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { type Sale, type Product, type SerializedProductItem } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, Package, DollarSign, Redo } from "lucide-react";
+import { Loader2, TrendingUp, Package, DollarSign, Archive, ClipboardList } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency } from "@/lib/utils";
 import { subDays } from "date-fns";
@@ -41,7 +41,7 @@ export default function AnalyticsClient() {
   const totalProfit = useMemo(() => filteredSales.reduce((acc, sale) => acc + sale.profit, 0), [filteredSales]);
   const itemsSoldCount = useMemo(() => filteredSales.reduce((acc, sale) => acc + sale.items.filter(i => i.status !== 'returned').length, 0), [filteredSales]);
 
-  const inventoryValue = useMemo(() => {
+  const { inventoryCost, potentialRevenue } = useMemo(() => {
     const stockMap = serializedItems
       .filter(item => item.status === 'in_stock')
       .reduce((acc, item) => {
@@ -51,8 +51,10 @@ export default function AnalyticsClient() {
 
     return products.reduce((acc, product) => {
       const quantity = stockMap[product.id] || 0;
-      return acc + (quantity * product.purchasePrice);
-    }, 0);
+      acc.inventoryCost += (quantity * product.purchasePrice);
+      acc.potentialRevenue += (quantity * product.price);
+      return acc;
+    }, { inventoryCost: 0, potentialRevenue: 0 });
   }, [products, serializedItems]);
 
 
@@ -92,20 +94,20 @@ export default function AnalyticsClient() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Items Sold</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Inventory Cost</CardTitle>
+            <Archive className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+{itemsSoldCount}</div>
+            <div className="text-2xl font-bold">{formatCurrency(inventoryCost, currency)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inventory Value</CardTitle>
-            <Redo className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Potential Revenue</CardTitle>
+            <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(inventoryValue, currency)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(potentialRevenue, currency)}</div>
           </CardContent>
         </Card>
       </div>
