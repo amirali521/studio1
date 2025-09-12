@@ -48,44 +48,38 @@ export default function DashboardClient() {
     }
 
     try {
+        const batch = writeBatch(db);
+
+        // 1. Reference the main product document to be deleted
+        const productRef = doc(db, "users", user.uid, "products", productId);
+        
+        // 2. Query for all associated serialized items (both in_stock and sold)
         const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
         const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
         const querySnapshot = await getDocs(q);
-        
-        const productHasSoldItems = querySnapshot.docs.some(doc => doc.data().status === 'sold');
 
-        if (productHasSoldItems) {
-            toast({
-                variant: "destructive",
-                title: "Cannot Delete Product",
-                description: "This product has associated sales records and cannot be deleted.",
-            });
-            return;
-        }
-
-        const batch = writeBatch(db);
-
-        // Delete the product itself
-        const productRef = doc(db, "users", user.uid, "products", productId);
+        // 3. Delete the product and ONLY the 'in_stock' items. Leave 'sold' items for historical records.
         batch.delete(productRef);
-
-        // Delete all associated serialized items
         querySnapshot.forEach((doc) => {
-            batch.delete(doc.ref);
+            if (doc.data().status === 'in_stock') {
+                batch.delete(doc.ref);
+            }
         });
 
+        // 4. Commit the batch
         await batch.commit();
 
         toast({
-            title: "Product Deleted",
-            description: "The product and all its stock have been removed.",
+            title: "Product Removed",
+            description: "The product and its remaining stock have been removed from inventory.",
         });
+
     } catch (error) {
         console.error("Error deleting product:", error);
         toast({
             variant: "destructive",
             title: "Deletion Failed",
-            description: "An error occurred while trying to delete the product.",
+            description: "An error occurred while trying to remove the product from inventory.",
         });
     }
   };
