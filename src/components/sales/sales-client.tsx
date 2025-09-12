@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Trash2, XCircle, Loader2, Printer, Camera, ScanLine } from "lucide-react";
+import { Trash2, XCircle, Loader2, Printer } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
-import { CameraScannerDialog } from "./camera-scanner-dialog";
+import PosBarcodeScanner from "./pos-barcode-scanner";
 
 
 export default function SalesClient() {
@@ -30,8 +30,6 @@ export default function SalesClient() {
   const [scannedValue, setScannedValue] = useState("");
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-
 
   const { toast } = useToast();
   const { currency } = useCurrency();
@@ -228,23 +226,16 @@ export default function SalesClient() {
              <div className="flex gap-2">
                 <Input
                     type="text"
-                    placeholder="Scan or enter serial number..."
+                    placeholder="Enter serial number..."
                     value={scannedValue}
                     onChange={(e) => setScannedValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleScan(scannedValue)}
                     className="text-base"
                 />
                  <Button onClick={() => handleScan(scannedValue)} disabled={!scannedValue}>
-                    <ScanLine className="mr-2"/> Add
+                    Add
                 </Button>
-                <Button 
-                    onClick={() => setIsScannerOpen(true)} 
-                    variant="outline"
-                    size="icon"
-                >
-                    <Camera />
-                    <span className="sr-only">Scan with camera</span>
-                </Button>
+                 <PosBarcodeScanner onScan={handleScan} />
             </div>
 
             <div className="min-h-[300px] border rounded-lg overflow-hidden">
@@ -360,12 +351,6 @@ export default function SalesClient() {
         </Card>
       </div>
     </main>
-    <CameraScannerDialog 
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScan={handleScan}
-     />
     </>
   );
 }
-
