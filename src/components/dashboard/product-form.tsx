@@ -228,14 +228,14 @@ export default function ProductForm({
                         control={form.control}
                         name={`customFields.${index}.key`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="Field Name" className="w-1/3"/>
+                           <Input {...field} placeholder="" className="w-1/3"/>
                         )}
                     />
                      <FormField
                         control={form.control}
                         name={`customFields.${index}.value`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="Field Value" className="w-2/3"/>
+                           <Input {...field} placeholder="" className="w-2/3"/>
                         )}
                     />
                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
