@@ -37,8 +37,8 @@ export default function SalesClient() {
   const { currency } = useCurrency();
 
 
-  const handleScan = (scannedValue: string) => {
-    if (!scannedValue) return;
+  const handleScan = (scannedValue: string): boolean => {
+    if (!scannedValue) return false;
 
     let scannedData: Partial<QrCodeData> = {};
     try {
@@ -54,7 +54,7 @@ export default function SalesClient() {
             description: "This product belongs to another user's inventory.",
         });
         setScannedValue("");
-        return;
+        return false;
     }
     
     if (!scannedData.serialNumber) {
@@ -64,7 +64,7 @@ export default function SalesClient() {
             description: "The scanned QR code does not contain a valid serial number.",
         });
         setScannedValue("");
-        return;
+        return false;
     }
 
 
@@ -75,11 +75,11 @@ export default function SalesClient() {
     if (!item) {
       toast({
         variant: "destructive",
-        title: "ScanError",
+        title: "Scan Error",
         description: "Item not found, already sold, or invalid serial number.",
       });
       setScannedValue("");
-      return;
+      return false;
     }
 
     if (currentSaleItems.some(saleItem => saleItem.serialNumber === item.serialNumber)) {
@@ -89,7 +89,7 @@ export default function SalesClient() {
             description: "This item has already been scanned for the current sale.",
         });
         setScannedValue("");
-        return;
+        return false;
     }
 
     const product = products.find(p => p.id === item.productId);
@@ -100,7 +100,7 @@ export default function SalesClient() {
             description: "Could not find the base product for this item.",
         });
         setScannedValue("");
-        return;
+        return false;
     }
 
     const discountAmount = product.price * ((product.discount || 0) / 100);
@@ -127,6 +127,7 @@ export default function SalesClient() {
 
     const audio = new Audio('/scan-success.mp3');
     audio.play();
+    return true;
   };
 
   const handleRemoveItem = (serialNumber: string) => {
@@ -367,3 +368,4 @@ export default function SalesClient() {
     </>
   );
 }
+
