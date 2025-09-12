@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -33,17 +32,6 @@ export function CameraScannerDialog({
   const animationFrameId = useRef<number>();
   const lastScanTime = useRef<number>(0);
   const { toast } = useToast();
-
-  const cleanup = useCallback(() => {
-    if (animationFrameId.current) {
-      cancelAnimationFrame(animationFrameId.current);
-    }
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  }, []);
 
   const tick = useCallback(() => {
     const now = Date.now();
@@ -80,8 +68,29 @@ export function CameraScannerDialog({
     animationFrameId.current = requestAnimationFrame(tick);
   }, [onScan]);
 
+  const cleanup = useCallback(() => {
+    if (animationFrameId.current) {
+      cancelAnimationFrame(animationFrameId.current);
+      animationFrameId.current = undefined;
+    }
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }, []);
+
 
   useEffect(() => {
+    const videoElement = videoRef.current;
+    
+    const handleCanPlay = () => {
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+        }
+        animationFrameId.current = requestAnimationFrame(tick);
+    }
+    
     async function setupCamera() {
       if (isOpen) {
         setHasCameraPermission(null);
@@ -94,9 +103,9 @@ export function CameraScannerDialog({
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
             videoRef.current.setAttribute("playsinline", "true"); // Required for iOS
+            videoRef.current.addEventListener('canplay', handleCanPlay);
             await videoRef.current.play();
             setHasCameraPermission(true);
-            animationFrameId.current = requestAnimationFrame(tick);
           }
         } catch (err) {
           console.error("Camera access error:", err);
@@ -110,12 +119,18 @@ export function CameraScannerDialog({
         }
       } else {
         cleanup();
+        if(videoElement) {
+           videoElement.removeEventListener('canplay', handleCanPlay);
+        }
       }
     }
     setupCamera();
 
     return () => {
       cleanup();
+      if(videoElement) {
+        videoElement.removeEventListener('canplay', handleCanPlay);
+      }
     };
   }, [isOpen, cleanup, toast, tick]);
 
