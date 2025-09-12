@@ -3,16 +3,11 @@
 
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import type { QrCodeData } from '@/lib/types';
 
-interface BarcodeItem {
-  serialNumber: string;
-  productName: string;
-  price: number;
-  description: string;
-  customFields?: Record<string, string>;
-}
+
 interface BarcodeDisplayProps {
-    item: BarcodeItem;
+    item: Omit<QrCodeData, 'id' | 'createdAt'>;
 }
 
 export function BarcodeDisplay({ item }: BarcodeDisplayProps) {

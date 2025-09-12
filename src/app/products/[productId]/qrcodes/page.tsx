@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import AppHeader from "@/components/layout/app-header";
 import UserProfile from "@/components/layout/user-profile";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function ProductQRCodesPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const productId = params.productId as string;
 
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
@@ -36,7 +38,7 @@ export default function ProductQRCodesPage() {
     window.print();
   };
   
-  const loading = productsLoading || itemsLoading;
+  const loading = productsLoading || itemsLoading || !user;
   
   if (loading) {
     return (
@@ -87,6 +89,7 @@ export default function ProductQRCodesPage() {
                   ...product,
                   serialNumber: item.serialNumber,
                   productName: product.name,
+                  uid: user.uid
                 }}
               />
             ))}

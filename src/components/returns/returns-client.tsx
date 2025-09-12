@@ -4,15 +4,18 @@
 import { useState, useRef } from "react";
 import { ScanLine, Loader2, History, Undo2 } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import type { Sale, SerializedProductItem } from "@/lib/types";
+import type { Sale, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
 import SalesHistoryDialog from "../sales/sales-history-dialog";
+import { useAuth } from "@/contexts/auth-context";
+
 
 export default function ReturnsClient() {
+  const { user } = useAuth();
   const { data: sales, updateItem: updateSale, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
   const { data: serializedItems, updateItem: updateSerializedItem, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   
@@ -25,10 +28,38 @@ export default function ReturnsClient() {
   const handleScanReturn = async () => {
     if (!scannedValue) return;
 
+    let scannedData: Partial<QrCodeData> = {};
+    try {
+        scannedData = JSON.parse(scannedValue);
+    } catch(e) {
+        // This is not a JSON QR code, so we'll assume it's just a serial number
+        scannedData = { serialNumber: scannedValue };
+    }
+
+    if (scannedData.uid && user && scannedData.uid !== user.uid) {
+         toast({
+            variant: "destructive",
+            title: "Ownership Error",
+            description: "This product belongs to another user's inventory.",
+        });
+        setScannedValue("");
+        return;
+    }
+    
+    if (!scannedData.serialNumber) {
+         toast({
+            variant: "destructive",
+            title: "Invalid QR Code",
+            description: "The scanned QR code does not contain a valid serial number.",
+        });
+        setScannedValue("");
+        return;
+    }
+
     setIsProcessing(true);
 
     const itemToReturn = serializedItems.find(
-      (i) => i.serialNumber === scannedValue
+      (i) => i.serialNumber === scannedData.serialNumber
     );
     
     if (!itemToReturn) {
@@ -54,7 +85,7 @@ export default function ReturnsClient() {
     }
 
     // Find the sale containing this item
-    const saleToUpdate = sales.find(s => s.items.some(i => i.serialNumber === scannedValue && i.status !== 'returned'));
+    const saleToUpdate = sales.find(s => s.items.some(i => i.serialNumber === scannedData.serialNumber && i.status !== 'returned'));
 
     if (!saleToUpdate) {
         toast({
@@ -73,7 +104,7 @@ export default function ReturnsClient() {
 
         // 2. Update the item's status in the sale record to 'returned'
         const updatedItems = saleToUpdate.items.map(item => 
-            item.serialNumber === scannedValue 
+            item.serialNumber === scannedData.serialNumber
                 ? { ...item, status: 'returned' as const } 
                 : item
         );
@@ -81,7 +112,7 @@ export default function ReturnsClient() {
 
         toast({
             title: "Return Processed",
-            description: `Item ${scannedValue} has been returned to stock.`,
+            description: `Item ${scannedData.serialNumber} has been returned to stock.`,
         });
 
         setScannedValue("");
@@ -99,7 +130,7 @@ export default function ReturnsClient() {
     }
   };
   
-  const loading = salesLoading || itemsLoading;
+  const loading = salesLoading || itemsLoading || !user;
   
   if (loading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>

@@ -21,6 +21,7 @@ import { db } from "@/lib/firebase";
 import { writeBatch, collection, query, where, getDocs, doc } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
 
 export default function DashboardClient() {
@@ -107,7 +108,7 @@ export default function DashboardClient() {
       const productCode = data.name.slice(0, 3).toUpperCase();
 
       for (let i = 0; i < data.quantity; i++) {
-          const uniquePart = `${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+          const uniquePart = uuidv4().split('-')[0]; // Use a portion of a UUID for uniqueness
           const serialNumber = `${productCode}-${uniquePart}-${i+1}`;
           newItems.push({
               productId: newProductId,

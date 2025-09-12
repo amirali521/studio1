@@ -12,7 +12,7 @@ export interface SerializedProductItem {
   id: string; // This will be the Firestore document ID
   productId: string; // This ID should match the `id` of a Product document
   serialNumber: string; // The unique serial number for this item
-  status: 'in_stock' | 'sold';
+  status: 'in_stock' | 'sold' | 'returned';
   createdAt: string;
 }
 
@@ -33,4 +33,9 @@ export interface Sale {
   createdAt?: string; // Optional for backwards compatibility, but new sales will have it
 }
 
+export interface QrCodeData extends Product {
+  serialNumber: string;
+  productName: string;
+  uid: string;
+}
     

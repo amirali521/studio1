@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from "react";
 import { ScanLine, Trash2, XCircle, Loader2, Printer } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import type { Sale, Product, SerializedProductItem, SaleItem } from "@/lib/types";
+import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -17,8 +17,11 @@ import Link from "next/link";
 import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
+import { useAuth } from "@/contexts/auth-context";
+
 
 export default function SalesClient() {
+  const { user } = useAuth();
   const { data: sales, addItem: addSale, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, updateItems: updateSerializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
@@ -39,8 +42,37 @@ export default function SalesClient() {
   const handleScan = () => {
     if (!scannedValue) return;
 
+    let scannedData: Partial<QrCodeData> = {};
+    try {
+        scannedData = JSON.parse(scannedValue);
+    } catch(e) {
+        // This is not a JSON QR code, so we'll assume it's just a serial number
+        scannedData = { serialNumber: scannedValue };
+    }
+
+    if (scannedData.uid && user && scannedData.uid !== user.uid) {
+         toast({
+            variant: "destructive",
+            title: "Ownership Error",
+            description: "This product belongs to another user's inventory.",
+        });
+        setScannedValue("");
+        return;
+    }
+    
+    if (!scannedData.serialNumber) {
+         toast({
+            variant: "destructive",
+            title: "Invalid QR Code",
+            description: "The scanned QR code does not contain a valid serial number.",
+        });
+        setScannedValue("");
+        return;
+    }
+
+
     const item = serializedItems.find(
-      (i) => i.serialNumber === scannedValue && i.status === 'in_stock'
+      (i) => i.serialNumber === scannedData.serialNumber && i.status === 'in_stock'
     );
     
     if (!item) {
@@ -140,7 +172,7 @@ export default function SalesClient() {
     }
   };
   
-  const loading = salesLoading || productsLoading || itemsLoading;
+  const loading = salesLoading || productsLoading || itemsLoading || !user;
 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
@@ -172,7 +204,7 @@ export default function SalesClient() {
               <Input
                 ref={inputRef}
                 type="text"
-                placeholder="Scan or enter serial number..."
+                placeholder="Scan or enter QR code data..."
                 value={scannedValue}
                 onChange={(e) => setScannedValue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleScan()}
