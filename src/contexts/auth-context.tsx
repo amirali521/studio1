@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { usePathname, useRouter } from 'next/navigation';
+import LoadingScreen from '@/components/layout/loading-screen';
 
 interface AuthContextType {
   user: User | null;
@@ -13,8 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
 
-const PROTECTED_ROUTES = ['/dashboard', '/sales'];
-const PUBLIC_ROUTES = ['/login', '/signup'];
+const PROTECTED_ROUTES = ['/dashboard', '/sales', '/analytics', '/barcodes', '/products', '/returns', '/settings'];
+const PUBLIC_ROUTES = ['/login', '/signup', '/forgot-password'];
 const VERIFICATION_ROUTE = '/email-verification';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,17 +66,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return <LoadingScreen />;
   }
   
   // To avoid flicker, we only render children if the routing logic is complete
   const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
   if (!user && isProtectedRoute) {
-     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+     return <LoadingScreen />;
   }
 
   if (user && !user.emailVerified && pathname !== VERIFICATION_ROUTE) {
-     return <div className="flex h-screen items-center justify-center">Loading...</div>;
+     return <LoadingScreen />;
   }
 
 
