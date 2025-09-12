@@ -37,14 +37,6 @@ export function CameraScannerDialog({
   const [scanStatus, setScanStatus] = useState<ScanStatus>("idle");
   const { toast } = useToast();
 
-  const cleanup = useCallback(() => {
-    if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach((track) => track.stop());
-      videoRef.current.srcObject = null;
-    }
-  }, []);
-
   useEffect(() => {
     let stream: MediaStream | null = null;
   
@@ -61,8 +53,7 @@ export function CameraScannerDialog({
             videoRef.current.srcObject = stream;
             videoRef.current.setAttribute("playsinline", "true"); // Required for iOS
             
-            // Wait for metadata to load to ensure dimensions are available
-             videoRef.current.onloadedmetadata = () => {
+            videoRef.current.onloadedmetadata = () => {
               videoRef.current?.play().catch(err => {
                 console.error("Video play failed:", err);
                 setHasCameraPermission(false);
@@ -118,7 +109,7 @@ export function CameraScannerDialog({
     if (
       !videoRef.current ||
       !canvasRef.current ||
-      videoRef.current.readyState < videoRef.current.HAVE_METADATA // Use HAVE_METADATA
+      videoRef.current.readyState < videoRef.current.HAVE_METADATA
     ) {
       toast({
         variant: "destructive",
@@ -156,7 +147,6 @@ export function CameraScannerDialog({
       }
     }
     
-    // Use a short timeout to allow the user to see the button press state
     setTimeout(() => setIsCapturing(false), 200);
 
   }, [onScan, toast]);
@@ -165,7 +155,7 @@ export function CameraScannerDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen p-0 m-0 !rounded-none">
         <DialogHeader className="hidden">
-          <DialogTitle>QR Code Scanner</DialogTitle>
+            <DialogTitle>QR Code Scanner</DialogTitle>
         </DialogHeader>
         <div className="relative w-full h-full bg-black flex items-center justify-center">
           {hasCameraPermission === null && (
