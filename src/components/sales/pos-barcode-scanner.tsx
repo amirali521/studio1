@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef } from "react";
@@ -27,16 +26,18 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
+
     reader.onload = (e) => {
       const image = new Image();
       image.src = e.target?.result as string;
+
       image.onload = () => {
         const canvas = canvasRef.current;
         if (!canvas) {
             setIsLoading(false);
             return;
         }
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
         if (!ctx) {
             setIsLoading(false);
             return;
@@ -46,41 +47,62 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
         canvas.width = image.width;
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-        if (code && code.data) {
-          onScan(code.data);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Scan Failed",
-            description: "No valid QR code was found in the image. Please ensure the code is clear and fully visible.",
-          });
+          if (code && code.data) {
+            const success = onScan(code.data);
+            if (!success) {
+              // The onScan function handles its own failure toasts.
+            }
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Scan Failed",
+              description: "No valid QR code was found in the image. Please ensure the code is clear and fully visible.",
+            });
+          }
+        } catch (error) {
+            console.error("Error decoding QR code:", error);
+            toast({
+              variant: "destructive",
+              title: "Scan Error",
+              description: "Could not process the image. The file might be corrupted or in an unsupported format.",
+            });
+        } finally {
+           setIsLoading(false);
+           // Reset file input to allow scanning the same file again
+           if (event.target) {
+               event.target.value = '';
+           }
         }
-        setIsLoading(false);
       };
+
       image.onerror = () => {
          toast({
             variant: "destructive",
-            title: "Load error",
-            description: "Could not load the selected image.",
+            title: "Image Load Error",
+            description: "Could not load the selected image file.",
           });
          setIsLoading(false);
+         if (event.target) {
+            event.target.value = '';
+         }
       }
     };
+    
     reader.onerror = () => {
       setIsLoading(false);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to read file.",
+        title: "File Read Error",
+        description: "Failed to read the selected file.",
       });
-    };
-     // Reset file input to allow scanning the same file again
-    if (event.target) {
+      if (event.target) {
         event.target.value = '';
-    }
+      }
+    };
   };
 
   return (
@@ -92,6 +114,7 @@ export default function PosBarcodeScanner({ onScan }: PosBarcodeScannerProps) {
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
+        disabled={isLoading}
       />
       <canvas ref={canvasRef} className="hidden" />
       <Button
