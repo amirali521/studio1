@@ -148,7 +148,7 @@ export function CameraScannerDialog({
             </div>
           )}
 
-          {hasCamerapermission === false && (
+          {hasCameraPermission === false && (
             <div className="p-8 text-center text-white">
               <VideoOff className="h-16 w-16 mx-auto mb-4 text-destructive" />
               <h2 className="text-2xl font-bold">Camera Access Required</h2>
