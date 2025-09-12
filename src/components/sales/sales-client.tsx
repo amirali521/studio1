@@ -175,14 +175,14 @@ export default function SalesClient() {
 
     try {
         await updateSerializedItems(soldItemUpdates);
-        await addSale(newSale);
+        const saleDocRef = await addSale(newSale);
         
         toast({
           title: "Sale Recorded",
           description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
         });
 
-        setLastSale({ ...newSale, id: saleId, createdAt: new Date().toISOString() });
+        setLastSale({ ...newSale, id: saleDocRef.id, createdAt: new Date().toISOString() });
         handleClearSale();
     } catch (error) {
         console.error("Error finalizing sale:", error);

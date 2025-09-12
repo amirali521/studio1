@@ -27,12 +27,7 @@ export function useFirestoreCollection<T extends { id?: string }>(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) {
-      // Still waiting for auth status to resolve
-      return;
-    }
-
-    if (!user) {
+    if (authLoading || !user) {
       setData([]);
       setLoading(false);
       return;
@@ -80,11 +75,14 @@ export function useFirestoreCollection<T extends { id?: string }>(
     await batch.commit();
   };
   
-  const addItem = async (item: Omit<T, "id" | 'createdAt'> & { createdAt: string }) => {
+  const addItem = async (item: Omit<T, "id" | 'createdAt'>) => {
     if (!user) throw new Error("User not authenticated");
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);
-    const docRef = await addDoc(dataCollectionRef, item);
+    const docRef = await addDoc(dataCollectionRef, {
+        ...item,
+        createdAt: new Date().toISOString()
+    });
     return docRef;
   };
 
