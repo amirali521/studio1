@@ -122,7 +122,7 @@ export default function ProductForm({
             <FormItem>
               <FormLabel>Product Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="e.g., Organic Coffee Beans" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -138,6 +138,7 @@ export default function ProductForm({
               <FormControl>
                 <Textarea
                   {...field}
+                  placeholder="e.g., 12oz bag of single-origin dark roast"
                 />
               </FormControl>
               <FormMessage />
@@ -153,7 +154,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Purchase Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} />
+                  <Input type="number" step="0.01" {...field} placeholder="e.g., 5.50" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -166,7 +167,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Selling Price</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} />
+                  <Input type="number" step="0.01" {...field} placeholder="e.g., 12.99" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -187,6 +188,7 @@ export default function ProductForm({
                         step="1" 
                         {...field}
                         disabled={isEditing}
+                        placeholder="e.g., 50"
                     />
                     </FormControl>
                     <FormMessage />
@@ -200,7 +202,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Discount (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} placeholder="e.g., 10" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -213,7 +215,7 @@ export default function ProductForm({
               <FormItem>
                 <FormLabel>Tax (%)</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} />
+                  <Input type="number" step="0.01" {...field} value={field.value ?? ''} placeholder="e.g., 8.25" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -228,14 +230,14 @@ export default function ProductForm({
                         control={form.control}
                         name={`customFields.${index}.key`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="" className="w-1/3"/>
+                           <Input {...field} placeholder="Field Name" className="w-1/3"/>
                         )}
                     />
                      <FormField
                         control={form.control}
                         name={`customFields.${index}.value`}
                         render={({ field }) => (
-                           <Input {...field} placeholder="" className="w-2/3"/>
+                           <Input {...field} placeholder="Field Value" className="w-2/3"/>
                         )}
                     />
                     <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
