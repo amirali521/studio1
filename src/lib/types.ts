@@ -46,5 +46,6 @@ export interface Sale {
 export interface QrCodeData {
   serialNumber: string;
   uid: string;
+  productName: string;
 }
     

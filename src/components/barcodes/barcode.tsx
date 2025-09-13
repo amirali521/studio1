@@ -9,6 +9,7 @@ import { Download } from 'lucide-react';
 interface SimpleQrCodeData {
     serialNumber: string;
     uid: string;
+    productName: string;
 }
 
 export type DownloadFormat = 'svg' | 'png' | 'jpg';
@@ -16,12 +17,11 @@ export type DownloadFormat = 'svg' | 'png' | 'jpg';
 interface BarcodeDisplayProps {
     item: SimpleQrCodeData;
     size?: number;
-    productName?: string;
     downloadFormat?: DownloadFormat;
 }
 
-export function BarcodeDisplay({ item, size = 150, productName, downloadFormat = 'svg' }: BarcodeDisplayProps) {
-  const { serialNumber } = item;
+export function BarcodeDisplay({ item, size = 150, downloadFormat = 'svg' }: BarcodeDisplayProps) {
+  const { serialNumber, productName } = item;
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const qrCodeSvg = useMemo(() => {

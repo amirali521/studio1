@@ -185,9 +185,9 @@ export default function BarcodeClient() {
                 item={{
                   serialNumber: item.serialNumber,
                   uid: user.uid,
+                  productName: selectedProduct.name,
                 }}
                 size={qrSize}
-                productName={selectedProduct.name}
                 downloadFormat={downloadFormat}
               />
             ))}

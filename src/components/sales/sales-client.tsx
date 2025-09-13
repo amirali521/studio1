@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { Trash2, XCircle, Loader2, Printer, Camera } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import type { Sale, Product, SerializedProductItem, SaleItem } from "@/lib/types";
+import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -39,12 +39,12 @@ export default function SalesClient() {
   const handleScan = (scannedValue: string): boolean => {
     if (!scannedValue) return false;
 
-    let scannedData: { serialNumber: string, uid: string };
+    let scannedData: Partial<QrCodeData>;
     try {
         scannedData = JSON.parse(scannedValue);
     } catch(e) {
         // Fallback for non-JSON serial numbers
-        scannedData = { serialNumber: scannedValue, uid: '' };
+        scannedData = { serialNumber: scannedValue };
     }
     
     if (!scannedData.serialNumber) {

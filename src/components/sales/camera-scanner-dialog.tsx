@@ -96,7 +96,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   };
 
   const handleDecode = (text: string) => {
-    let scannedData: { serialNumber: string, uid: string };
+    let scannedData: QrCodeData;
     try {
         scannedData = JSON.parse(text);
     } catch (e) {
@@ -104,7 +104,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         return;
     }
     
-    if (!scannedData.serialNumber || !scannedData.uid) {
+    if (!scannedData.serialNumber || !scannedData.uid || !scannedData.productName) {
          setLastScanResult({ success: false, message: "Invalid QR data." });
          return;
     }
