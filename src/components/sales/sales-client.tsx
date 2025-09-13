@@ -128,10 +128,13 @@ export default function SalesClient() {
 
   const handleBulkScan = (scannedItems: (Omit<Product, 'id'> & { serialNumber: string })[]) => {
     const newSaleItems: SaleItem[] = [];
-    scannedItems.forEach(scannedItem => {
-
+    
+    // Deduplicate the scannedItems array based on serialNumber
+    const uniqueScannedItems = Array.from(new Map(scannedItems.map(item => [item.serialNumber, item])).values());
+    
+    uniqueScannedItems.forEach(scannedItem => {
         if (currentSaleItems.some(saleItem => saleItem.serialNumber === scannedItem.serialNumber)) {
-            return; // Skip already scanned items
+            return; // Skip already scanned items in the current sale
         }
 
         const serializedItem = serializedItems.find(si => si.serialNumber === scannedItem.serialNumber);
@@ -407,3 +410,5 @@ export default function SalesClient() {
     </>
   );
 }
+
+    
