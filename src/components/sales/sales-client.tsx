@@ -18,7 +18,6 @@ import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
-import PosBarcodeScanner from "./pos-barcode-scanner";
 import CameraScannerDialog from "./camera-scanner-dialog";
 
 
@@ -124,9 +123,6 @@ export default function SalesClient() {
         description: `${product.name} has been added to the sale.`,
     });
     setScannedValue("");
-
-    const audio = new Audio('/scan-success.mp3');
-    audio.play();
     return true;
   };
 
@@ -164,8 +160,6 @@ export default function SalesClient() {
             title: `${newSaleItems.length} Item(s) Added`,
             description: `The scanned items have been added to the sale.`,
         });
-        const audio = new Audio('/scan-success.mp3');
-        audio.play();
     }
   };
 

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ScanLine, Loader2, History, Undo2 } from "lucide-react";
+import { Loader2, Undo2, Camera } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import Link from "next/link";
 import SalesHistoryDialog from "../sales/sales-history-dialog";
 import { useAuth } from "@/contexts/auth-context";
+import ReturnCameraScannerDialog from "./return-camera-scanner";
 
 
 export default function ReturnsClient() {
@@ -21,19 +22,20 @@ export default function ReturnsClient() {
   
   const [scannedValue, setScannedValue] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleScanReturn = async () => {
-    if (!scannedValue) return;
+  const handleScanReturn = async (valueToScan: string) => {
+    if (!valueToScan) return;
 
     let scannedData: Partial<QrCodeData> = {};
     try {
-        scannedData = JSON.parse(scannedValue);
+        scannedData = JSON.parse(valueToScan);
     } catch(e) {
         // This is not a JSON QR code, so we'll assume it's just a serial number
-        scannedData = { serialNumber: scannedValue };
+        scannedData = { serialNumber: valueToScan };
     }
 
     if (scannedData.uid && user && scannedData.uid !== user.uid) {
@@ -129,6 +131,11 @@ export default function ReturnsClient() {
         inputRef.current?.focus();
     }
   };
+
+  const handleCameraScan = (text: string) => {
+    handleScanReturn(text);
+    setIsScannerOpen(false);
+  }
   
   const loading = salesLoading || itemsLoading || !user;
   
@@ -152,6 +159,7 @@ export default function ReturnsClient() {
   }
 
   return (
+    <>
     <main className="flex-1 p-4 sm:p-6 flex justify-center items-start">
       <Card className="w-full max-w-lg">
         <CardHeader>
@@ -166,18 +174,28 @@ export default function ReturnsClient() {
                 placeholder="Scan or enter serial number..."
                 value={scannedValue}
                 onChange={(e) => setScannedValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleScanReturn()}
+                onKeyDown={(e) => e.key === 'Enter' && handleScanReturn(scannedValue)}
                 disabled={isProcessing}
                 className="text-base"
               />
-              <Button onClick={handleScanReturn} disabled={isProcessing || !scannedValue}>
+              <Button onClick={() => handleScanReturn(scannedValue)} disabled={isProcessing || !scannedValue}>
                 {isProcessing ? <Loader2 className="mr-2 animate-spin"/> : <Undo2 className="mr-2"/>}
                 Process
               </Button>
             </div>
+            <Button className="w-full" variant="outline" onClick={() => setIsScannerOpen(true)}>
+                <Camera className="mr-2"/>
+                Scan with Camera
+            </Button>
              <SalesHistoryDialog sales={sales} />
         </CardContent>
       </Card>
     </main>
+    <ReturnCameraScannerDialog
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleCameraScan}
+    />
+    </>
   );
 }
