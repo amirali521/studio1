@@ -7,7 +7,7 @@ import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Product, SerializedProductItem } from "@/lib/types";
 import { BarcodeDisplay } from "@/components/barcodes/barcode";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Printer } from "lucide-react";
 import AppHeader from "@/components/layout/app-header";
 import UserProfile from "@/components/layout/user-profile";
 import { useAuth } from "@/contexts/auth-context";
@@ -72,16 +72,17 @@ export default function ProductQRCodesPage() {
     <div className="flex h-full flex-col">
       <AppHeader title={`QR Codes for ${product.name}`}>
           <Button variant="outline" onClick={() => router.push('/dashboard')}>
-              <ArrowLeft className="mr-2"/>
-              Back to Dashboard
+              <ArrowLeft className="mr-2 h-4 w-4"/>
+              <span className="hidden sm:inline">Back to Dashboard</span>
           </Button>
           <Button onClick={handlePrint}>
-              Print All
+              <Printer className="mr-2 h-4 w-4"/>
+              <span className="hidden sm:inline">Print All</span>
           </Button>
         <UserProfile />
       </AppHeader>
        <main className="flex-1 p-4 sm:p-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {productItems.map((item) => (
               <BarcodeDisplay 
                 key={item.id} 

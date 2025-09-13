@@ -64,8 +64,8 @@ export default function AnalyticsClient() {
 
   return (
     <main className="flex-1 p-4 sm:p-6 space-y-6">
-      <div className="flex justify-end">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-end items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
             {(['7d', '30d', '90d', '1y', 'all'] as TimeRange[]).map((range) => (
                 <Button key={range} variant={timeRange === range ? 'default' : 'outline'} size="sm" onClick={() => setTimeRange(range)}>
                     {range.toUpperCase()}
@@ -73,7 +73,7 @@ export default function AnalyticsClient() {
             ))}
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>

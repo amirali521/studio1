@@ -49,7 +49,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                 <TableRow>
                   <TableHead>Date</TableHead>
                   <TableHead>Items Sold</TableHead>
-                  <TableHead>Profit</TableHead>
+                  <TableHead className="hidden sm:table-cell">Profit</TableHead>
                   <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -69,16 +69,16 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                           <Badge 
                             key={index} 
                             variant={item.status === 'returned' ? 'destructive' : 'secondary'} 
-                            className="font-normal"
+                            className="font-normal whitespace-nowrap"
                           >
                              {item.productName} {item.status === 'returned' && '(Returned)'}
                           </Badge>
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-green-600">{sale.profit.toFixed(2)}</TableCell>
+                    <TableCell className="font-mono text-green-600 hidden sm:table-cell">{formatCurrency(sale.profit, currency)}</TableCell>
                     <TableCell className="text-right font-mono">
-                      {sale.total.toFixed(2)}
+                      {formatCurrency(sale.total, currency)}
                     </TableCell>
                     <TableCell className="text-right">
                        <InvoiceDialog sale={sale}>

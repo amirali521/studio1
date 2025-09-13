@@ -262,9 +262,9 @@ export default function SalesClient() {
 
   return (
     <>
-    <main className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-4 sm:p-6">
+    <main className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 sm:p-6">
       {/* Current Sale Section */}
-      <div className="lg:col-span-2">
+      <div className="md:col-span-2">
         <Card>
           <CardContent className="p-4 space-y-4">
              <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function SalesClient() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Product</TableHead>
-                    <TableHead>Serial Number</TableHead>
+                    <TableHead className="hidden sm:table-cell">Serial Number</TableHead>
                     <TableHead className="text-right">Price</TableHead>
                     <TableHead className="w-[50px] text-right">Action</TableHead>
                   </TableRow>
@@ -300,8 +300,11 @@ export default function SalesClient() {
                   {currentSaleItems.length > 0 ? (
                     currentSaleItems.map((item) => (
                       <TableRow key={item.serialNumber}>
-                        <TableCell>{item.productName}</TableCell>
-                        <TableCell className="font-mono text-xs">{item.serialNumber}</TableCell>
+                        <TableCell>
+                          <div>{item.productName}</div>
+                          <div className="font-mono text-xs text-muted-foreground sm:hidden">{item.serialNumber}</div>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs hidden sm:table-cell">{item.serialNumber}</TableCell>
                         <TableCell className="text-right">{formatCurrency(item.price, currency)}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.serialNumber)}>
@@ -345,7 +348,7 @@ export default function SalesClient() {
       </div>
 
       {/* Actions and Total Section */}
-      <div className="lg:col-span-1">
+      <div className="md:col-span-1">
         <Card>
             <CardContent className="p-4 space-y-4">
                  <div className="flex justify-between items-center text-3xl font-bold pt-4">
@@ -410,5 +413,3 @@ export default function SalesClient() {
     </>
   );
 }
-
-    

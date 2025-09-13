@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export default function SalesHistoryDialog({ sales }: SalesHistoryDialogProps) {
             View Sales History
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="w-full max-w-sm sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="font-headline">Sales History</DialogTitle>
         </DialogHeader>

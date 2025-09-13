@@ -111,7 +111,7 @@ export default function BarcodeClient() {
   return (
     <main className="flex-1 p-4 sm:p-6">
       <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 justify-between items-end print:hidden">
-        <div className="w-full">
+        <div className="lg:col-span-1 w-full">
           <Label htmlFor="product-select">Select Product</Label>
           <Select
             value={selectedProductId}
@@ -129,7 +129,7 @@ export default function BarcodeClient() {
             </SelectContent>
           </Select>
         </div>
-        <div className="w-full">
+        <div className="lg:col-span-1 w-full">
           <Label htmlFor="search-serial">Search Serial Number</Label>
           <Input
             id="search-serial"
@@ -139,7 +139,7 @@ export default function BarcodeClient() {
             disabled={!selectedProductId}
           />
         </div>
-        <div className="w-full">
+        <div className="lg:col-span-1 w-full">
            <Label htmlFor="size-slider">QR Code Size</Label>
            <Slider
             id="size-slider"
@@ -151,7 +151,7 @@ export default function BarcodeClient() {
             disabled={itemsToDisplay.length === 0}
           />
         </div>
-        <div className="w-full">
+        <div className="lg:col-span-1 w-full">
             <Label htmlFor="format-select">Download Format</Label>
             <Select value={downloadFormat} onValueChange={(val) => setDownloadFormat(val as DownloadFormat)}>
                 <SelectTrigger id="format-select">
@@ -164,12 +164,12 @@ export default function BarcodeClient() {
                 </SelectContent>
             </Select>
         </div>
-        <div className="flex gap-2 self-end">
-             <Button variant="outline" onClick={handleDownloadAll} disabled={itemsToDisplay.length === 0 || isDownloading}>
+        <div className="flex gap-2 self-end w-full lg:col-span-1">
+             <Button className="w-full" variant="outline" onClick={handleDownloadAll} disabled={itemsToDisplay.length === 0 || isDownloading}>
                 {isDownloading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
                 Download All
             </Button>
-            <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
+            <Button className="w-full" onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
                 <Printer className="mr-2"/>
                 Print
             </Button>
@@ -178,7 +178,7 @@ export default function BarcodeClient() {
 
       {selectedProductId ? (
         itemsToDisplay.length > 0 && selectedProduct && user ? (
-           <div id="qr-code-grid" className="flex flex-wrap gap-4 justify-center">
+           <div id="qr-code-grid" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {itemsToDisplay.map((item) => (
               <BarcodeDisplay 
                 key={item.id} 

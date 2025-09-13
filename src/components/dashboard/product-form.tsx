@@ -187,7 +187,7 @@ export default function ProductForm({
             )}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="purchasePrice"
@@ -216,7 +216,7 @@ export default function ProductForm({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="quantity"
@@ -266,19 +266,19 @@ export default function ProductForm({
           
           <div className="space-y-4">
               {fields.map((field, index) => (
-                  <div key={field.id} className="flex items-center gap-2">
+                  <div key={field.id} className="flex items-start sm:items-center gap-2 flex-col sm:flex-row">
                       <FormField
                           control={form.control}
                           name={`customFields.${index}.key`}
                           render={({ field }) => (
-                            <Input {...field} placeholder="Field Name" className="w-1/3"/>
+                            <Input {...field} placeholder="Field Name" className="w-full sm:w-1/3"/>
                           )}
                       />
                       <FormField
                           control={form.control}
                           name={`customFields.${index}.value`}
                           render={({ field }) => (
-                            <Input {...field} placeholder="Field Value" className="w-2/3"/>
+                            <Input {...field} placeholder="Field Value" className="w-full sm:w-2/3"/>
                           )}
                       />
                       <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
