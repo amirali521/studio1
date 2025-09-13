@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { BrowserQRCodeReader, NotFoundException } from '@zxing/library';
@@ -155,6 +155,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0">
+        <DialogTitle className="sr-only">Camera QR Code Scanner</DialogTitle>
         <div className="relative w-full h-full">
             <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
 
@@ -251,3 +252,5 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     </Dialog>
   );
 }
+
+    
