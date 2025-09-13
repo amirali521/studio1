@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BrowserQRCodeReader, NotFoundException } from '@zxing/library';
+import { BrowserQRCodeReader } from '@zxing/library';
 import type { Product, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { User } from "firebase/auth";
 import { X, Zap, ZapOff, CheckCircle2, XCircle, Trash2, Image as ImageIcon } from "lucide-react";
