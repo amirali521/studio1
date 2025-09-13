@@ -144,8 +144,8 @@ export default function ReturnCameraScannerDialog({ isOpen, onClose, onScan }: R
                     <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
-                    {/* Scanning line animation */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-green-400/80 rounded-full animate-scan"></div>
+                    {/* Scanning line (no animation) */}
+                     <div className="absolute top-1/2 left-0 right-0 h-1 bg-green-400/80 rounded-full"></div>
                 </div>
                 <p className="mt-4 text-center">Scan a single item for return.</p>
                 <div className="mt-2 px-4 py-1 bg-black/30 rounded-full">
@@ -190,21 +190,6 @@ export default function ReturnCameraScannerDialog({ isOpen, onClose, onScan }: R
               </div>
           )}
         </div>
-         <style jsx global>{`
-            @keyframes scan {
-                0% { transform: translateY(0); }
-                100% { transform: translateY(calc(60vw - 4px)); }
-            }
-            @media (min-width: 680px) { /* approx 400px scan box width */
-                 @keyframes scan {
-                    0% { transform: translateY(0); }
-                    100% { transform: translateY(calc(400px - 4px)); }
-                }
-            }
-            .animate-scan {
-                animation: scan 2s linear infinite alternate;
-            }
-        `}</style>
       </DialogContent>
     </Dialog>
   );
