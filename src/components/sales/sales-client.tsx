@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { Trash2, XCircle, Loader2, Printer } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Trash2, XCircle, Loader2, Printer, Camera } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
 import PosBarcodeScanner from "./pos-barcode-scanner";
+import CameraScannerDialog from "./camera-scanner-dialog";
 
 
 export default function SalesClient() {
@@ -30,6 +31,7 @@ export default function SalesClient() {
   const [scannedValue, setScannedValue] = useState("");
   const [currentSaleItems, setCurrentSaleItems] = useState<SaleItem[]>([]);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const { toast } = useToast();
   const { currency } = useCurrency();
@@ -128,6 +130,46 @@ export default function SalesClient() {
     return true;
   };
 
+  const handleBulkScan = (scannedItems: QrCodeData[]) => {
+    const newSaleItems: SaleItem[] = [];
+    scannedItems.forEach(scannedItem => {
+
+        if (currentSaleItems.some(saleItem => saleItem.serialNumber === scannedItem.serialNumber)) {
+            return; // Skip already scanned items
+        }
+
+        const product = products.find(p => p.id === scannedItem.id);
+        if(!product) return;
+
+        const discountAmount = product.price * ((product.discount || 0) / 100);
+        const priceAfterDiscount = product.price - discountAmount;
+        const taxAmount = priceAfterDiscount * ((product.tax || 0) / 100);
+
+        const newSaleItem: SaleItem = {
+            serializedProductId: serializedItems.find(si => si.serialNumber === scannedItem.serialNumber)?.id || '',
+            productName: product.name,
+            serialNumber: scannedItem.serialNumber,
+            price: product.price,
+            purchasePrice: product.purchasePrice,
+            discount: discountAmount,
+            tax: taxAmount,
+            status: 'sold'
+        };
+        newSaleItems.push(newSaleItem);
+    });
+
+    if(newSaleItems.length > 0) {
+        setCurrentSaleItems(prev => [...prev, ...newSaleItems]);
+        toast({
+            title: `${newSaleItems.length} Item(s) Added`,
+            description: `The scanned items have been added to the sale.`,
+        });
+        const audio = new Audio('/scan-success.mp3');
+        audio.play();
+    }
+  };
+
+
   const handleRemoveItem = (serialNumber: string) => {
     setCurrentSaleItems(prev => prev.filter(item => item.serialNumber !== serialNumber));
   };
@@ -166,7 +208,6 @@ export default function SalesClient() {
       tax: totalTax,
       total,
       profit: totalProfit,
-      createdAt: new Date().toISOString()
     };
 
     const soldItemUpdates = currentSaleItems.map(item => ({
@@ -178,17 +219,18 @@ export default function SalesClient() {
         await updateSerializedItems(soldItemUpdates);
         const saleDocRef = await addSale(newSaleData);
         
+        const finalSale: Sale = { 
+          id: saleDocRef.id,
+          ...newSaleData, 
+        };
+        setLastSale(finalSale);
+        handleClearSale();
+
         toast({
           title: "Sale Recorded",
           description: `Sale of ${currentSaleItems.length} item(s) for ${formatCurrency(total, currency)} has been recorded.`,
         });
 
-        const finalSale: Sale = { 
-          ...newSaleData, 
-          id: saleDocRef.id, 
-        };
-        setLastSale(finalSale);
-        handleClearSale();
     } catch (error) {
         console.error("Error finalizing sale:", error);
         toast({
@@ -242,7 +284,10 @@ export default function SalesClient() {
                 </Button>
             </div>
 
-            <PosBarcodeScanner onScan={handleScan} />
+            <Button className="w-full" variant="outline" onClick={() => setIsScannerOpen(true)}>
+                <Camera className="mr-2"/>
+                Scan with Camera
+            </Button>
 
             <div className="min-h-[300px] border rounded-lg overflow-hidden">
               <Table>
@@ -357,6 +402,14 @@ export default function SalesClient() {
         </Card>
       </div>
     </main>
+    <CameraScannerDialog 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScan={handleBulkScan}
+        products={products}
+        serializedItems={serializedItems}
+        user={user}
+    />
     </>
   );
 }
