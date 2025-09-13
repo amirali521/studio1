@@ -43,9 +43,8 @@ export interface Sale {
   createdAt?: string; // Optional for backwards compatibility, but new sales will have it
 }
 
-export interface QrCodeData extends Product {
+export interface QrCodeData {
   serialNumber: string;
-  productName: string;
   uid: string;
 }
     

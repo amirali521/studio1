@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 interface CameraScannerDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onScan: (items: QrCodeData[]) => void;
+  onScan: (items: (Omit<Product, 'id'> & { serialNumber: string })[]) => void;
   products: Product[];
   serializedItems: SerializedProductItem[];
   user: User | null;
@@ -23,7 +23,7 @@ interface CameraScannerDialogProps {
 export default function CameraScannerDialog({ isOpen, onClose, onScan, products, serializedItems, user }: CameraScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [scannedItems, setScannedItems] = useState<QrCodeData[]>([]);
+  const [scannedItems, setScannedItems] = useState<(Omit<Product, 'id'> & { serialNumber: string })[]>([]);
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const codeReader = useRef(new BrowserQRCodeReader());
@@ -96,7 +96,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   };
 
   const handleDecode = (text: string) => {
-    let scannedData: Partial<QrCodeData> = {};
+    let scannedData: { serialNumber: string, uid: string };
     try {
         scannedData = JSON.parse(text);
     } catch (e) {
@@ -104,12 +104,17 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         return;
     }
     
+    if (!scannedData.serialNumber || !scannedData.uid) {
+         setLastScanResult({ success: false, message: "Invalid QR data." });
+         return;
+    }
+    
     // Prevent multiple scans of the same code
-    if (scannedItems.some(item => scannedData.serialNumber && item.serialNumber === scannedData.serialNumber)) {
+    if (scannedItems.some(item => item.serialNumber === scannedData.serialNumber)) {
         return;
     }
 
-    if (scannedData.uid && user && scannedData.uid !== user.uid) {
+    if (user && scannedData.uid !== user.uid) {
         setLastScanResult({ success: false, message: "Item belongs to another user." });
         return;
     }
@@ -126,11 +131,11 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         return;
     }
     
-    const fullScannedItem : QrCodeData = {
-        ...product,
+    const { id, ...productData } = product;
+
+    const fullScannedItem = {
+        ...productData,
         serialNumber: itemInStock.serialNumber,
-        productName: product.name,
-        uid: user?.uid || ''
     };
 
     setScannedItems(prev => [...prev, fullScannedItem]);
@@ -194,8 +199,6 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
                     <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
-                    {/* Scanning line (no animation) */}
-                    <div className="absolute top-1/2 left-0 right-0 h-1 bg-green-400/80 rounded-full"></div>
                 </div>
                 <p className="mt-4 text-center">Align QR Code within frame to scan.</p>
                 <div className="mt-2 px-4 py-1 bg-black/30 rounded-full">
@@ -229,7 +232,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
                      {scannedItems.length > 0 ? scannedItems.map(item => (
                         <div key={item.serialNumber} className="flex justify-between items-center bg-secondary p-2 rounded-md">
                             <div>
-                                <p className="text-sm font-medium">{item.productName}</p>
+                                <p className="text-sm font-medium">{item.name}</p>
                                 <p className="text-xs text-muted-foreground font-mono">{item.serialNumber}</p>
                             </div>
                             <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.serialNumber)}>

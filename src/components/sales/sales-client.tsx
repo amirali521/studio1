@@ -4,7 +4,7 @@
 import { useState, useMemo } from "react";
 import { Trash2, XCircle, Loader2, Printer, Camera } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
+import type { Sale, Product, SerializedProductItem, SaleItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from "uuid";
@@ -39,11 +39,22 @@ export default function SalesClient() {
   const handleScan = (scannedValue: string): boolean => {
     if (!scannedValue) return false;
 
-    let scannedData: Partial<QrCodeData> = {};
+    let scannedData: { serialNumber: string, uid: string };
     try {
         scannedData = JSON.parse(scannedValue);
     } catch(e) {
-        scannedData = { serialNumber: scannedValue };
+        // Fallback for non-JSON serial numbers
+        scannedData = { serialNumber: scannedValue, uid: '' };
+    }
+    
+    if (!scannedData.serialNumber) {
+        toast({
+            variant: "destructive",
+            title: "Scan Error",
+            description: "QR Code does not contain a serial number.",
+        });
+        setScannedValue("");
+        return false;
     }
 
     if (scannedData.uid && user && scannedData.uid !== user.uid) {
@@ -55,17 +66,6 @@ export default function SalesClient() {
         setScannedValue("");
         return false;
     }
-    
-    if (!scannedData.serialNumber) {
-         toast({
-            variant: "destructive",
-            title: "Invalid QR Code",
-            description: "The scanned QR code does not contain a valid serial number.",
-        });
-        setScannedValue("");
-        return false;
-    }
-
 
     const item = serializedItems.find(
       (i) => i.serialNumber === scannedData.serialNumber && i.status === 'in_stock'
@@ -126,7 +126,7 @@ export default function SalesClient() {
     return true;
   };
 
-  const handleBulkScan = (scannedItems: QrCodeData[]) => {
+  const handleBulkScan = (scannedItems: (Omit<Product, 'id'> & { serialNumber: string })[]) => {
     const newSaleItems: SaleItem[] = [];
     scannedItems.forEach(scannedItem => {
 
@@ -134,19 +134,19 @@ export default function SalesClient() {
             return; // Skip already scanned items
         }
 
-        const product = products.find(p => p.id === scannedItem.id);
-        if(!product) return;
-
-        const discountAmount = product.price * ((product.discount || 0) / 100);
-        const priceAfterDiscount = product.price - discountAmount;
-        const taxAmount = priceAfterDiscount * ((product.tax || 0) / 100);
+        const serializedItem = serializedItems.find(si => si.serialNumber === scannedItem.serialNumber);
+        if(!serializedItem) return;
+        
+        const discountAmount = scannedItem.price * ((scannedItem.discount || 0) / 100);
+        const priceAfterDiscount = scannedItem.price - discountAmount;
+        const taxAmount = priceAfterDiscount * ((scannedItem.tax || 0) / 100);
 
         const newSaleItem: SaleItem = {
-            serializedProductId: serializedItems.find(si => si.serialNumber === scannedItem.serialNumber)?.id || '',
-            productName: product.name,
+            serializedProductId: serializedItem.id,
+            productName: scannedItem.name,
             serialNumber: scannedItem.serialNumber,
-            price: product.price,
-            purchasePrice: product.purchasePrice,
+            price: scannedItem.price,
+            purchasePrice: scannedItem.purchasePrice,
             discount: discountAmount,
             tax: taxAmount,
             status: 'sold'

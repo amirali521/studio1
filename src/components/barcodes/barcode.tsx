@@ -3,11 +3,14 @@
 
 import { useMemo } from 'react';
 import QRCode from 'qrcode';
-import type { QrCodeData } from '@/lib/types';
 
+interface SimpleQrCodeData {
+    serialNumber: string;
+    uid: string;
+}
 
 interface BarcodeDisplayProps {
-    item: Omit<QrCodeData, 'id' | 'createdAt'>;
+    item: SimpleQrCodeData;
     size?: number;
 }
 

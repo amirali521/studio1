@@ -21,8 +21,10 @@ import Link from "next/link";
 import { Slider } from "@/components/ui/slider";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useAuth } from "@/contexts/auth-context";
 
 export default function BarcodeClient() {
+  const { user } = useAuth();
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -93,7 +95,7 @@ export default function BarcodeClient() {
     }
   };
 
-  const loading = productsLoading || itemsLoading;
+  const loading = productsLoading || itemsLoading || !user;
 
   if (loading) {
     return (
@@ -173,15 +175,14 @@ export default function BarcodeClient() {
       </div>
 
       {selectedProductId ? (
-        itemsToDisplay.length > 0 && selectedProduct ? (
+        itemsToDisplay.length > 0 && selectedProduct && user ? (
            <div id="qr-code-grid" className="flex flex-wrap gap-4 justify-center">
             {itemsToDisplay.map((item) => (
               <BarcodeDisplay 
                 key={item.id} 
                 item={{
-                  ...selectedProduct,
                   serialNumber: item.serialNumber,
-                  productName: selectedProduct.name,
+                  uid: user.uid,
                 }}
                 size={qrSize}
               />
