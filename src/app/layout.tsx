@@ -42,8 +42,12 @@ export default function RootLayout({
           <ShopSettingsProvider>
             <CurrencyProvider>
               <SidebarProvider>
-                <AppSidebar />
-                <SidebarInset>{children}</SidebarInset>
+                <div className="flex">
+                  <AppSidebar />
+                  <div className="flex-1">
+                    {children}
+                  </div>
+                </div>
                 <Toaster />
               </SidebarProvider>
             </CurrencyProvider>

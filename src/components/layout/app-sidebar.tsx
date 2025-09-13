@@ -25,12 +25,14 @@ const navItems = [
   { href: "/settings", icon: Settings, label: "Settings"},
 ];
 
+const protectedPages = navItems.map(item => item.href);
+
 export default function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const { setOpenMobile } = useSidebar();
   
-  if (!user) {
+  if (!user || !protectedPages.some(p => pathname.startsWith(p))) {
     return null;
   }
   

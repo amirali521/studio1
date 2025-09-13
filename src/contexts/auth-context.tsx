@@ -15,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
 
 const PROTECTED_ROUTES = ['/dashboard', '/sales', '/analytics', '/barcodes', '/products', '/returns', '/settings'];
-const PUBLIC_ROUTES = ['/login', '/signup', '/forgot-password'];
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/forgot-password'];
 const VERIFICATION_ROUTE = '/email-verification';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
