@@ -34,11 +34,8 @@ export default function LandingPage() {
           <Logo />
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Button variant="ghost" asChild>
-            <Link href="/login">Sign In</Link>
-          </Button>
           <Button asChild>
-            <Link href="/signup">Get Started</Link>
+            <Link href="/login">Sign In</Link>
           </Button>
         </nav>
       </header>
