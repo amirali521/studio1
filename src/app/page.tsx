@@ -61,12 +61,12 @@ export default function LandingPage() {
               </div>
               <div className="flex justify-center">
                  <Image
-                    src="https://picsum.photos/seed/promo/600/400"
+                    src="https://picsum.photos/seed/dashboard/600/400"
                     width="600"
                     height="400"
                     alt="App Screenshot"
                     className="rounded-xl shadow-2xl"
-                    data-ai-hint="app dashboard"
+                    data-ai-hint="app dashboard analytics"
                   />
               </div>
             </div>
