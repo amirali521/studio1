@@ -5,11 +5,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart, LayoutGrid, QrCode, ShoppingCart } from "lucide-react";
 import { Logo } from "@/components/logo";
-import Image from "next/image";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
+import LandingHero from "@/components/landing-hero";
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -59,15 +59,8 @@ export default function LandingPage() {
                   </Button>
                 </div>
               </div>
-              <div className="flex justify-center">
-                 <Image
-                    src="https://picsum.photos/seed/dashboard/600/400"
-                    width="600"
-                    height="400"
-                    alt="App Screenshot"
-                    className="rounded-xl shadow-2xl"
-                    data-ai-hint="app dashboard analytics"
-                  />
+              <div className="flex justify-center items-center">
+                 <LandingHero className="w-full h-auto max-w-lg rounded-xl shadow-2xl" />
               </div>
             </div>
           </div>
