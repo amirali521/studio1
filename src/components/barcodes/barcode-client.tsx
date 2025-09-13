@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { BarcodeDisplay } from "./barcode";
+import { BarcodeDisplay, type DownloadFormat } from "./barcode";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { Loader2, Printer, Download, Check } from "lucide-react";
 import Link from "next/link";
@@ -30,6 +30,7 @@ export default function BarcodeClient() {
   const [qrSize, setQrSize] = useState(150);
   const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
+  const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('svg');
 
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId),
@@ -56,19 +57,6 @@ export default function BarcodeClient() {
     }
     window.print();
   };
-
-  const downloadSvg = (svgEl: SVGElement, name: string) => {
-    const svgData = new XMLSerializer().serializeToString(svgEl);
-    const blob = new Blob([svgData], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${name}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
   
   const handleDownloadAll = async () => {
     if (itemsToDisplay.length === 0) {
@@ -82,22 +70,15 @@ export default function BarcodeClient() {
     
     setIsDownloading(true);
 
-    const qrGrid = document.getElementById('qr-code-grid');
-    if (qrGrid) {
-      const qrCodes = qrGrid.querySelectorAll('svg');
-      for (let i = 0; i < qrCodes.length; i++) {
-        const svg = qrCodes[i];
-        const serial = itemsToDisplay[i]?.serialNumber || `qrcode-${i + 1}`;
-        const productName = selectedProduct?.name || 'product';
-        downloadSvg(svg, `${productName}-${serial}`);
-        // Add a small delay between downloads to prevent browser blocking
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+    const downloadButtons = document.querySelectorAll<HTMLButtonElement>('[data-download-button="true"]');
+    for (const btn of Array.from(downloadButtons)) {
+        btn.click();
+        await new Promise(resolve => setTimeout(resolve, 100)); // Stagger downloads
     }
 
     toast({
         title: "Downloads Started",
-        description: `${itemsToDisplay.length} QR codes are being downloaded.`,
+        description: `${itemsToDisplay.length} QR codes are being downloaded as ${downloadFormat.toUpperCase()} files.`,
     });
     
     setIsDownloading(false);
@@ -129,8 +110,8 @@ export default function BarcodeClient() {
 
   return (
     <main className="flex-1 p-4 sm:p-6">
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center print:hidden">
-        <div className="w-full sm:w-64">
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 justify-between items-end print:hidden">
+        <div className="w-full">
           <Label htmlFor="product-select">Select Product</Label>
           <Select
             value={selectedProductId}
@@ -148,7 +129,7 @@ export default function BarcodeClient() {
             </SelectContent>
           </Select>
         </div>
-        <div className="w-full sm:w-64">
+        <div className="w-full">
           <Label htmlFor="search-serial">Search Serial Number</Label>
           <Input
             id="search-serial"
@@ -158,7 +139,7 @@ export default function BarcodeClient() {
             disabled={!selectedProductId}
           />
         </div>
-        <div className="w-full sm:w-64">
+        <div className="w-full">
            <Label htmlFor="size-slider">QR Code Size</Label>
            <Slider
             id="size-slider"
@@ -170,6 +151,19 @@ export default function BarcodeClient() {
             disabled={itemsToDisplay.length === 0}
           />
         </div>
+        <div className="w-full">
+            <Label htmlFor="format-select">Download Format</Label>
+            <Select value={downloadFormat} onValueChange={(val) => setDownloadFormat(val as DownloadFormat)}>
+                <SelectTrigger id="format-select">
+                    <SelectValue placeholder="Select format" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="svg">SVG</SelectItem>
+                    <SelectItem value="png">PNG</SelectItem>
+                    <SelectItem value="jpg">JPG</SelectItem>
+                </SelectContent>
+            </Select>
+        </div>
         <div className="flex gap-2 self-end">
              <Button variant="outline" onClick={handleDownloadAll} disabled={itemsToDisplay.length === 0 || isDownloading}>
                 {isDownloading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
@@ -177,7 +171,7 @@ export default function BarcodeClient() {
             </Button>
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
                 <Printer className="mr-2"/>
-                Print QR Codes
+                Print
             </Button>
         </div>
       </div>
@@ -194,6 +188,7 @@ export default function BarcodeClient() {
                 }}
                 size={qrSize}
                 productName={selectedProduct.name}
+                downloadFormat={downloadFormat}
               />
             ))}
           </div>

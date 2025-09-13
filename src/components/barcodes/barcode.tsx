@@ -11,15 +11,18 @@ interface SimpleQrCodeData {
     uid: string;
 }
 
+export type DownloadFormat = 'svg' | 'png' | 'jpg';
+
 interface BarcodeDisplayProps {
     item: SimpleQrCodeData;
     size?: number;
     productName?: string;
+    downloadFormat?: DownloadFormat;
 }
 
-export function BarcodeDisplay({ item, size = 150, productName }: BarcodeDisplayProps) {
+export function BarcodeDisplay({ item, size = 150, productName, downloadFormat = 'svg' }: BarcodeDisplayProps) {
   const { serialNumber } = item;
-  const svgRef = useRef<HTMLDivElement>(null);
+  const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const qrCodeSvg = useMemo(() => {
     const qrData = JSON.stringify(item);
@@ -39,19 +42,47 @@ export function BarcodeDisplay({ item, size = 150, productName }: BarcodeDisplay
   }, [item]);
   
   const handleDownload = () => {
-    if (svgRef.current?.firstChild) {
-      const svgEl = svgRef.current.firstChild as SVGElement;
-      const svgData = new XMLSerializer().serializeToString(svgEl);
-      const blob = new Blob([svgData], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(blob);
+    if (!svgContainerRef.current?.firstChild) return;
+
+    const svgEl = svgContainerRef.current.firstChild as SVGElement;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const filename = `${productName || 'qrcode'}-${serialNumber}`;
+
+    if (downloadFormat === 'svg') {
+        const blob = new Blob([svgData], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, `${filename}.svg`);
+        URL.revokeObjectURL(url);
+    } else {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const img = new Image();
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        img.onload = () => {
+            canvas.width = size;
+            canvas.height = size;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, size, size);
+            const dataUrl = canvas.toDataURL(`image/${downloadFormat}`);
+            triggerDownload(dataUrl, `${filename}.${downloadFormat}`);
+            URL.revokeObjectURL(url);
+        };
+        img.src = url;
+    }
+  };
+
+  const triggerDownload = (href: string, filename: string) => {
       const link = document.createElement("a");
-      link.href = url;
-      link.download = `${productName || 'qrcode'}-${serialNumber}.svg`;
+      link.href = href;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
   };
 
 
@@ -63,7 +94,7 @@ export function BarcodeDisplay({ item, size = 150, productName }: BarcodeDisplay
         {qrCodeSvg ? (
             <>
                 <div 
-                  ref={svgRef}
+                  ref={svgContainerRef}
                   style={{ width: `${size*0.8}px`, height: `${size*0.8}px` }}
                   className="w-full h-full"
                   dangerouslySetInnerHTML={{ __html: qrCodeSvg }} 
@@ -75,6 +106,7 @@ export function BarcodeDisplay({ item, size = 150, productName }: BarcodeDisplay
                         size="icon" 
                         className="h-7 w-7 shrink-0 print:hidden"
                         onClick={handleDownload}
+                        data-download-button="true"
                     >
                         <Download className="w-4 h-4"/>
                     </Button>
