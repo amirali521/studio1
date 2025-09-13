@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, XCircle, Scan, Trash2 } from "lucide-react";
-import { BrowserMultiFormatReader, NotFoundException, ChecksumException, FormatException } from '@zxing/library';
+import { BrowserQRCodeReader, NotFoundException } from '@zxing/library';
 import type { Product, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { User } from "firebase/auth";
 
@@ -25,7 +25,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   const [scannedItems, setScannedItems] = useState<QrCodeData[]>([]);
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const codeReader = useRef(new BrowserMultiFormatReader());
+  const codeReader = useRef(new BrowserQRCodeReader());
 
   useEffect(() => {
     if (!isOpen) {
@@ -189,3 +189,4 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   );
 }
 
+    
