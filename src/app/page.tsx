@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -42,26 +44,24 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         <section className="w-full pt-24 md:pt-32 lg:pt-40 border-y bg-primary/5">
-          <div className="px-4 md:px-6 space-y-10 xl:space-y-16">
-            <div className="grid max-w-[1300px] mx-auto gap-4 px-4 sm:px-6 md:px-10 md:grid-cols-2 md:gap-16">
-              <div>
-                <h1 className="lg:leading-tighter text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-[3.4rem] 2xl:text-[3.75rem] font-headline">
-                  The Modern Solution for Inventory Management
-                </h1>
-                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl mt-4">
-                  Stockpile Scan combines powerful inventory tracking, a simple point-of-sale system, and insightful analytics. All powered by your device's camera.
-                </p>
-                <div className="space-x-4 mt-6">
-                  <Button asChild size="lg">
-                    <Link href="/signup">
-                      Get Started <ArrowRight className="ml-2" />
-                    </Link>
-                  </Button>
-                </div>
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center space-y-4 text-center">
+              <h1 className="lg:leading-tighter text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-[3.4rem] 2xl:text-[3.75rem] font-headline max-w-3xl">
+                The Modern Solution for Inventory Management
+              </h1>
+              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                Stockpile Scan combines powerful inventory tracking, a simple point-of-sale system, and insightful analytics. All powered by your device's camera.
+              </p>
+              <div className="space-x-4 pt-4">
+                <Button asChild size="lg">
+                  <Link href="/signup">
+                    Get Started <ArrowRight className="ml-2" />
+                  </Link>
+                </Button>
               </div>
-              <div className="flex justify-center items-center">
-                 <LandingHero className="w-full h-auto max-w-lg rounded-xl shadow-2xl" />
-              </div>
+            </div>
+            <div className="flex justify-center items-center mt-8">
+                 <LandingHero className="w-full h-auto max-w-2xl rounded-xl shadow-2xl" />
             </div>
           </div>
         </section>
@@ -76,52 +76,62 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid items-start gap-8 sm:max-w-4xl sm:grid-cols-2 md:gap-12 lg:max-w-5xl lg:grid-cols-3">
-              <div className="grid gap-1">
-                <div className="flex items-center gap-2">
-                    <LayoutGrid className="h-6 w-6 text-primary"/>
-                    <h3 className="text-lg font-bold">Inventory Management</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Easily add, edit, and track products. Generate unique QR codes for serialized items and always know your stock levels.
-                </p>
-              </div>
-              <div className="grid gap-1">
-                 <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-6 w-6 text-primary"/>
-                    <h3 className="text-lg font-bold">Point of Sale (POS)</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  A simple and fast POS system. Use your camera to scan items and finalize sales in seconds. Print receipts for your customers.
-                </p>
-              </div>
-              <div className="grid gap-1">
-                 <div className="flex items-center gap-2">
-                    <BarChart className="h-6 w-6 text-primary"/>
-                    <h3 className="text-lg font-bold">Sales Analytics</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Understand your business with powerful analytics. Track revenue, profit, and inventory value over time.
-                </p>
-              </div>
-               <div className="grid gap-1">
-                 <div className="flex items-center gap-2">
-                    <QrCode className="h-6 w-6 text-primary"/>
-                    <h3 className="text-lg font-bold">AI-Powered Scanning</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Prefill product details instantly by scanning a product's existing barcode using your device's camera.
-                </p>
-              </div>
-               <div className="grid gap-1">
-                 <div className="flex items-center gap-2">
-                    <QrCode className="h-6 w-6 text-primary"/>
-                    <h3 className="text-lg font-bold">QR Code Generation</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Generate and print unique QR codes for each item in your inventory for easy tracking and sales processing.
-                </p>
-              </div>
+            <div className="mx-auto grid items-stretch gap-8 sm:max-w-4xl sm:grid-cols-2 md:gap-12 lg:max-w-5xl lg:grid-cols-3">
+              <Card>
+                <CardHeader className="flex flex-row items-center gap-2">
+                    <LayoutGrid className="h-8 w-8 text-primary"/>
+                    <CardTitle>Inventory Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Easily add, edit, and track products. Generate unique QR codes for serialized items and always know your stock levels.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                 <CardHeader className="flex flex-row items-center gap-2">
+                    <ShoppingCart className="h-8 w-8 text-primary"/>
+                    <CardTitle>Point of Sale (POS)</CardTitle>
+                </CardHeader>
+                 <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      A simple and fast POS system. Use your camera to scan items and finalize sales in seconds. Print receipts for your customers.
+                    </p>
+                </CardContent>
+              </Card>
+              <Card>
+                 <CardHeader className="flex flex-row items-center gap-2">
+                    <BarChart className="h-8 w-8 text-primary"/>
+                    <CardTitle>Sales Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Understand your business with powerful analytics. Track revenue, profit, and inventory value over time.
+                    </p>
+                </CardContent>
+              </Card>
+               <Card>
+                 <CardHeader className="flex flex-row items-center gap-2">
+                    <QrCode className="h-8 w-8 text-primary"/>
+                    <CardTitle>AI-Powered Scanning</CardTitle>
+                </CardHeader>
+                 <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Prefill product details instantly by scanning a product's existing barcode using your device's camera.
+                    </p>
+                </CardContent>
+              </Card>
+               <Card>
+                 <CardHeader className="flex flex-row items-center gap-2">
+                    <QrCode className="h-8 w-8 text-primary"/>
+                    <CardTitle>QR Code Generation</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Generate and print unique QR codes for each item in your inventory for easy tracking and sales processing.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
