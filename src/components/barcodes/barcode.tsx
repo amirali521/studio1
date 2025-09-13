@@ -57,25 +57,28 @@ export function BarcodeDisplay({ item, size = 150, productName }: BarcodeDisplay
 
   return (
     <div 
-      className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid relative group"
-      style={{ width: `${size}px`, height: `${size}px` }}
+      className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid"
+      style={{ width: `${size}px` }}
     >
         {qrCodeSvg ? (
             <>
                 <div 
                   ref={svgRef}
+                  style={{ width: `${size*0.8}px`, height: `${size*0.8}px` }}
                   className="w-full h-full"
                   dangerouslySetInnerHTML={{ __html: qrCodeSvg }} 
                 />
-                <p className="text-xs mt-1 font-mono">{serialNumber}</p>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute top-1 right-1 h-7 w-7 transition-opacity print:hidden"
-                    onClick={handleDownload}
-                >
-                    <Download className="w-4 h-4"/>
-                </Button>
+                <div className="flex items-center justify-between w-full mt-2">
+                    <p className="text-xs font-mono truncate">{serialNumber}</p>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 shrink-0 print:hidden"
+                        onClick={handleDownload}
+                    >
+                        <Download className="w-4 h-4"/>
+                    </Button>
+                </div>
             </>
         ) : <p>Generating QR...</p>}
     </div>
