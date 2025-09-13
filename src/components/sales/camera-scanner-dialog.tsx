@@ -2,14 +2,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle2, XCircle, Scan, Trash2 } from "lucide-react";
 import { BrowserQRCodeReader, NotFoundException } from '@zxing/library';
 import type { Product, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { User } from "firebase/auth";
+import { X, Zap, ZapOff, CheckCircle2, XCircle, Trash2, Image as ImageIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CameraScannerDialogProps {
   isOpen: boolean;
@@ -26,15 +26,19 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const codeReader = useRef(new BrowserQRCodeReader());
+  const [isFlashOn, setIsFlashOn] = useState(false);
+  const [hasFlash, setHasFlash] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
-      // Stop scanning and release camera when dialog is closed
+      // Reset state when closing
       codeReader.current.reset();
       if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
+      setIsFlashOn(false);
+      setScannedItems([]);
       return;
     }
 
@@ -44,12 +48,17 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+
+          // Check for flash capability
+          const track = stream.getVideoTracks()[0];
+          const capabilities = track.getCapabilities();
+          if (capabilities.torch) {
+            setHasFlash(true);
+          }
+
           codeReader.current.decodeFromStream(stream, videoRef.current, (result, error) => {
             if (result) {
               handleDecode(result.getText());
-            }
-            if (error && !(error instanceof NotFoundException)) {
-                // This will catch more persistent errors, but we ignore NotFoundException as it's expected
             }
           });
         }
@@ -69,10 +78,25 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
       }
     };
   }, [isOpen]);
+  
+  const toggleFlash = async () => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const track = stream.getVideoTracks()[0];
+      try {
+        await track.applyConstraints({
+          advanced: [{ torch: !isFlashOn }],
+        });
+        setIsFlashOn(!isFlashOn);
+      } catch (err) {
+        console.error('Failed to toggle flash:', err);
+      }
+    }
+  };
 
   const handleDecode = (text: string) => {
-    // To prevent multiple scans of the same code in quick succession
-    if (scannedItems.some(item => item.serialNumber === JSON.parse(text)?.serialNumber)) {
+    // Prevent multiple scans of the same code
+    if (scannedItems.some(item => JSON.parse(text)?.serialNumber && item.serialNumber === JSON.parse(text)?.serialNumber)) {
         return;
     }
     
@@ -118,7 +142,6 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
 
   const handleDone = () => {
     onScan(scannedItems);
-    setScannedItems([]);
     onClose();
   };
 
@@ -131,62 +154,100 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>Scan Products</DialogTitle>
-        </DialogHeader>
-        <div className="relative aspect-video bg-black">
-          <video ref={videoRef} className="w-full h-full" autoPlay muted playsInline />
-          {hasCameraPermission === false && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+      <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0">
+        <div className="relative w-full h-full">
+            <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                <div className="relative w-[60vw] max-w-[400px] aspect-square">
+                    {/* Corner brackets */}
+                    <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
+                    <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
+                    <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
+                    <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
+                    {/* Scanning line animation */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-green-400/80 rounded-full animate-scan"></div>
+                </div>
+                <p className="mt-4 text-center">Align QR Code within frame to scan.</p>
+                <div className="mt-2 px-4 py-1 bg-black/30 rounded-full">
+                    <span className="text-sm font-medium">QR CODE</span>
+                </div>
+            </div>
+
+            {/* Top controls */}
+            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                    <ImageIcon className="h-6 w-6" />
+                </Button>
+                <div>
+                  {hasFlash && (
+                    <Button variant="ghost" size="icon" onClick={toggleFlash} className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                      {isFlashOn ? <ZapOff className="h-6 w-6" /> : <Zap className="h-6 w-6" />}
+                    </Button>
+                  )}
+                   <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                    <X className="h-6 w-6" />
+                  </Button>
+                </div>
+            </div>
+            
+             {/* Bottom Sheet for Scanned Items */}
+             <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md rounded-t-2xl p-4 max-h-[40vh] flex flex-col">
+                <h3 className="font-bold text-lg text-center mb-2">Scanned Items ({scannedItems.length})</h3>
+                <div className="flex-1 overflow-y-auto space-y-2">
+                     {scannedItems.length > 0 ? scannedItems.map(item => (
+                        <div key={item.serialNumber} className="flex justify-between items-center bg-secondary p-2 rounded-md">
+                            <div>
+                                <p className="text-sm font-medium">{item.productName}</p>
+                                <p className="text-xs text-muted-foreground font-mono">{item.serialNumber}</p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.serialNumber)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                        </div>
+                    )) : (
+                        <p className="text-sm text-muted-foreground text-center py-4">Scan an item to begin.</p>
+                    )}
+                </div>
+                <Button onClick={handleDone} disabled={scannedItems.length === 0} className="mt-4">
+                    Done Scanning
+                </Button>
+            </div>
+            
+            {/* Feedback Overlay */}
+            {lastScanResult && (
+                 <div className={cn("absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300", 
+                    lastScanResult.success ? 'bg-green-500/80' : 'bg-red-500/80'
+                 )}>
+                    {lastScanResult.success ? <CheckCircle2 className="h-16 w-16 text-white" /> : <XCircle className="h-16 w-16 text-white" />}
+                    <p className="mt-4 text-lg font-bold text-white text-center">{lastScanResult.message}</p>
+                </div>
+            )}
+             {hasCameraPermission === false && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/80">
                   <Alert variant="destructive" className="m-4">
                       <AlertTitle>Camera Access Denied</AlertTitle>
                       <AlertDescription>Please enable camera permissions in your browser settings to use the scanner.</AlertDescription>
                   </Alert>
               </div>
           )}
-          {lastScanResult && (
-            <div className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-300 ${lastScanResult.success ? 'bg-green-500/80' : 'bg-red-500/80'}`}>
-                {lastScanResult.success ? <CheckCircle2 className="h-16 w-16 text-white" /> : <XCircle className="h-16 w-16 text-white" />}
-                <p className="mt-4 text-lg font-bold text-white text-center">{lastScanResult.message}</p>
-            </div>
-          )}
-           <div className="absolute top-2 left-2 right-2 flex justify-center">
-             <div className="relative w-3/4 h-24 border-4 border-dashed border-white/50 rounded-lg">
-                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
-                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg"></div>
-             </div>
-           </div>
         </div>
-        <div className="p-6 pt-0 space-y-4">
-            <h3 className="font-medium">Scanned Items ({scannedItems.length})</h3>
-            <div className="max-h-32 overflow-y-auto space-y-2 rounded-md border p-2">
-                {scannedItems.length > 0 ? scannedItems.map(item => (
-                    <div key={item.serialNumber} className="flex justify-between items-center bg-secondary p-2 rounded-md">
-                        <div>
-                            <p className="text-sm font-medium">{item.productName}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{item.serialNumber}</p>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.serialNumber)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                    </div>
-                )) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">No items scanned yet.</p>
-                )}
-            </div>
-        </div>
-        <DialogFooter className="p-6 pt-0">
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleDone} disabled={scannedItems.length === 0}>
-            Done Scanning
-          </Button>
-        </DialogFooter>
+         <style jsx global>{`
+            @keyframes scan {
+                0% { transform: translateY(0); }
+                100% { transform: translateY(calc(60vw - 4px)); }
+            }
+            @media (min-width: 680px) { /* approx 400px scan box width */
+                 @keyframes scan {
+                    0% { transform: translateY(0); }
+                    100% { transform: translateY(calc(400px - 4px)); }
+                }
+            }
+            .animate-scan {
+                animation: scan 2s linear infinite alternate;
+            }
+        `}</style>
       </DialogContent>
     </Dialog>
   );
 }
-
-    
