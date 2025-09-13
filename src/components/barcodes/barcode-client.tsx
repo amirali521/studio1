@@ -16,9 +16,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeDisplay } from "./barcode";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { Loader2 } from "lucide-react";
+import { Loader2, Printer, Download } from "lucide-react";
 import Link from "next/link";
 import { Slider } from "@/components/ui/slider";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export default function BarcodeClient() {
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
@@ -52,6 +54,43 @@ export default function BarcodeClient() {
       return;
     }
     window.print();
+  };
+
+  const handleDownload = () => {
+     if (itemsToDisplay.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No codes to download",
+        description: "Please select a product with stock available.",
+      });
+      return;
+    }
+    
+    const input = document.getElementById('qr-code-grid');
+    if (input) {
+      html2canvas(input, {
+        useCORS: true,
+        scale: 2, // Higher scale for better quality
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'px',
+          format: 'a4'
+        });
+        
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const ratio = canvasWidth / canvasHeight;
+        const width = pdfWidth;
+        const height = width / ratio;
+
+        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.save(`${selectedProduct?.name || 'qrcodes'}-download.pdf`);
+      });
+    }
   };
 
   const loading = productsLoading || itemsLoading;
@@ -121,8 +160,13 @@ export default function BarcodeClient() {
             disabled={itemsToDisplay.length === 0}
           />
         </div>
-        <div className="self-end">
+        <div className="flex gap-2 self-end">
+             <Button variant="outline" onClick={handleDownload} disabled={itemsToDisplay.length === 0}>
+                <Download className="mr-2"/>
+                Download as PDF
+            </Button>
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
+                <Printer className="mr-2"/>
                 Print QR Codes
             </Button>
         </div>
@@ -130,7 +174,7 @@ export default function BarcodeClient() {
 
       {selectedProductId ? (
         itemsToDisplay.length > 0 && selectedProduct ? (
-           <div className="flex flex-wrap gap-4 justify-center">
+           <div id="qr-code-grid" className="flex flex-wrap gap-4 justify-center">
             {itemsToDisplay.map((item) => (
               <BarcodeDisplay 
                 key={item.id} 
@@ -160,10 +204,10 @@ export default function BarcodeClient() {
           body * {
             visibility: hidden;
           }
-          main, main * {
+          #qr-code-grid, #qr-code-grid * {
             visibility: visible;
           }
-          main {
+          #qr-code-grid {
             position: absolute;
             left: 0;
             top: 0;
