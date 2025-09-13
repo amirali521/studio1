@@ -22,6 +22,7 @@ interface CameraScannerDialogProps {
 
 export default function CameraScannerDialog({ isOpen, onClose, onScan, products, serializedItems, user }: CameraScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [scannedItems, setScannedItems] = useState<QrCodeData[]>([]);
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
@@ -136,6 +137,26 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     setLastScanResult({ success: true, message: `${product.name} added!` });
   };
   
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      if (e.target?.result) {
+        try {
+          const result = await codeReader.current.decodeFromImageUrl(e.target.result as string);
+          handleDecode(result.getText());
+        } catch (error) {
+          setLastScanResult({ success: false, message: 'No QR code found in image.' });
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+    // Reset file input to allow scanning the same file again
+    event.target.value = '';
+  };
+  
   const handleRemoveItem = (serialNumber: string) => {
       setScannedItems(prev => prev.filter(item => item.serialNumber !== serialNumber));
   }
@@ -156,6 +177,13 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0">
         <DialogTitle className="sr-only">Camera QR Code Scanner</DialogTitle>
+         <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
         <div className="relative w-full h-full">
             <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
 
@@ -177,7 +205,11 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
 
             {/* Top controls */}
             <div className="absolute top-0 left-0 right-0 p-4 flex justify-between">
-                <div></div>
+                <div>
+                  <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                    <ImageIcon className="h-6 w-6" />
+                  </Button>
+                </div>
                 <div>
                   {hasFlash && (
                     <Button variant="ghost" size="icon" onClick={toggleFlash} className="text-white hover:bg-white/10 hover:text-white rounded-full">

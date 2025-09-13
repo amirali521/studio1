@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BrowserQRCodeReader, NotFoundException } from '@zxing/library';
+import { BrowserQRCodeReader } from '@zxing/library';
 import { X, Zap, ZapOff, CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ interface ReturnCameraScannerDialogProps {
 
 export default function ReturnCameraScannerDialog({ isOpen, onClose, onScan }: ReturnCameraScannerDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const codeReader = useRef(new BrowserQRCodeReader());
@@ -98,10 +99,41 @@ export default function ReturnCameraScannerDialog({ isOpen, onClose, onScan }: R
     }, 1000); // Give user time to see feedback
   };
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      if (e.target?.result) {
+        try {
+          const result = await codeReader.current.decodeFromImageUrl(e.target.result as string);
+          handleDecode(result.getText());
+        } catch (error) {
+           setLastScanResult({ success: false, message: 'No QR code found in image.' });
+            setTimeout(() => {
+                setLastScanResult(null);
+                isScanning.current = true; // Allow scanning again
+            }, 1500);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0">
         <DialogTitle className="sr-only">Camera QR Code Scanner for Returns</DialogTitle>
+         <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+        />
         <div className="relative w-full h-full">
             <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
 
@@ -123,7 +155,11 @@ export default function ReturnCameraScannerDialog({ isOpen, onClose, onScan }: R
 
             {/* Top controls */}
             <div className="absolute top-0 left-0 right-0 p-4 flex justify-between">
-                <div></div>
+                <div>
+                   <Button variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} className="text-white hover:bg-white/10 hover:text-white rounded-full">
+                    <ImageIcon className="h-6 w-6" />
+                  </Button>
+                </div>
                 <div>
                   {hasFlash && (
                     <Button variant="ghost" size="icon" onClick={toggleFlash} className="text-white hover:bg-white/10 hover:text-white rounded-full">
