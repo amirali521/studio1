@@ -10,6 +10,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { LayoutGrid, ShoppingCart, QrCode, Settings, Undo2, AreaChart } from "lucide-react";
@@ -27,9 +28,14 @@ const navItems = [
 export default function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
+  const { setOpenMobile } = useSidebar();
   
   if (!user) {
     return null;
+  }
+  
+  const handleLinkClick = () => {
+    setOpenMobile(false);
   }
 
   return (
@@ -46,7 +52,7 @@ export default function AppSidebar() {
                 isActive={pathname.startsWith(item.href)}
                 tooltip={item.label}
               >
-                <Link href={item.href}>
+                <Link href={item.href} onClick={handleLinkClick}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
