@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import * as ReactDOM from "react-dom/client";
 import type { Product, SerializedProductItem } from "@/lib/types";
 import {
   Select,
@@ -16,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeDisplay } from "./barcode";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { Loader2, Printer, Download } from "lucide-react";
+import { Loader2, Printer, Download, Check } from "lucide-react";
 import Link from "next/link";
 import { Slider } from "@/components/ui/slider";
 import jsPDF from 'jspdf';
@@ -30,6 +31,7 @@ export default function BarcodeClient() {
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [qrSize, setQrSize] = useState(150);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
 
   const selectedProduct = useMemo(
@@ -58,8 +60,8 @@ export default function BarcodeClient() {
     window.print();
   };
 
-  const handleDownload = () => {
-     if (itemsToDisplay.length === 0) {
+  const handleDownload = async () => {
+     if (itemsToDisplay.length === 0 || !user) {
       toast({
         variant: "destructive",
         title: "No codes to download",
@@ -68,31 +70,93 @@ export default function BarcodeClient() {
       return;
     }
     
-    const input = document.getElementById('qr-code-grid');
-    if (input) {
-      html2canvas(input, {
-        useCORS: true,
-        scale: 2, // Higher scale for better quality
-      }).then(canvas => {
+    setIsDownloading(true);
+
+    const offscreenContainer = document.createElement('div');
+    offscreenContainer.style.position = 'absolute';
+    offscreenContainer.style.left = '-9999px';
+    offscreenContainer.style.top = '-9999px';
+    document.body.appendChild(offscreenContainer);
+
+    const root = ReactDOM.createRoot(offscreenContainer);
+    
+    const A4_WIDTH_PX = 794;
+    const PADDING = 20;
+    const CODES_PER_ROW = Math.floor((A4_WIDTH_PX - (PADDING * 2)) / qrSize);
+
+    root.render(
+      <div 
+          id="pdf-content" 
+          className="flex flex-wrap gap-4 p-5 bg-white"
+          style={{ width: `${A4_WIDTH_PX}px` }}
+      >
+        {itemsToDisplay.map((item) => (
+            <BarcodeDisplay 
+                key={item.id} 
+                item={{ serialNumber: item.serialNumber, uid: user.uid }}
+                size={qrSize}
+            />
+        ))}
+      </div>
+    );
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const pdfContent = document.getElementById('pdf-content');
+
+    if (pdfContent) {
+      try {
+        const canvas = await html2canvas(pdfContent, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({
           orientation: 'portrait',
           unit: 'px',
-          format: 'a4'
+          format: 'a4',
         });
         
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
         const ratio = canvasWidth / canvasHeight;
-        const width = pdfWidth;
-        const height = width / ratio;
+        let imgHeight = pdfWidth / ratio;
+        let heightLeft = imgHeight;
+        let position = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdf.internal.pageSize.getHeight();
+
+        while (heightLeft >= 0) {
+            position = heightLeft - imgHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdf.internal.pageSize.getHeight();
+        }
+
         pdf.save(`${selectedProduct?.name || 'qrcodes'}-download.pdf`);
-      });
+        toast({
+          title: "Download Complete",
+          description: "Your QR codes have been saved as a PDF.",
+          action: (
+              <div className="w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center">
+                  <Check size={16} />
+              </div>
+          )
+        })
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast({ variant: "destructive", title: "Download Failed", description: "Could not generate the PDF file."});
+      }
     }
+    
+    // Cleanup
+    root.unmount();
+    document.body.removeChild(offscreenContainer);
+    setIsDownloading(false);
   };
 
   const loading = productsLoading || itemsLoading || !user;
@@ -163,8 +227,8 @@ export default function BarcodeClient() {
           />
         </div>
         <div className="flex gap-2 self-end">
-             <Button variant="outline" onClick={handleDownload} disabled={itemsToDisplay.length === 0}>
-                <Download className="mr-2"/>
+             <Button variant="outline" onClick={handleDownload} disabled={itemsToDisplay.length === 0 || isDownloading}>
+                {isDownloading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
                 Download as PDF
             </Button>
             <Button onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
