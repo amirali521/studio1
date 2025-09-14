@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Loader2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
@@ -22,25 +22,20 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
     const { user, loading: authLoading, isAdmin } = useAuth();
     const [newMessage, setNewMessage] = useState("");
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const viewportRef = useRef<HTMLDivElement>(null);
 
     const chatId = isAdmin ? chatPartnerId : user?.uid;
     
     // Fetch all users to get display names and avatars
-    const { data: users, loading: usersLoading } = useFirestoreCollection("users");
+    const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
 
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(
         `chats/${chatId}/messages`
     );
     
     useEffect(() => {
-        if (scrollAreaRef.current) {
-            const viewport = scrollAreaRef.current.querySelector('div');
-            if (viewport) {
-                 setTimeout(() => {
-                    viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-                }, 100);
-            }
+        if (viewportRef.current) {
+            viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
         }
     }, [messages]);
 
@@ -92,7 +87,7 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
 
     return (
         <div className="flex flex-col h-full bg-secondary/30 rounded-lg">
-            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+            <ScrollArea className="flex-1 p-4" viewportRef={viewportRef}>
                 <div className="space-y-6">
                     {messages.map(msg => {
                         const isSender = msg.senderId === user.uid;

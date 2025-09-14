@@ -28,7 +28,7 @@ export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps
             Have a question? We're here to help.
           </DialogDescription>
         </DialogHeader>
-        <div className="h-[60vh] flex flex-col px-6 pb-6">
+        <div className="h-[40vh] flex flex-col px-6 pb-6">
             <ChatInterface chatPartnerId={adminId} />
         </div>
       </DialogContent>
