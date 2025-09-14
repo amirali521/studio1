@@ -45,13 +45,19 @@ export function useFirestoreCollection<T extends { id?: string }>(
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
 ) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Special case for 'users' collection for admin
     if (collectionName === 'users') {
+        if (authLoading) return;
+        if (!isAdmin) {
+             setData([]);
+             setLoading(false);
+             return;
+        }
         const usersCollectionRef = collection(db, 'users');
         const unsubscribe = onSnapshot(usersCollectionRef, (querySnapshot) => {
             const usersData = querySnapshot.docs.map(doc => ({
@@ -97,7 +103,7 @@ export function useFirestoreCollection<T extends { id?: string }>(
     );
 
     return () => unsubscribe();
-  }, [user, authLoading, collectionName]);
+  }, [user, isAdmin, authLoading, collectionName]);
 
   const addItems = async (items: Omit<T, "id" | "createdAt">[]) => {
     if (!user) throw new Error("User not authenticated");

@@ -36,15 +36,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
-        const userData = userDoc.data();
         
-        const appUser: AppUser = {
-          ...firebaseUser,
-          isAdmin: userData?.isAdmin || false,
-        };
+        let appUser: AppUser = firebaseUser;
+        let adminStatus = false;
 
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            adminStatus = userData.isAdmin === true;
+            appUser = {
+              ...firebaseUser,
+              isAdmin: adminStatus,
+            };
+        }
+        
         setUser(appUser);
-        setIsAdmin(appUser.isAdmin || false);
+        setIsAdmin(adminStatus);
       } else {
         setUser(null);
         setIsAdmin(false);

@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
 const firebaseConfig = {
@@ -22,13 +22,21 @@ const db = getFirestore(app);
 const syncUserToFirestore = async (user: User) => {
   if (!user) return;
   const userRef = doc(db, "users", user.uid);
+  
+  // Check if the document exists to avoid overwriting the isAdmin field
+  const userDoc = await getDoc(userRef);
+  const existingData = userDoc.data();
+
   const userData = {
     uid: user.uid,
     email: user.email,
     displayName: user.displayName,
     photoURL: user.photoURL,
     lastLogin: new Date().toISOString(),
+    // Preserve isAdmin if it exists, otherwise default to false
+    isAdmin: existingData?.isAdmin || false,
   };
+  
   await setDoc(userRef, userData, { merge: true });
 };
 
