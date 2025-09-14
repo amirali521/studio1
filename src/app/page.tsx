@@ -53,7 +53,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center">
+        <div className="container flex h-14 max-w-screen-2xl items-center px-4">
           <div className="mr-4 flex">
             <Link href="/" className="flex items-center space-x-2">
               <Logo />
@@ -71,7 +71,7 @@ export default function LandingPage() {
       <main className="flex-1">
         {/* Hero Section */}
         <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-24">
-          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center px-4">
             <h1 className="font-headline text-3xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
               Effortless Inventory, Powerful Sales
             </h1>
@@ -88,14 +88,14 @@ export default function LandingPage() {
             </div>
           </div>
            {/* Hero Graphic */}
-          <div className="container max-w-5xl mt-12">
+          <div className="container max-w-5xl mt-12 px-4">
               <LandingHero className="rounded-xl border bg-card shadow-lg"/>
           </div>
         </section>
 
         {/* Features Section */}
         <section className="bg-muted/30 py-12 md:py-24 lg:py-32">
-          <div className="container flex max-w-[64rem] flex-col items-center gap-8 text-center">
+          <div className="container flex max-w-[64rem] flex-col items-center gap-8 text-center px-4">
             <div className="mx-auto max-w-3xl text-center">
                 <h2 className="font-headline text-3xl font-bold sm:text-5xl">Everything You Need</h2>
                 <p className="mt-4 text-muted-foreground sm:text-xl">
@@ -122,7 +122,7 @@ export default function LandingPage() {
 
         {/* New CTA Section */}
         <section className="space-y-6 py-12 md:py-24 lg:py-32">
-            <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+            <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center px-4">
                 <h2 className="font-headline text-3xl font-bold sm:text-5xl">Ready to Take Control?</h2>
                 <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
                     Stop letting inventory manage you. Start your free account today and see how simple running your business can be.
@@ -140,7 +140,7 @@ export default function LandingPage() {
 
       </main>
       <footer className="py-6 md:px-8 md:py-0 border-t">
-        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row px-4">
             <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
                 &copy; 2024 Stockpile Scan. All rights reserved.
             </p>
