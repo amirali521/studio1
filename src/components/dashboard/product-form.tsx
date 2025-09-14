@@ -187,7 +187,7 @@ export default function ProductForm({
             )}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="purchasePrice"
@@ -235,7 +235,7 @@ export default function ProductForm({
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="discount"
