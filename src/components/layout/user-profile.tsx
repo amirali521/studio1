@@ -28,8 +28,6 @@ export default function UserProfile() {
 
   useEffect(() => {
     const findAdminId = async () => {
-      // In a real app, you might get this from a config document for efficiency.
-      // Here, we query the users collection to find a user with isAdmin: true.
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("isAdmin", "==", true), limit(1));
       
