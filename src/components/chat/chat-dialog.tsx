@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import ChatInterface from "./chat-interface";
 
@@ -20,11 +21,14 @@ export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-lg p-0">
+        <DialogHeader className="p-6 pb-2">
           <DialogTitle className="font-headline">Chat with Support</DialogTitle>
+          <DialogDescription>
+            Have a question? We're here to help.
+          </DialogDescription>
         </DialogHeader>
-        <div className="h-[60vh] flex flex-col">
+        <div className="h-[60vh] flex flex-col px-6 pb-6">
             <ChatInterface chatPartnerId={adminId} />
         </div>
       </DialogContent>
