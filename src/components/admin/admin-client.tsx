@@ -14,6 +14,7 @@ import { MessageSquare, Search, Users, CircleDot, CircleOff } from "lucide-react
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
+import { formatNumberCompact } from "@/lib/utils";
 
 interface AppUser extends Partial<FirebaseUser> {
     id: string;
@@ -72,19 +73,19 @@ export default function AdminClient() {
                 <div className="grid grid-cols-3 divide-x">
                     <div className="px-4 text-center">
                         <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-                        <p className="text-2xl font-bold">{totalUsers}</p>
+                        <p className="text-2xl font-bold">{formatNumberCompact(totalUsers)}</p>
                     </div>
                     <div className="px-4 text-center">
                         <p className="text-sm font-medium text-muted-foreground flex items-center justify-center">
                            <span className="text-green-500 mr-2">🟢</span> Active
                         </p>
-                        <p className="text-2xl font-bold">{activeUsers}</p>
+                        <p className="text-2xl font-bold">{formatNumberCompact(activeUsers)}</p>
                     </div>
                     <div className="px-4 text-center">
                          <p className="text-sm font-medium text-muted-foreground flex items-center justify-center">
                            <span className="text-red-500 mr-2">🔴</span> Offline
                         </p>
-                        <p className="text-2xl font-bold">{offlineUsers}</p>
+                        <p className="text-2xl font-bold">{formatNumberCompact(offlineUsers)}</p>
                     </div>
                 </div>
             </CardContent>

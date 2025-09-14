@@ -11,3 +11,10 @@ export function formatCurrency(amount: number, currency: string = 'USD') {
     currency: currency,
   }).format(amount);
 }
+
+export function formatNumberCompact(number: number) {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    compactDisplay: 'short'
+  }).format(number);
+}
