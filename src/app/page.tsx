@@ -3,15 +3,13 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart, LayoutGrid, QrCode, ShoppingCart, ScanLine, FilePenLine, AreaChartIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
-import Image from "next/image";
-
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
