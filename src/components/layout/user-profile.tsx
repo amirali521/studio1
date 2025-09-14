@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, MessageSquare } from "lucide-react";
+import { LogOut, Settings, MessageSquare, Loader2 } from "lucide-react";
 import { auth, db } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,9 +25,11 @@ export default function UserProfile() {
   const router = useRouter();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [adminId, setAdminId] = useState<string | null>(null);
+  const [isFindingAdmin, setIsFindingAdmin] = useState(true);
 
   useEffect(() => {
     const findAdminId = async () => {
+      setIsFindingAdmin(true);
       const usersRef = collection(db, "users");
       const q = query(usersRef, where("isAdmin", "==", true), limit(1));
       
@@ -41,11 +43,15 @@ export default function UserProfile() {
         }
       } catch (error) {
         console.error("Error finding admin user:", error);
+      } finally {
+        setIsFindingAdmin(false);
       }
     };
 
     if (user && !isAdmin) {
       findAdminId();
+    } else {
+        setIsFindingAdmin(false);
     }
   }, [user, isAdmin]);
 
@@ -87,9 +93,13 @@ export default function UserProfile() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {!isAdmin && adminId && (
-             <DropdownMenuItem onClick={() => setIsChatOpen(true)}>
-                <MessageSquare className="mr-2 h-4 w-4" />
+          {!isAdmin && (
+             <DropdownMenuItem onClick={() => setIsChatOpen(true)} disabled={isFindingAdmin || !adminId}>
+                {isFindingAdmin ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                )}
                 <span>Chat Support</span>
             </DropdownMenuItem>
           )}
