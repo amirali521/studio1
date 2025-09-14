@@ -148,7 +148,7 @@ export default function ProductForm({
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           {!isEditing && (
              <Button type="button" variant="outline" className="w-full" onClick={() => setIsScannerOpen(true)}>
                 <Camera className="mr-2 h-4 w-4" />
@@ -187,7 +187,7 @@ export default function ProductForm({
             )}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField
               control={form.control}
               name="purchasePrice"
@@ -214,10 +214,7 @@ export default function ProductForm({
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <FormField
+             <FormField
               control={form.control}
               name="quantity"
               render={({ field }) => (
@@ -236,6 +233,9 @@ export default function ProductForm({
                   </FormItem>
               )}
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormField
               control={form.control}
               name="discount"
