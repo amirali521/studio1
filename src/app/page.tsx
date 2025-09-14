@@ -71,54 +71,6 @@ export default function LandingPage() {
             <LandingHero className="rounded-xl border bg-card shadow-lg"/>
         </section>
         
-        {/* Feature Showcase Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50/50 dark:bg-transparent">
-            <div className="container px-4 md:px-6">
-                <div className="grid gap-12 md:gap-16">
-                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl">All-in-One Business Command Center</h2>
-                            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                Manage your entire operation, from stockroom to storefront, with our intuitive and powerful suite of tools.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
-                        <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
-                            <h3 className="text-2xl font-bold">Intuitive Dashboard</h3>
-                            <p className="text-muted-foreground">
-                                Get a bird's-eye view of your inventory at a glance. Track stock levels, see your top-selling products, and manage everything from one simple, clean interface. No more guesswork.
-                            </p>
-                        </div>
-                        <Image
-                            src="https://picsum.photos/seed/101/600/400"
-                            width={600}
-                            height={400}
-                            alt="Dashboard"
-                            data-ai-hint="dashboard analytics"
-                            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
-                        />
-                    </div>
-                    <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
-                        <div className="flex flex-col justify-center space-y-4 text-center lg:order-last lg:text-left">
-                            <h3 className="text-2xl font-bold">Lightning-Fast Point of Sale</h3>
-                            <p className="text-muted-foreground">
-                                Turn any device into a powerful POS. Scan barcodes with your camera, process sales in seconds, and automatically update your inventory. Checkout has never been smoother.
-                            </p>
-                        </div>
-                        <Image
-                             src="https://picsum.photos/seed/102/600/400"
-                             width={600}
-                             height={400}
-                            alt="POS"
-                            data-ai-hint="point sale"
-                            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full"
-                        />
-                    </div>
-                </div>
-            </div>
-        </section>
-
         {/* New CTA Section */}
         <section className="space-y-6 py-12 md:py-24 lg:py-32">
             <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
