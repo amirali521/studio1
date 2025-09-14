@@ -34,8 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Ensure the user document exists before proceeding
-        await syncUserToFirestore(firebaseUser);
+        // Ensure the user document exists before fetching profile
+        await syncUserToFirestore(firebaseUser); 
         
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);

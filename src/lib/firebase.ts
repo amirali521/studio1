@@ -26,7 +26,6 @@ export const syncUserToFirestore = async (user: User) => {
   const userDoc = await getDoc(userRef);
 
   // If the user document doesn't exist, create it.
-  // This is crucial for new sign-ups.
   if (!userDoc.exists()) {
     const userData = {
       uid: user.uid,
@@ -36,17 +35,20 @@ export const syncUserToFirestore = async (user: User) => {
       lastLogin: new Date().toISOString(),
       isAdmin: false, // Default new users to not be admins
     };
-    await setDoc(userRef, userData);
+    // Return the promise from setDoc
+    return setDoc(userRef, userData);
   } else {
-    // If user exists, just update their last login time
+    // If user exists, update their details
     const existingData = userDoc.data();
     const userData = {
+      // Keep existing data but update what might change on login
       displayName: user.displayName,
       photoURL: user.photoURL,
       lastLogin: new Date().toISOString(),
       isAdmin: existingData?.isAdmin || false, // Preserve existing isAdmin status
     };
-    await setDoc(userRef, userData, { merge: true });
+    // Return the promise from setDoc
+    return setDoc(userRef, userData, { merge: true });
   }
 };
 
