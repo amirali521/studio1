@@ -47,21 +47,21 @@ export default function AdminChatClient() {
   }
 
   return (
-    <main className="flex flex-col h-[calc(100vh-theme(spacing.16))] p-4 sm:p-6">
+    <main className="flex flex-col flex-1 p-4 sm:p-6">
         <div className="mb-4">
             <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users
             </Button>
         </div>
-        <Card className="flex-1 flex flex-col">
+        <Card className="flex-1 flex flex-col max-h-[70vh]">
             <CardHeader>
                 <CardTitle className="font-headline">Chat with {chatPartner.displayName || "User"}</CardTitle>
                 <CardDescription>
                     You are viewing the conversation with {chatPartner.email}.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col">
+            <CardContent className="flex-1 flex flex-col min-h-0">
                  <ChatInterface chatPartnerId={chatUserId} />
             </CardContent>
         </Card>
