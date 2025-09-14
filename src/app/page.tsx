@@ -12,7 +12,6 @@ import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-
 const features = [
   {
     icon: <LayoutGrid className="h-8 w-8 text-primary" />,
@@ -103,7 +102,7 @@ export default function LandingPage() {
                     From scanning your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage your business.
                 </p>
             </div>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2">
               {features.map((feature) => (
                 <Card key={feature.title} className="text-center">
                   <CardHeader>
