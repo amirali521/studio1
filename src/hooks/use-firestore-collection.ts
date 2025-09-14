@@ -26,7 +26,6 @@ import type { AppUser } from "@/lib/types";
 export function useFirestoreCollection(collectionName: "users"): { 
     data: (AppUser & { id: string })[]; 
     loading: boolean;
-    // ... other methods if they apply to the 'users' collection
 };
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
@@ -50,9 +49,9 @@ export function useFirestoreCollection<T extends { id?: string }>(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Special case for 'users' collection for admin
+    if (authLoading) return;
+
     if (collectionName === 'users') {
-        if (authLoading) return;
         if (!isAdmin) {
              setData([]);
              setLoading(false);
@@ -74,16 +73,14 @@ export function useFirestoreCollection<T extends { id?: string }>(
     }
 
 
-    if (authLoading || !user) {
-      if (!authLoading) setLoading(false);
+    if (!user) {
+      setLoading(false);
       return;
     }
 
     const userDocRef = doc(db, "users", user.uid);
     const dataCollectionRef = collection(userDocRef, collectionName);
     
-    // Fallback to ordering by a field that exists on all collections if 'createdAt' is not ideal for all.
-    // For this app, 'createdAt' is consistent.
     const q = query(dataCollectionRef, orderBy("createdAt", "desc"));
 
     const unsubscribe = onSnapshot(

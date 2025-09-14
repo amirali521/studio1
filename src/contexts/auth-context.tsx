@@ -4,7 +4,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, db, syncUserToFirestore } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import { usePathname, useRouter } from 'next/navigation';
 import LoadingScreen from '@/components/layout/loading-screen';
 
@@ -34,23 +33,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Ensure the user document exists before fetching profile
-        await syncUserToFirestore(firebaseUser); 
+        await syncUserToFirestore(firebaseUser);
         
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        let appUser: AppUser = firebaseUser;
-        let adminStatus = false;
+        const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
+        const adminStatus = firebaseUser.uid === adminUid;
 
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            adminStatus = userData.isAdmin === true;
-            appUser = {
-              ...firebaseUser,
-              isAdmin: adminStatus,
-            };
-        }
+        const appUser: AppUser = {
+            ...firebaseUser,
+            isAdmin: adminStatus,
+        };
         
         setUser(appUser);
         setIsAdmin(adminStatus);
@@ -71,36 +62,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
     const isVerificationRoute = pathname === VERIFICATION_ROUTE;
 
-    // If no user, and trying to access a protected route, redirect to login
     if (!user && isProtectedRoute) {
       router.push('/login');
       return;
     }
     
     if (user) {
-        // If user exists but email is not verified
         if (!user.emailVerified) {
-            // and they are not on the verification page, redirect them
             if (!isVerificationRoute) {
                 router.push(VERIFICATION_ROUTE);
             }
-        } else { // if email is verified
-            // and they are on a public or verification page, redirect to dashboard
+        } else {
              if (isPublicRoute || isVerificationRoute) {
                 router.push('/dashboard');
             }
         }
     }
-
-
   }, [user, loading, pathname, router]);
-
 
   if (loading) {
     return <LoadingScreen />;
   }
   
-  // To avoid flicker, we only render children if the routing logic is complete
   const isProtectedRoute = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
   if (!user && isProtectedRoute) {
      return <LoadingScreen />;
@@ -109,7 +92,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (user && !user.emailVerified && pathname !== VERIFICATION_ROUTE) {
      return <LoadingScreen />;
   }
-
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin }}>
