@@ -71,7 +71,7 @@ export default function LandingPage() {
             <LandingHero className="rounded-xl border bg-card shadow-lg"/>
         </section>
         
-        {/* New Feature Showcase Section */}
+        {/* Feature Showcase Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50/50 dark:bg-transparent">
             <div className="container px-4 md:px-6">
                 <div className="grid gap-12 md:gap-16">
@@ -120,18 +120,20 @@ export default function LandingPage() {
         </section>
 
         {/* New CTA Section */}
-        <section className="w-full py-12 md:py-24 lg:py-32">
-            <div className="container flex flex-col items-center justify-center gap-4 px-4 text-center md:px-6">
-                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl">Ready to Take Control?</h2>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed">
+        <section className="space-y-6 py-12 md:py-24 lg:py-32">
+            <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+                <h2 className="font-headline text-3xl font-bold sm:text-5xl">Ready to Take Control?</h2>
+                <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
                     Stop letting inventory manage you. Start your free account today and see how simple running your business can be.
                 </p>
-                <Button asChild size="lg">
-                    <Link href="/signup">
-                        Sign Up Now
-                        <ArrowRight className="ml-2" />
-                    </Link>
-                </Button>
+                <div className="space-x-4">
+                    <Button asChild size="lg">
+                        <Link href="/signup">
+                            Sign Up Now
+                            <ArrowRight className="ml-2" />
+                        </Link>
+                    </Button>
+                </div>
             </div>
         </section>
 
