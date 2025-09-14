@@ -10,15 +10,15 @@ import { User as FirebaseUser } from "firebase/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
-import { MessageSquare, Search, Users, CircleDot, CircleOff } from "lucide-react";
+import { MessageSquare, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
-import { Separator } from "../ui/separator";
 import { formatNumberCompact } from "@/lib/utils";
 
 interface AppUser extends Partial<FirebaseUser> {
     id: string;
     lastLogin?: string;
+    isOnline?: boolean;
 }
 
 export default function AdminClient() {
@@ -33,28 +33,40 @@ export default function AdminClient() {
     }
   }, [user, loading, isAdmin, router]);
 
-  const { activeUsers, offlineUsers, totalUsers } = useMemo(() => {
+  const { activeUsers, offlineUsers, totalUsers, processedUsers } = useMemo(() => {
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
-    const active = users.filter(u => u.lastLogin && new Date(u.lastLogin) > fiveMinutesAgo);
+    const processed = users.map(u => ({
+        ...u,
+        isOnline: u.lastLogin && new Date(u.lastLogin) > fiveMinutesAgo
+    }));
+
+    const active = processed.filter(u => u.isOnline);
     
     return {
       activeUsers: active.length,
       offlineUsers: users.length - active.length,
       totalUsers: users.length,
+      processedUsers: processed,
     }
   }, [users]);
 
   const filteredUsers = useMemo(() => {
+    const sortedUsers = [...processedUsers].sort((a, b) => {
+        if (a.isOnline && !b.isOnline) return -1;
+        if (!a.isOnline && b.isOnline) return 1;
+        return (b.lastLogin || '').localeCompare(a.lastLogin || '');
+    });
+
     if (!searchTerm) {
-      return users;
+      return sortedUsers;
     }
-    return users.filter(u => 
+    return sortedUsers.filter(u => 
       u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [users, searchTerm]);
+  }, [processedUsers, searchTerm]);
 
   if (loading || usersLoading || !isAdmin) {
     return <LoadingScreen />;
@@ -123,11 +135,14 @@ export default function AdminClient() {
                                 filteredUsers.map((appUser) => (
                                     <TableRow key={appUser.id}>
                                         <TableCell>
-                                            <div className="flex items-center gap-2">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={appUser.photoURL || undefined} alt={appUser.displayName || 'User'} />
-                                                    <AvatarFallback>{getInitials(appUser.displayName)}</AvatarFallback>
-                                                </Avatar>
+                                            <div className="flex items-center gap-3">
+                                                <div className="relative">
+                                                    <Avatar className="h-9 w-9">
+                                                        <AvatarImage src={appUser.photoURL || undefined} alt={appUser.displayName || 'User'} />
+                                                        <AvatarFallback>{getInitials(appUser.displayName)}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background" style={{ backgroundColor: appUser.isOnline ? '#22c55e' : '#ef4444' }} />
+                                                </div>
                                                 <span>{appUser.displayName || 'No Name'}</span>
                                             </div>
                                         </TableCell>
