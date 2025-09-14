@@ -10,29 +10,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
-
-const features = [
-  {
-    icon: LayoutGrid,
-    title: "Inventory Management",
-    description: "Easily add, edit, and track products. Know your stock levels at all times.",
-  },
-  {
-    icon: ShoppingCart,
-    title: "Point of Sale (POS)",
-    description: "A simple and fast POS system. Scan items with your camera to finalize sales.",
-  },
-  {
-    icon: BarChart,
-    title: "Sales Analytics",
-    description: "Track revenue, profit, and inventory value with powerful, easy-to-read charts.",
-  },
-  {
-    icon: QrCode,
-    title: "QR Code Generation",
-    description: "Generate and print unique QR codes for your items for easy scanning and tracking.",
-  },
-];
+import Image from "next/image";
 
 
 export default function LandingPage() {
@@ -92,76 +70,69 @@ export default function LandingPage() {
         <section className="container max-w-5xl">
             <LandingHero className="rounded-xl border bg-card shadow-lg"/>
         </section>
-
-        {/* Features Section */}
-        <section
-          id="features"
-          className="container space-y-6 bg-slate-50/50 py-8 dark:bg-transparent md:py-12 lg:py-24"
-        >
-          <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-            <h2 className="font-headline text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl">
-              Everything You Need
-            </h2>
-            <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              From scanning your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage your business.
-            </p>
-          </div>
-          <div className="mx-auto grid justify-center gap-4 sm:grid-cols-2 md:max-w-[64rem] lg:grid-cols-2">
-            {features.map((feature) => (
-              <div key={feature.title} className="relative overflow-hidden rounded-lg border bg-background p-2">
-                <div className="flex h-[180px] flex-col justify-between rounded-md p-6">
-                  <feature.icon className="h-12 w-12 text-primary" />
-                  <div className="space-y-2">
-                    <h3 className="font-bold">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
-                  </div>
+        
+        {/* New Feature Showcase Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50/50 dark:bg-transparent">
+            <div className="container px-4 md:px-6">
+                <div className="grid gap-12 md:gap-16">
+                    <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl">All-in-One Business Command Center</h2>
+                            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                                Manage your entire operation, from stockroom to storefront, with our intuitive and powerful suite of tools.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
+                        <div className="flex flex-col justify-center space-y-4">
+                            <h3 className="text-2xl font-bold">Intuitive Dashboard</h3>
+                            <p className="text-muted-foreground">
+                                Get a bird's-eye view of your inventory at a glance. Track stock levels, see your top-selling products, and manage everything from one simple, clean interface. No more guesswork.
+                            </p>
+                        </div>
+                        <Image
+                            src="https://picsum.photos/seed/101/600/400"
+                            width={600}
+                            height={400}
+                            alt="Dashboard"
+                            data-ai-hint="dashboard analytics"
+                            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full lg:order-last"
+                        />
+                    </div>
+                    <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
+                        <div className="flex flex-col justify-center space-y-4 lg:order-last">
+                            <h3 className="text-2xl font-bold">Lightning-Fast Point of Sale</h3>
+                            <p className="text-muted-foreground">
+                                Turn any device into a powerful POS. Scan barcodes with your camera, process sales in seconds, and automatically update your inventory. Checkout has never been smoother.
+                            </p>
+                        </div>
+                        <Image
+                             src="https://picsum.photos/seed/102/600/400"
+                             width={600}
+                             height={400}
+                            alt="POS"
+                            data-ai-hint="point sale"
+                            className="mx-auto aspect-video overflow-hidden rounded-xl object-cover object-center sm:w-full"
+                        />
+                    </div>
                 </div>
-              </div>
-            ))}
-          </div>
+            </div>
         </section>
 
-         {/* How It Works Section */}
-        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container space-y-12 px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl">How It Works</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  A simple 3-step process to get you up and running.
+        {/* New CTA Section */}
+        <section className="w-full py-12 md:py-24 lg:py-32">
+            <div className="container flex flex-col items-center justify-center gap-4 px-4 text-center md:px-6">
+                <h2 className="text-3xl font-bold font-headline tracking-tighter sm:text-5xl">Ready to Take Control?</h2>
+                <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed">
+                    Stop letting inventory manage you. Start your free account today and see how simple running your business can be.
                 </p>
-              </div>
+                <Button asChild size="lg">
+                    <Link href="/signup">
+                        Sign Up Now
+                        <ArrowRight className="ml-2" />
+                    </Link>
+                </Button>
             </div>
-            <div className="mx-auto grid items-start gap-8 sm:max-w-4xl sm:grid-cols-3 md:gap-12 lg:max-w-5xl">
-              <div className="grid gap-1 text-center">
-                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-                    <ScanLine className="h-8 w-8 text-primary"/>
-                </div>
-                <h3 className="text-lg font-bold">1. Scan & Add</h3>
-                <p className="text-sm text-muted-foreground">
-                  Use your device's camera to scan barcodes and automatically add products to your inventory.
-                </p>
-              </div>
-              <div className="grid gap-1 text-center">
-                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-                    <ShoppingCart className="h-8 w-8 text-primary"/>
-                </div>
-                <h3 className="text-lg font-bold">2. Sell & Process</h3>
-                <p className="text-sm text-muted-foreground">
-                  The Point-of-Sale system makes it easy to scan items, process payments, and print receipts.
-                </p>
-              </div>
-              <div className="grid gap-1 text-center">
-                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-                    <AreaChartIcon className="h-8 w-8 text-primary"/>
-                </div>
-                <h3 className="text-lg font-bold">3. Track & Analyze</h3>
-                <p className="text-sm text-muted-foreground">
-                  Gain insights into your sales, revenue, and profit with our simple analytics dashboard.
-                </p>
-              </div>
-            </div>
-          </div>
         </section>
 
       </main>
