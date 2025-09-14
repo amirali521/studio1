@@ -84,7 +84,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
-                        <div className="flex flex-col justify-center space-y-4">
+                        <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
                             <h3 className="text-2xl font-bold">Intuitive Dashboard</h3>
                             <p className="text-muted-foreground">
                                 Get a bird's-eye view of your inventory at a glance. Track stock levels, see your top-selling products, and manage everything from one simple, clean interface. No more guesswork.
@@ -100,7 +100,7 @@ export default function LandingPage() {
                         />
                     </div>
                     <div className="mx-auto grid max-w-5xl items-center gap-6 lg:grid-cols-2 lg:gap-12">
-                        <div className="flex flex-col justify-center space-y-4 lg:order-last">
+                        <div className="flex flex-col justify-center space-y-4 text-center lg:order-last lg:text-left">
                             <h3 className="text-2xl font-bold">Lightning-Fast Point of Sale</h3>
                             <p className="text-muted-foreground">
                                 Turn any device into a powerful POS. Scan barcodes with your camera, process sales in seconds, and automatically update your inventory. Checkout has never been smoother.
