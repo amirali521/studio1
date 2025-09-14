@@ -95,8 +95,8 @@ export default function LandingPage() {
 
         {/* Features Section */}
         <section className="bg-muted/30 py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="mx-auto max-w-3xl text-center mb-12">
+          <div className="container flex max-w-[64rem] flex-col items-center gap-8 text-center">
+            <div className="mx-auto max-w-3xl text-center">
                 <h2 className="font-headline text-3xl font-bold sm:text-5xl">Everything You Need</h2>
                 <p className="mt-4 text-muted-foreground sm:text-xl">
                     From scanning your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage your business.
