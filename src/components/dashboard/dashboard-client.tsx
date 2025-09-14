@@ -6,14 +6,7 @@ import { PlusCircle, Loader2 } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Product, SerializedProductItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import ProductsTable from "@/components/dashboard/products-table";
-import ProductForm from "@/components/dashboard/product-form";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -22,6 +15,7 @@ import { writeBatch, collection, query, where, getDocs, doc } from "firebase/fir
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import ResponsiveProductDialog from "./responsive-product-dialog";
 
 
 export default function DashboardClient() {
@@ -194,49 +188,22 @@ export default function DashboardClient() {
           onDelete={handleDeleteProduct}
           onEdit={handleEditProduct}
         />
-        <Dialog
-          open={isAddDialogOpen}
+        <ResponsiveProductDialog
+          isOpen={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
-        >
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="font-headline">
-                Add New Product
-              </DialogTitle>
-            </DialogHeader>
-            <ProductForm
-              onSubmit={handleAddFormSubmit}
-              onCancel={() => setIsAddDialogOpen(false)}
-            />
-          </DialogContent>
-        </Dialog>
+          onSubmit={handleAddFormSubmit}
+        />
 
-        {editingProduct && (
-          <Dialog
-            open={isEditDialogOpen}
-            onOpenChange={(isOpen) => {
-              setIsEditDialogOpen(isOpen);
-              if (!isOpen) setEditingProduct(null);
-            }}
-          >
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="font-headline">
-                  Edit {editingProduct.name}
-                </DialogTitle>
-              </DialogHeader>
-              <ProductForm
-                onSubmit={handleEditFormSubmit}
-                onCancel={() => {
-                  setIsEditDialogOpen(false);
-                  setEditingProduct(null);
-                }}
-                initialData={editingProduct}
-                isEditing
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+        <ResponsiveProductDialog
+          isOpen={isEditDialogOpen}
+          onOpenChange={(isOpen) => {
+            setIsEditDialogOpen(isOpen);
+            if (!isOpen) setEditingProduct(null);
+          }}
+          onSubmit={handleEditFormSubmit}
+          isEditing={true}
+          initialData={editingProduct}
+        />
       </main>
     </>
   );
