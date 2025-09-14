@@ -14,10 +14,31 @@ import {
   where,
   orderBy,
   addDoc,
-  updateDoc
+  updateDoc,
+  collectionGroup
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { db } from "@/lib/firebase";
+
+// Overload signatures
+export function useFirestoreCollection<s>(collectionName: "users"): { 
+    data: (import("firebase/auth").User & { id: string })[]; 
+    loading: boolean;
+    // ... other methods if they apply to the 'users' collection
+};
+export function useFirestoreCollection<T extends { id?: string }>(
+  collectionName: string
+): { 
+    data: T[]; 
+    loading: boolean; 
+    addItem: (item: Omit<T, "id" | 'createdAt'>) => Promise<any>; 
+    updateItem: (itemId: string, itemData: Partial<T>) => Promise<void>;
+    deleteItem: (itemId: string) => Promise<void>; 
+    addItems: (items: Omit<T, "id" | "createdAt">[]) => Promise<void>;
+    updateItems: (updates: { id: string; data: Partial<T> }[]) => Promise<void>;
+    deleteItemsByProduct: (productId: string) => Promise<void>;
+};
+
 
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
@@ -27,9 +48,26 @@ export function useFirestoreCollection<T extends { id?: string }>(
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Special case for 'users' collection for admin
+    if (collectionName === 'users') {
+        const usersCollectionRef = collection(db, 'users');
+        const unsubscribe = onSnapshot(usersCollectionRef, (querySnapshot) => {
+            const usersData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as T[];
+            setData(usersData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching all users:", error);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }
+
+
     if (authLoading || !user) {
-      setData([]);
-      setLoading(false);
+      if (!authLoading) setLoading(false);
       return;
     }
 

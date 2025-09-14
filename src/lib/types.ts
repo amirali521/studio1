@@ -1,4 +1,5 @@
 
+
 export interface Product {
   id: string; // This will be the Firestore document ID
   name: string;
@@ -48,4 +49,10 @@ export interface QrCodeData {
   uid: string;
   productName: string;
 }
-    
+
+export interface ChatMessage {
+    id: string;
+    text: string;
+    senderId: string;
+    timestamp: string;
+}

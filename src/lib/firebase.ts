@@ -1,7 +1,8 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { onAuthStateChanged, User } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAHT1KZyZVOUGH-j6NUSSGWoO_kUhwtWjM",
@@ -16,5 +17,27 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Function to sync user data to a 'users' collection
+const syncUserToFirestore = async (user: User) => {
+  if (!user) return;
+  const userRef = doc(db, "users", user.uid);
+  const userData = {
+    uid: user.uid,
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    lastLogin: new Date().toISOString(),
+  };
+  await setDoc(userRef, userData, { merge: true });
+};
+
+// Listen for auth state changes to keep user data in sync
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    syncUserToFirestore(user);
+  }
+});
+
 
 export { app, auth, db };
