@@ -3,7 +3,8 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth, db, syncUserToFirestore } from '@/lib/firebase';
+import { auth, db, syncUserToFirestore, firebaseConfig } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { usePathname, useRouter } from 'next/navigation';
 import LoadingScreen from '@/components/layout/loading-screen';
 
@@ -35,8 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (firebaseUser) {
         await syncUserToFirestore(firebaseUser);
         
-        const adminUid = process.env.NEXT_PUBLIC_ADMIN_UID;
-        const adminStatus = firebaseUser.uid === adminUid;
+        const adminStatus = firebaseUser.uid === firebaseConfig.adminUid;
 
         const appUser: AppUser = {
             ...firebaseUser,

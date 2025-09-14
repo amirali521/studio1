@@ -4,14 +4,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyAHT1KZyZVOUGH-j6NUSSGWoO_kUhwtWjM",
   authDomain: "stockpilescan.firebaseapp.com",
   projectId: "stockpilescan",
   storageBucket: "stockpilescan.appspot.com",
   messagingSenderId: "815972164857",
   appId: "1:815972164857:web:608367b83f5b5cc47aae28",
-  measurementId: "G-B9WN0JSEPE"
+  measurementId: "G-B9WN0JSEPE",
+  adminUid: "iNqXkJFtSIQVFTLWz6v5rvA9Lii1",
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -33,21 +34,17 @@ export const syncUserToFirestore = async (user: User) => {
       displayName: user.displayName,
       photoURL: user.photoURL,
       lastLogin: new Date().toISOString(),
-      isAdmin: false, // Default new users to not be admins
+      isAdmin: user.uid === firebaseConfig.adminUid, 
     };
-    // Return the promise from setDoc
     return setDoc(userRef, userData);
   } else {
     // If user exists, update their details
-    const existingData = userDoc.data();
     const userData = {
-      // Keep existing data but update what might change on login
       displayName: user.displayName,
       photoURL: user.photoURL,
       lastLogin: new Date().toISOString(),
-      isAdmin: existingData?.isAdmin || false, // Preserve existing isAdmin status
+      isAdmin: user.uid === firebaseConfig.adminUid,
     };
-    // Return the promise from setDoc
     return setDoc(userRef, userData, { merge: true });
   }
 };

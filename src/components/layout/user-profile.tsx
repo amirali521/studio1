@@ -13,7 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Settings, MessageSquare } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { auth, firebaseConfig } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -24,7 +24,7 @@ export default function UserProfile() {
   const router = useRouter();
   const [isChatOpen, setIsChatOpen] = useState(false);
   
-  const adminId = process.env.NEXT_PUBLIC_ADMIN_UID;
+  const adminId = firebaseConfig.adminUid;
 
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
