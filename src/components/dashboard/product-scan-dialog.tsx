@@ -139,7 +139,7 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0">
+      <DialogContent className="max-w-full w-full h-full p-0 m-0 bg-black/80 backdrop-blur-sm border-0" showCloseButton={false}>
         <DialogTitle className="sr-only">Camera QR Code Scanner for Prefilling</DialogTitle>
          <input
           type="file"
