@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/auth-context";
-import { useFirestoreCollection }s from "@/hooks/use-firestore-collection";
+import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "../layout/loading-screen";
@@ -20,7 +20,7 @@ interface AppUser extends Partial<FirebaseUser> {
 export default function AdminClient() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const { data: users, loading: usersLoading } = useFirestoreCollection<s>("users");
+  const { data: users, loading: usersLoading } = useFirestoreCollection("users");
 
   useEffect(() => {
     if (!loading && !isAdmin) {
