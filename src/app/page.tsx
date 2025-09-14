@@ -57,7 +57,7 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-            <div className="flex justify-center items-center mt-8">
+            <div className="mt-8 flex justify-center">
                  <LandingHero className="w-full h-auto max-w-2xl rounded-xl shadow-2xl" />
             </div>
           </div>
