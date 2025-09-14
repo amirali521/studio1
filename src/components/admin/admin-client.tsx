@@ -18,12 +18,10 @@ interface AppUser extends Partial<FirebaseUser> {
 }
 
 export default function AdminClient() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const { data: users, loading: usersLoading } = useFirestoreCollection<s>("users");
 
-  const isAdmin = user?.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
-  
   useEffect(() => {
     if (!loading && !isAdmin) {
       router.push("/dashboard");

@@ -33,14 +33,12 @@ const protectedPages = [...navItems.map(item => item.href), ...adminNavItems.map
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { setOpenMobile } = useSidebar();
   
   if (!user || !protectedPages.some(p => pathname.startsWith(p))) {
     return null;
   }
-
-  const isAdmin = user.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
   
   const handleLinkClick = () => {
     setOpenMobile(false);

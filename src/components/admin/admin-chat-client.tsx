@@ -11,12 +11,10 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function AdminChatClient() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const params = useParams();
   const chatUserId = params.userId as string;
-
-  const isAdmin = user?.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
 
   useEffect(() => {
     if (!loading && !isAdmin) {

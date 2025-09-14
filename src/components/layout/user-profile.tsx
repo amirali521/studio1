@@ -13,19 +13,43 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Settings, MessageSquare } from "lucide-react";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ChatDialog from "../chat/chat-dialog";
+import { collection, query, where, getDocs, limit } from "firebase/firestore";
 
 export default function UserProfile() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const router = useRouter();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [adminId, setAdminId] = useState<string | null>(null);
 
-  const isAdmin = user?.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
-  const adminId = process.env.NEXT_PUBLIC_ADMIN_UID;
+  useEffect(() => {
+    const findAdminId = async () => {
+      // In a real app, you might get this from a config document for efficiency.
+      // Here, we query the users collection to find a user with isAdmin: true.
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("isAdmin", "==", true), limit(1));
+      
+      try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const adminDoc = querySnapshot.docs[0];
+          setAdminId(adminDoc.id);
+        } else {
+          console.warn("No admin user found in the database.");
+        }
+      } catch (error) {
+        console.error("Error finding admin user:", error);
+      }
+    };
+
+    if (user && !isAdmin) {
+      findAdminId();
+    }
+  }, [user, isAdmin]);
 
   const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -84,7 +108,7 @@ export default function UserProfile() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {adminId && (
+      {adminId && !isAdmin && (
         <ChatDialog 
           isOpen={isChatOpen}
           onClose={() => setIsChatOpen(false)}

@@ -1,5 +1,10 @@
 
 
+import type { User as FirebaseUser } from 'firebase/auth';
+
+export interface AppUser extends FirebaseUser {
+    isAdmin?: boolean;
+}
 export interface Product {
   id: string; // This will be the Firestore document ID
   name: string;

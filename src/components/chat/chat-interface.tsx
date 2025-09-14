@@ -17,11 +17,10 @@ interface ChatInterfaceProps {
 }
 
 export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
-    const { user, loading } = useAuth();
+    const { user, loading, isAdmin } = useAuth();
     const [newMessage, setNewMessage] = useState("");
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    const isAdmin = user?.uid === process.env.NEXT_PUBLIC_ADMIN_UID;
     const chatId = isAdmin ? chatPartnerId : user?.uid;
 
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(

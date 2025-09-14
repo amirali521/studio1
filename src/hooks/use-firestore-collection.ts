@@ -19,10 +19,12 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { db } from "@/lib/firebase";
+import type { AppUser } from "@/lib/types";
+
 
 // Overload signatures
-export function useFirestoreCollection<s>(collectionName: "users"): { 
-    data: (import("firebase/auth").User & { id: string })[]; 
+export function useFirestoreCollection(collectionName: "users"): { 
+    data: (AppUser & { id: string })[]; 
     loading: boolean;
     // ... other methods if they apply to the 'users' collection
 };

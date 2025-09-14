@@ -16,6 +16,8 @@ interface ChatDialogProps {
 }
 
 export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps) {
+  if (!adminId) return null;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">

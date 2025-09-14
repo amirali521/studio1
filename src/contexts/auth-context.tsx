@@ -3,30 +3,52 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { usePathname, useRouter } from 'next/navigation';
 import LoadingScreen from '@/components/layout/loading-screen';
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
+interface AppUser extends User {
+    isAdmin?: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+interface AuthContextType {
+  user: AppUser | null;
+  loading: boolean;
+  isAdmin: boolean;
+}
 
-const PROTECTED_ROUTES = ['/dashboard', '/sales', '/analytics', '/barcodes', '/products', '/returns', '/settings'];
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, isAdmin: false });
+
+const PROTECTED_ROUTES = ['/dashboard', '/sales', '/analytics', '/barcodes', '/products', '/returns', '/settings', '/admin'];
 const PUBLIC_ROUTES = ['/', '/login', '/signup', '/forgot-password'];
 const VERIFICATION_ROUTE = '/email-verification';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        const userData = userDoc.data();
+        
+        const appUser: AppUser = {
+          ...firebaseUser,
+          isAdmin: userData?.isAdmin || false,
+        };
+
+        setUser(appUser);
+        setIsAdmin(appUser.isAdmin || false);
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+      }
       setLoading(false);
     });
 
@@ -81,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );
