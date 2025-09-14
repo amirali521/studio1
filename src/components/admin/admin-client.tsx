@@ -10,12 +10,13 @@ import { User as FirebaseUser } from "firebase/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Button } from "../ui/button";
-import { MessageSquare, Search } from "lucide-react";
+import { MessageSquare, Search, Users, CircleDot, CircleOff } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 
 interface AppUser extends Partial<FirebaseUser> {
     id: string;
+    lastLogin?: string;
 }
 
 export default function AdminClient() {
@@ -29,6 +30,19 @@ export default function AdminClient() {
       router.push("/dashboard");
     }
   }, [user, loading, isAdmin, router]);
+
+  const { activeUsers, offlineUsers, totalUsers } = useMemo(() => {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+    const active = users.filter(u => u.lastLogin && new Date(u.lastLogin) > fiveMinutesAgo);
+    
+    return {
+      activeUsers: active.length,
+      offlineUsers: users.length - active.length,
+      totalUsers: users.length,
+    }
+  }, [users]);
 
   const filteredUsers = useMemo(() => {
     if (!searchTerm) {
@@ -51,7 +65,38 @@ export default function AdminClient() {
 
 
   return (
-     <main className="flex-1 p-4 sm:p-6">
+     <main className="flex-1 p-4 sm:p-6 space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{totalUsers}</div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+                    <CircleDot className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{activeUsers}</div>
+                    <p className="text-xs text-muted-foreground">Online in the last 5 minutes</p>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Offline Users</CardTitle>
+                    <CircleOff className="h-4 w-4 text-red-500" />
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold">{offlineUsers}</div>
+                </CardContent>
+            </Card>
+        </div>
+
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">App Users</CardTitle>
