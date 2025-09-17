@@ -119,7 +119,7 @@ export default function BarcodeClient() {
 
         // Use the first barcode to determine the height ratio
         const firstElement = barcodeElements[0];
-        const firstCanvas = await html2canvas(firstElement, { scale: 2, useCORS: true });
+        const firstCanvas = await html2canvas(firstElement, { scale: 2, useCORS: true, backgroundColor: null });
         const barcodeHeight = barcodeWidth * (firstCanvas.height / firstCanvas.width);
 
         const rowsPerPage = Math.floor((pageHeight - (margin * 2)) / barcodeHeight);
@@ -137,7 +137,7 @@ export default function BarcodeClient() {
                 y = margin;
             }
 
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: null });
             const imgData = canvas.toDataURL('image/png');
             
             pdf.addImage(imgData, 'PNG', x, y, barcodeWidth, barcodeHeight);
