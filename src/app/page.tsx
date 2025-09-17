@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
-import LandingHero from "@/components/landing-hero";
+import AnimatedLandingHero from "@/components/animated-landing-hero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const features = [
@@ -89,7 +89,7 @@ export default function LandingPage() {
           </div>
            {/* Hero Graphic */}
           <div className="container max-w-5xl mt-12 px-4">
-              <LandingHero className="rounded-xl border bg-card shadow-lg"/>
+              <AnimatedLandingHero className="rounded-xl border bg-card shadow-lg"/>
           </div>
         </section>
 

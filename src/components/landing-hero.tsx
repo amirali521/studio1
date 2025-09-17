@@ -35,7 +35,7 @@ export default function LandingHero({ className, ...props }: LandingHeroProps) {
         
         {/* Header */}
         <rect x="50" y="30" width="400" height="40" rx="0" fill="hsl(var(--muted)/0.5)" />
-         <border x="50" y="70" width="400" height="1" fill="hsl(var(--border))" />
+         <line x1="50" y1="70" x2="450" y2="70" stroke="hsl(var(--border))" />
         <circle cx="70" cy="50" r="6" fill="#ef4444" />
         <circle cx="90" cy="50" r="6" fill="#f59e0b" />
         <circle cx="110" cy="50" r="6" fill="#22c55e" />
