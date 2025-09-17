@@ -16,10 +16,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { BarcodeDisplay, type DownloadFormat } from "./barcode";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { Loader2, Printer, Download, Check } from "lucide-react";
+import { Loader2, Printer, Download, FileText } from "lucide-react";
 import Link from "next/link";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/contexts/auth-context";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function BarcodeClient() {
   const { user } = useAuth();
@@ -29,6 +31,7 @@ export default function BarcodeClient() {
   const [searchTerm, setSearchTerm] = useState("");
   const [qrSize, setQrSize] = useState(150);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const { toast } = useToast();
   const [downloadFormat, setDownloadFormat] = useState<DownloadFormat>('svg');
 
@@ -83,6 +86,77 @@ export default function BarcodeClient() {
     
     setIsDownloading(false);
   };
+  
+  const handleDownloadPdf = async () => {
+    if (itemsToDisplay.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No codes for PDF",
+        description: "Please select a product with stock available.",
+      });
+      return;
+    }
+    setIsGeneratingPdf(true);
+
+    const grid = document.getElementById('qr-code-grid');
+    if (!grid) {
+      setIsGeneratingPdf(false);
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(grid, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const canvasAspectRatio = canvasWidth / canvasHeight;
+      
+      let imgWidth = pdfWidth;
+      let imgHeight = imgWidth / canvasAspectRatio;
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+      
+      pdf.save(`${selectedProduct?.name || 'barcodes'}.pdf`);
+      toast({
+        title: "PDF Generated",
+        description: "Your PDF with all QR codes has been downloaded.",
+      });
+
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        variant: "destructive",
+        title: "PDF Generation Failed",
+        description: "An unexpected error occurred while creating the PDF.",
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
 
   const loading = productsLoading || itemsLoading || !user;
 
@@ -110,7 +184,7 @@ export default function BarcodeClient() {
 
   return (
     <main className="flex-1 p-4 sm:p-6">
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 justify-between items-end print:hidden">
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 justify-between items-end print:hidden">
         <div className="lg:col-span-1 w-full">
           <Label htmlFor="product-select">Select Product</Label>
           <Select
@@ -151,28 +225,34 @@ export default function BarcodeClient() {
             disabled={itemsToDisplay.length === 0}
           />
         </div>
-        <div className="lg:col-span-1 w-full">
-            <Label htmlFor="format-select">Download Format</Label>
-            <Select value={downloadFormat} onValueChange={(val) => setDownloadFormat(val as DownloadFormat)}>
-                <SelectTrigger id="format-select">
-                    <SelectValue placeholder="Select format" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="svg">SVG</SelectItem>
-                    <SelectItem value="png">PNG</SelectItem>
-                    <SelectItem value="jpg">JPG</SelectItem>
-                </SelectContent>
-            </Select>
-        </div>
-        <div className="flex gap-2 self-end w-full lg:col-span-1">
-             <Button className="w-full" variant="outline" onClick={handleDownloadAll} disabled={itemsToDisplay.length === 0 || isDownloading}>
-                {isDownloading ? <Loader2 className="mr-2 animate-spin"/> : <Download className="mr-2"/>}
-                Download All
-            </Button>
-            <Button className="w-full" onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
-                <Printer className="mr-2"/>
-                Print
-            </Button>
+        
+        <div className="flex flex-col gap-2 self-end w-full lg:col-span-1">
+             <Label htmlFor="format-select">Actions</Label>
+            <div className="flex gap-2">
+                <Select value={downloadFormat} onValueChange={(val) => setDownloadFormat(val as DownloadFormat)}>
+                    <SelectTrigger id="format-select" className="w-2/3">
+                        <SelectValue placeholder="Format" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="svg">SVG</SelectItem>
+                        <SelectItem value="png">PNG</SelectItem>
+                        <SelectItem value="jpg">JPG</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button className="w-1/3" variant="outline" onClick={handleDownloadAll} disabled={itemsToDisplay.length === 0 || isDownloading}>
+                    {isDownloading ? <Loader2 className="animate-spin"/> : <Download />}
+                </Button>
+            </div>
+            <div className="flex gap-2">
+                 <Button className="w-1/2" onClick={handleDownloadPdf} disabled={itemsToDisplay.length === 0 || isGeneratingPdf}>
+                    {isGeneratingPdf ? <Loader2 className="animate-spin"/> : <FileText />}
+                    PDF
+                </Button>
+                <Button className="w-1/2" onClick={handlePrint} disabled={itemsToDisplay.length === 0}>
+                    <Printer />
+                    Print
+                </Button>
+            </div>
         </div>
       </div>
 
