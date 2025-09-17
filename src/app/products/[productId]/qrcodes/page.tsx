@@ -87,11 +87,10 @@ export default function ProductQRCodesPage() {
               <BarcodeDisplay 
                 key={item.id} 
                 item={{
-                  ...product,
                   serialNumber: item.serialNumber,
-                  productName: product.name,
                   uid: user.uid
                 }}
+                productName={product.name}
               />
             ))}
           </div>

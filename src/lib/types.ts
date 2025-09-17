@@ -52,7 +52,6 @@ export interface Sale {
 export interface QrCodeData {
   serialNumber: string;
   uid: string;
-  productName: string;
 }
 
 export interface ChatMessage {
@@ -61,3 +60,4 @@ export interface ChatMessage {
     senderId: string;
     timestamp: string;
 }
+

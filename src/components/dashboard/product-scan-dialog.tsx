@@ -95,7 +95,7 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
     let scannedData: Partial<QrCodeData> = {};
     try {
         scannedData = JSON.parse(text);
-        if (!scannedData.serialNumber || !scannedData.uid || !scannedData.productName) {
+        if (!scannedData.serialNumber || !scannedData.uid) {
             throw new Error("Invalid QR data");
         }
         setLastScanResult({ success: true, message: "Code Scanned! Prefilling..." });

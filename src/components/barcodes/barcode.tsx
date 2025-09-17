@@ -5,23 +5,20 @@ import { useMemo, useRef } from 'react';
 import QRCode from 'qrcode';
 import { Button } from '../ui/button';
 import { Download } from 'lucide-react';
+import { QrCodeData } from '@/lib/types';
 
-interface SimpleQrCodeData {
-    serialNumber: string;
-    uid: string;
-    productName: string;
-}
 
 export type DownloadFormat = 'svg' | 'png' | 'jpg';
 
 interface BarcodeDisplayProps {
-    item: SimpleQrCodeData;
+    item: QrCodeData;
+    productName: string;
     size?: number;
     downloadFormat?: DownloadFormat;
 }
 
-export function BarcodeDisplay({ item, size = 150, downloadFormat = 'svg' }: BarcodeDisplayProps) {
-  const { serialNumber, productName } = item;
+export function BarcodeDisplay({ item, productName, size = 150, downloadFormat = 'svg' }: BarcodeDisplayProps) {
+  const { serialNumber } = item;
   const svgContainerRef = useRef<HTMLDivElement>(null);
 
   const qrCodeSvg = useMemo(() => {

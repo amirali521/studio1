@@ -104,7 +104,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         return;
     }
     
-    if (!scannedData.serialNumber || !scannedData.uid || !scannedData.productName) {
+    if (!scannedData.serialNumber || !scannedData.uid) {
          setLastScanResult({ success: false, message: "Invalid QR data." });
          return;
     }
