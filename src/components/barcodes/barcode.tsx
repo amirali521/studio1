@@ -86,6 +86,7 @@ export function BarcodeDisplay({ item, productName, size = 150, downloadFormat =
 
   return (
     <div 
+      data-barcode-display
       className="p-2 border rounded-lg flex flex-col items-center justify-center break-inside-avoid bg-white" // Added bg-white for html2canvas
       style={{ width: `${size}px` }}
     >

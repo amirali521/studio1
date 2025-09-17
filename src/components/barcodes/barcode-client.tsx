@@ -98,64 +98,74 @@ export default function BarcodeClient() {
     }
     setIsGeneratingPdf(true);
 
-    const grid = document.getElementById('qr-code-grid');
-    if (!grid) {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'pt', // Use points for better precision
+      format: 'a4'
+    });
+
+    const barcodeElements = document.querySelectorAll<HTMLDivElement>('[data-barcode-display]');
+    if (barcodeElements.length === 0) {
       setIsGeneratingPdf(false);
       return;
     }
 
     try {
-      const canvas = await html2canvas(grid, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: 'a4'
-      });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 40; // 40pt margin
+        const barcodesPerRow = 4;
+        const barcodeWidth = (pageWidth - (margin * 2)) / barcodesPerRow;
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const canvasAspectRatio = canvasWidth / canvasHeight;
-      
-      let imgWidth = pdfWidth;
-      let imgHeight = imgWidth / canvasAspectRatio;
-      
-      let heightLeft = imgHeight;
-      let position = 0;
+        // Use the first barcode to determine the height ratio
+        const firstElement = barcodeElements[0];
+        const firstCanvas = await html2canvas(firstElement, { scale: 2, useCORS: true });
+        const barcodeHeight = barcodeWidth * (firstCanvas.height / firstCanvas.width);
 
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
+        const rowsPerPage = Math.floor((pageHeight - (margin * 2)) / barcodeHeight);
+        const barcodesPerPage = barcodesPerRow * rowsPerPage;
 
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-      }
-      
-      pdf.save(`${selectedProduct?.name || 'barcodes'}.pdf`);
-      toast({
-        title: "PDF Generated",
-        description: "Your PDF with all QR codes has been downloaded.",
-      });
+        let x = margin;
+        let y = margin;
+
+        for (let i = 0; i < barcodeElements.length; i++) {
+            const element = barcodeElements[i];
+            
+            if (i > 0 && i % barcodesPerPage === 0) {
+                pdf.addPage();
+                x = margin;
+                y = margin;
+            }
+
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            
+            pdf.addImage(imgData, 'PNG', x, y, barcodeWidth, barcodeHeight);
+            
+            x += barcodeWidth;
+            if ((i + 1) % barcodesPerRow === 0) {
+                x = margin;
+                y += barcodeHeight;
+            }
+        }
+        
+        pdf.save(`${selectedProduct?.name || 'barcodes'}.pdf`);
+        toast({
+            title: "PDF Generated",
+            description: "Your PDF with all QR codes has been downloaded.",
+        });
 
     } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        variant: "destructive",
-        title: "PDF Generation Failed",
-        description: "An unexpected error occurred while creating the PDF.",
-      });
+        console.error("Error generating PDF:", error);
+        toast({
+            variant: "destructive",
+            title: "PDF Generation Failed",
+            description: "An unexpected error occurred while creating the PDF.",
+        });
     } finally {
-      setIsGeneratingPdf(false);
+        setIsGeneratingPdf(false);
     }
-  };
+};
 
 
   const loading = productsLoading || itemsLoading || !user;
