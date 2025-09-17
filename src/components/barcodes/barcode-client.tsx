@@ -89,67 +89,47 @@ export default function BarcodeClient() {
   
   const handleDownloadPdf = async () => {
     if (itemsToDisplay.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "No codes for PDF",
-        description: "Please select a product with stock available.",
-      });
-      return;
+        toast({
+            variant: "destructive",
+            title: "No codes for PDF",
+            description: "Please select a product with stock available.",
+        });
+        return;
     }
     setIsGeneratingPdf(true);
 
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'pt', // Use points for better precision
-      format: 'a4'
-    });
-
-    const barcodeElements = document.querySelectorAll<HTMLDivElement>('[data-barcode-display]');
-    if (barcodeElements.length === 0) {
-      setIsGeneratingPdf(false);
-      return;
+    const grid = document.getElementById('qr-code-grid');
+    if (!grid) {
+        toast({
+            variant: "destructive",
+            title: "PDF Generation Error",
+            description: "Could not find the content to print.",
+        });
+        setIsGeneratingPdf(false);
+        return;
     }
 
     try {
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 40; // 40pt margin
-        const barcodesPerRow = 4;
-        const barcodeWidth = (pageWidth - (margin * 2)) / barcodesPerRow;
-
-        // Use the first barcode to determine the height ratio
-        const firstElement = barcodeElements[0];
-        const firstCanvas = await html2canvas(firstElement, { scale: 2, useCORS: true, backgroundColor: null });
-        const barcodeHeight = barcodeWidth * (firstCanvas.height / firstCanvas.width);
-
-        const rowsPerPage = Math.floor((pageHeight - (margin * 2)) / barcodeHeight);
-        const barcodesPerPage = barcodesPerRow * rowsPerPage;
-
-        let x = margin;
-        let y = margin;
-
-        for (let i = 0; i < barcodeElements.length; i++) {
-            const element = barcodeElements[i];
-            
-            if (i > 0 && i % barcodesPerPage === 0) {
-                pdf.addPage();
-                x = margin;
-                y = margin;
-            }
-
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true, backgroundColor: null });
-            const imgData = canvas.toDataURL('image/png');
-            
-            pdf.addImage(imgData, 'PNG', x, y, barcodeWidth, barcodeHeight);
-            
-            x += barcodeWidth;
-            if ((i + 1) % barcodesPerRow === 0) {
-                x = margin;
-                y += barcodeHeight;
-            }
-        }
+        const canvas = await html2canvas(grid, {
+            scale: 2, // Higher scale for better quality
+            useCORS: true,
+            backgroundColor: null,
+        });
         
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = canvas.width;
+        const imgHeight = canvas.height;
+
+        // Create a PDF with a single page that fits the entire canvas
+        const pdf = new jsPDF({
+            orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [imgWidth, imgHeight]
+        });
+
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
         pdf.save(`${selectedProduct?.name || 'barcodes'}.pdf`);
+
         toast({
             title: "PDF Generated",
             description: "Your PDF with all QR codes has been downloaded.",
