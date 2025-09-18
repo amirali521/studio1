@@ -96,13 +96,13 @@ export default function LandingPage() {
                             <p className="mt-2 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-bold">
                                Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                             </p>
-                            <Button asChild size="lg" className="mt-2">
+                            <Button asChild size="lg" className="mt-4">
                                 <Link href="/signup">
                                     Learn More
                                 </Link>
                             </Button>
                         </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mt-1 mb-[-1rem]"/>
+                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mb-[-1rem]"/>
                     </div>
                 </div>
             </div>
