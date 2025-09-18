@@ -87,7 +87,7 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col">
         <section className="w-full pt-20">
             <div className="container mx-auto px-4 mt-5">
-                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden w-full">
+                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 pb-10 md:p-12 md:pb-14 overflow-hidden w-full">
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="flex flex-col items-center">
                             <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
@@ -96,13 +96,13 @@ export default function LandingPage() {
                             <p className="mt-6 max-w-xl mx-auto text-muted-foreground text-center md:text-lg">
                                Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                             </p>
-                            <Button asChild size="lg" className="mt-6">
+                            <Button asChild size="lg" className="mt-8">
                                 <Link href="/signup">
                                     Learn More
                                 </Link>
                             </Button>
                         </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mb-[-5rem]"/>
+                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto"/>
                     </div>
                 </div>
             </div>
