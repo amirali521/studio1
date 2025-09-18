@@ -76,7 +76,7 @@ export interface Friend {
 export interface FriendRequest {
     id: string; // UID of the user who sent/received the request
     direction: 'incoming' | 'outgoing';
-    status: 'pending' | 'accepted' | 'declined' | 'blocked';
+    status: 'pending' | 'accepted' | 'declined';
     displayName: string | null;
     email: string | null;
     photoURL: string | null;
@@ -103,8 +103,4 @@ export interface GroupInvitation {
     createdAt: string;
 }
 
-export interface BlockedUser {
-    id: string; // UID of the blocked user
-    displayName: string | null;
-    blockedAt: string;
-}
+    

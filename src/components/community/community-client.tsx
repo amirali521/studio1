@@ -5,12 +5,12 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { type AppUser, type Friend, type FriendRequest, type GroupChat, type BlockedUser, GroupInvitation } from "@/lib/types";
+import { type AppUser, type Friend, type FriendRequest, type GroupChat, type GroupInvitation } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle, EllipsisVertical, UserX, Trash2, ShieldOff } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle, EllipsisVertical, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
 import { collection, onSnapshot, orderBy, query, writeBatch, doc, arrayRemove, getDocs, where, deleteDoc, setDoc, arrayUnion } from "firebase/firestore";
@@ -41,7 +41,6 @@ export default function CommunityClient() {
   const { data: groupChats, loading: groupsLoading, updateItem: updateGroup } = useFirestoreCollection("groupChats");
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [groupInvites, setGroupInvites] = useState<GroupInvitation[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
@@ -55,7 +54,6 @@ export default function CommunityClient() {
     const collectionsToWatch = [
         { name: "friends", setter: setFriends, orderByField: "displayName" },
         { name: "friendRequests", setter: setFriendRequests, orderByField: "createdAt" },
-        { name: "blockedUsers", setter: setBlockedUsers, orderByField: "blockedAt" },
         { name: "groupInvitations", setter: setGroupInvites, orderByField: "createdAt" },
     ];
 
@@ -96,17 +94,15 @@ export default function CommunityClient() {
     if (!findUsersSearchTerm.trim() || !user) return [];
     const lowercasedTerm = findUsersSearchTerm.toLowerCase();
     const adminUid = firebaseConfig.adminUid;
-    const blockedIds = new Set(blockedUsers.map(b => b.id));
 
     return allUsers.filter(
       (u) =>
         u.id !== user.uid &&
         u.id !== adminUid &&
-        !blockedIds.has(u.id) &&
         (u.displayName?.toLowerCase().includes(lowercasedTerm) ||
           u.email?.toLowerCase().includes(lowercasedTerm))
     );
-  }, [findUsersSearchTerm, allUsers, user, blockedUsers]);
+  }, [findUsersSearchTerm, allUsers, user]);
   
   const filteredChats = useMemo(() => {
     const now = new Date();
@@ -196,11 +192,7 @@ export default function CommunityClient() {
       toast({ title: "Friend Request Sent" });
     } catch (error: any) {
       console.error("Error sending friend request:", error);
-      if (error.code === 'permission-denied') {
-        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests at this time." });
-      } else {
-        toast({ variant: "destructive", title: "Error", description: "Could not send friend request." });
-      }
+      toast({ variant: "destructive", title: "Error", description: "Could not send friend request." });
     }
   };
 
@@ -257,33 +249,6 @@ export default function CommunityClient() {
         toast({ variant: "destructive", title: "Error", description: "Could not remove friend." });
      }
   };
-  
-  const handleBlockUser = async (userToBlock: { id: string, displayName: string | null }) => {
-    if (!user) return;
-    try {
-        const timestamp = new Date().toISOString();
-        const myBlockedUserRef = doc(db, "users", user.uid, "blockedUsers", userToBlock.id);
-        
-        // Just add to the blocked list. Do not remove friend or requests.
-        await setDoc(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
-        
-        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked. They will not be able to send you friend requests if you unfriend them.` });
-    } catch (error) {
-        console.error("Error blocking user:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not block user." });
-    }
-  };
-
-  const handleUnblockUser = async (userIdToUnblock: string) => {
-    if (!user) return;
-    try {
-        await deleteDoc(doc(db, "users", user.uid, "blockedUsers", userIdToUnblock));
-        toast({ title: "User Unblocked" });
-    } catch (error) {
-        console.error("Error unblocking user:", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not unblock user." });
-    }
-  };
     
    const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -304,14 +269,13 @@ export default function CommunityClient() {
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
             <CardDescription>Connect with other users and groups.</CardDescription>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="chats"><MessageSquare className="mr-1 h-4 w-4"/>Chats</TabsTrigger>
               <TabsTrigger value="requests">
                 <Mail className="mr-1 h-4 w-4"/>Requests
                 {(incomingRequests.length + groupInvites.length) > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length + groupInvites.length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="find"><Search className="mr-1 h-4 w-4"/>Find</TabsTrigger>
-              <TabsTrigger value="blocked"><UserX className="mr-1 h-4 w-4"/>Blocked</TabsTrigger>
             </TabsList>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
@@ -368,23 +332,6 @@ export default function CommunityClient() {
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                     <AlertDialogAction variant="destructive" onClick={() => handleRemoveFriend(chat.id, chat.name)}>Remove</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                         <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                                    <UserX className="mr-2 h-4 w-4"/> Block User
-                                                </DropdownMenuItem>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Block {chat.name}?</AlertDialogTitle>
-                                                    <AlertDialogDescription>They will still be your friend, but if you unfriend them, they won't be able to send you a new friend request until you unblock them.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction variant="destructive" onClick={() => handleBlockUser({id: chat.id, displayName: chat.name})}>Block</AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
@@ -492,41 +439,6 @@ export default function CommunityClient() {
                    <p className="text-sm text-muted-foreground text-center py-4">Start typing to find users.</p>
                 )}
               </TabsContent>
-               <TabsContent value="blocked">
-                 {blockedUsers.length > 0 ? (
-                    <div className="space-y-2">
-                        {blockedUsers.map(blockedUser => (
-                            <div key={blockedUser.id} className="flex items-center gap-3 p-2">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarFallback>{getInitials(blockedUser.displayName)}</AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1 truncate">
-                                    <p className="text-sm font-medium truncate">{blockedUser.displayName || 'Unnamed User'}</p>
-                                </div>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="outline" size="sm">
-                                            <ShieldOff className="mr-2 h-4 w-4"/> Unblock
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Unblock {blockedUser.displayName}?</AlertDialogTitle>
-                                            <AlertDialogDescription>They will be able to send you friend requests again if you are not friends.</AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={() => handleUnblockUser(blockedUser.id)}>Unblock</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </div>
-                        ))}
-                    </div>
-                 ) : (
-                    <p className="text-sm text-muted-foreground text-center py-4">You haven't blocked any users.</p>
-                 )}
-              </TabsContent>
             </ScrollArea>
           </CardContent>
         </Tabs>
@@ -553,3 +465,5 @@ export default function CommunityClient() {
     </>
   );
 }
+
+    
