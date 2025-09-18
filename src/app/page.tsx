@@ -84,8 +84,8 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <section className="w-full mt-2">
-            <div className="container mx-auto px-4 mt-2">
+        <section className="w-full mt-5">
+            <div className="container mx-auto px-4 mt-5">
                 <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-4 pt-4 md:p-12 md:pt-4 pb-5 md:pb-7 overflow-hidden w-full">
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="flex flex-col items-center">
