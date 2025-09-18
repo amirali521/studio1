@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
 import AnimatedLandingHero from "@/components/animated-landing-hero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AnimatedAnalyticsBackground from "@/components/animated-analytics-background";
 
 const features = [
   {
@@ -62,6 +63,7 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
+       <AnimatedAnalyticsBackground className="fixed inset-0 w-full h-full object-cover -z-10 opacity-30" />
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 max-w-screen-2xl items-center px-4">
           <div className="mr-4 flex">
@@ -80,7 +82,7 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="space-y-6 pb-8 pt-4 md:pb-12 md:pt-8 lg:py-16">
+        <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-16">
           <div className="container flex flex-col items-start gap-8 px-4 text-left">
             <h1 className="w-full font-headline text-3xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
               Effortless Inventory, Powerful Sales
