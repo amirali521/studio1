@@ -70,7 +70,7 @@ export default function LandingPage() {
           <div className="w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
       </div>
       
-      <header className="w-full">
+      <header className="w-full absolute top-0 left-0 z-20">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
           <Link href="/" className="flex items-center space-x-2">
             <ScanBarcode className="h-7 w-7 text-primary" />
@@ -84,57 +84,59 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center">
-        <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div className="relative bg-card/20 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
-                <div className="absolute inset-0 z-0 opacity-50">
-                    <AnimatedLandingHero className="w-full h-full object-cover"/>
-                </div>
-                 <div className="absolute inset-0 z-0 bg-gradient-to-t from-card via-card/20 to-transparent"/>
-                <div className="relative z-10 flex flex-col items-center text-center gap-8">
-                    <div>
-                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
-                            Smart & Powerful Inventory
-                        </h1>
-                        <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-semibold">
-                           Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
-                        </p>
-                        <Button asChild size="lg" className="mt-8">
-                            <Link href="/signup">
-                                Learn More
-                            </Link>
-                        </Button>
+      <main className="flex-1 flex flex-col">
+        <section className="flex-1 flex items-center min-h-screen">
+            <div className="container mx-auto px-4 py-6 sm:py-8">
+                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
+                    <div className="absolute inset-0 z-0 opacity-100">
+                        <AnimatedLandingHero className="w-full h-full object-cover"/>
+                    </div>
+                     <div className="absolute inset-0 z-0 bg-gradient-to-t from-card via-card/10 to-transparent"/>
+                    <div className="relative z-10 flex flex-col items-center text-center gap-8">
+                        <div>
+                            <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
+                                Smart & Powerful Inventory
+                            </h1>
+                            <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-semibold">
+                               Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
+                            </p>
+                            <Button asChild size="lg" className="mt-8">
+                                <Link href="/signup">
+                                    Learn More
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-      </main>
+        </section>
 
-      <section className="py-12 sm:py-20">
-          <div className="container mx-auto px-4">
-              <div className="text-center mb-12">
-                  <h2 className="font-headline text-3xl md:text-4xl font-bold">All-in-One Business Solution</h2>
-                  <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
-                      From inventory tracking to sales analytics, Stockpile Scan provides all the tools you need to run your business efficiently.
-                  </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {features.map((feature, index) => (
-                      <Card key={index} className="bg-card/80 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
-                          <CardHeader className="flex flex-row items-center gap-4">
-                              <div className="bg-primary/10 p-3 rounded-lg">
-                                 <feature.icon className="h-6 w-6 text-primary" />
-                              </div>
-                              <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                              <p className="text-muted-foreground">{feature.description}</p>
-                          </CardContent>
-                      </Card>
-                  ))}
-              </div>
-          </div>
-      </section>
+        <section className="py-12 sm:py-20">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                    <h2 className="font-headline text-3xl md:text-4xl font-bold">All-in-One Business Solution</h2>
+                    <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
+                        From inventory tracking to sales analytics, Stockpile Scan provides all the tools you need to run your business efficiently.
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {features.map((feature, index) => (
+                        <Card key={index} className="bg-card/80 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
+                            <CardHeader className="flex flex-row items-center gap-4">
+                                <div className="bg-primary/10 p-3 rounded-lg">
+                                   <feature.icon className="h-6 w-6 text-primary" />
+                                </div>
+                                <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground">{feature.description}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </section>
+      </main>
 
       <footer className="bg-card mt-20">
           <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
