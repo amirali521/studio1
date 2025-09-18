@@ -85,9 +85,9 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <section className="flex-1 flex items-start md:pt-8 pt-8 min-h-screen">
-            <div className="container mx-auto px-4 py-6 sm:py-8">
-                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
+        <section className="flex-1 flex items-center justify-center min-h-screen pt-8 md:pt-8">
+            <div className="container mx-auto px-4 w-full h-full flex items-center pt-8">
+                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden w-full">
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div>
                             <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
@@ -102,7 +102,7 @@ export default function LandingPage() {
                                 </Link>
                             </Button>
                         </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mt-4 mb-[-3.5rem]"/>
+                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mt-4 mb-[-4.5rem]"/>
                     </div>
                 </div>
             </div>
