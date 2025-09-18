@@ -54,7 +54,7 @@ export default function AdminChatClient() {
                 Back to Users
             </Button>
         </div>
-        <Card className="flex-1 flex flex-col max-h-[70vh]">
+        <Card className="flex-1 flex flex-col max-h-[calc(100vh-12rem)]">
             <CardHeader>
                 <CardTitle className="font-headline">Chat with {chatPartner.displayName || "User"}</CardTitle>
                 <CardDescription>
@@ -62,7 +62,7 @@ export default function AdminChatClient() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col min-h-0">
-                 <ChatInterface chatPartnerId={chatUserId} />
+                 <ChatInterface chatPartnerId={chatUserId} isGroup={false} />
             </CardContent>
         </Card>
 

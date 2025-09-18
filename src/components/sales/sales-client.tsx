@@ -262,9 +262,9 @@ export default function SalesClient() {
 
   return (
     <>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Current Sale Section */}
-      <div className="md:col-span-2">
+      <div className="lg:col-span-2">
         <Card>
           <CardContent className="p-4 space-y-4">
              <div className="flex gap-2">
@@ -348,7 +348,7 @@ export default function SalesClient() {
       </div>
 
       {/* Actions and Total Section */}
-      <div className="md:col-span-1">
+      <div className="lg:col-span-1">
         <Card>
             <CardContent className="p-4 space-y-4">
                  <div className="flex justify-between items-center text-3xl font-bold pt-4">

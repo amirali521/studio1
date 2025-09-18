@@ -29,10 +29,10 @@ export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps
             Have a question? We're here to help.
           </DialogDescription>
         </DialogHeader>
-        <div className="h-[50vh] flex flex-col px-6 pb-6">
+        <div className="h-[60vh] sm:h-[50vh] flex flex-col px-6 pb-6">
           <Card className="flex-1 flex flex-col">
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-               <ChatInterface chatPartnerId={adminId} />
+               <ChatInterface chatPartnerId={adminId} isGroup={false} />
             </CardContent>
           </Card>
         </div>
