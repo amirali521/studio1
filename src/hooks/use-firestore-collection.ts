@@ -79,7 +79,8 @@ export function useFirestoreCollection<T extends { id?: string }>(
             return;
         }
         const groupsCollectionRef = collection(db, 'groupChats');
-        const q = query(groupsCollectionRef, where("members", "array-contains", user.uid), orderBy("createdAt", "desc"));
+        // Removed orderBy to avoid needing a composite index. Sorting is now done client-side.
+        const q = query(groupsCollectionRef, where("members", "array-contains", user.uid));
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const groupsData = querySnapshot.docs.map(doc => ({
                 id: doc.id,

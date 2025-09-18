@@ -136,11 +136,15 @@ export default function CommunityClient() {
     }));
 
     const allChats = [...friendsWithStatus, ...groupsAsChats];
-
+    
+    // Sort groups by creation date, and friends by online status then last activity
     const sorted = allChats.sort((a, b) => {
+        if (a.isGroup && b.isGroup) {
+            return b.lastActivity.getTime() - a.lastActivity.getTime(); // Newest groups first
+        }
         if (a.isOnline && !b.isOnline) return -1;
         if (!a.isOnline && b.isOnline) return 1;
-        return b.lastActivity.getTime() - a.lastActivity.getTime();
+        return b.lastActivity.getTime() - a.lastActivity.getTime(); // Most recent activity first
     });
     
     if (!chatsSearchTerm.trim()) {
