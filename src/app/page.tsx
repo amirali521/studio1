@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
-import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare } from "lucide-react";
+import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare, Facebook, Twitter, Instagram } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const features = [
@@ -82,11 +82,11 @@ export default function LandingPage() {
             <div className="bg-card rounded-2xl shadow-lg p-8 md:p-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div className="text-center md:text-left">
-                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
-                            Smart Inventory
+                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight pt-4">
+                            Smart & Powerful Inventory
                         </h1>
                         <p className="mt-4 max-w-md mx-auto md:mx-0 text-muted-foreground md:text-lg">
-                           Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights.
+                           Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                         </p>
                         <Button asChild size="lg" className="mt-8">
                             <Link href="/signup">
@@ -129,8 +129,13 @@ export default function LandingPage() {
       </section>
 
       <footer className="bg-card mt-20">
-          <div className="container mx-auto px-4 py-6 text-center text-muted-foreground">
-              <p className="text-sm">&copy; {new Date().getFullYear()} Stockpile Scan. All rights reserved.</p>
+          <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
+              <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Stockpile Scan. All rights reserved.</p>
+               <div className="flex gap-4 mt-4 sm:mt-0">
+                  <Link href="#" className="text-muted-foreground hover:text-primary"><Facebook /></Link>
+                  <Link href="#" className="text-muted-foreground hover:text-primary"><Twitter /></Link>
+                  <Link href="#" className="text-muted-foreground hover:text-primary"><Instagram /></Link>
+              </div>
           </div>
       </footer>
     </div>
