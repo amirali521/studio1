@@ -5,29 +5,30 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { type AppUser, type Friend, type FriendRequest, type ChatMessage } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { type AppUser, type Friend, type FriendRequest } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Send, Hourglass, Users } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Hourglass, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
-import { collection, doc, onSnapshot, orderBy, query, writeBatch } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, writeBatch, doc } from "firebase/firestore";
 import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "../ui/badge";
-import CommunityChatPopover from "./community-chat-popover";
+import CommunityChatDialog from "./community-chat-dialog";
 
 export default function CommunityClient() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeChatFriendId, setActiveChatFriendId] = useState<string | null>(null);
-
+  const [findUsersSearchTerm, setFindUsersSearchTerm] = useState("");
+  const [friendsSearchTerm, setFriendsSearchTerm] = useState("");
+  const [activeChatFriend, setActiveChatFriend] = useState<Friend | null>(null);
+  
   // Data fetching
   const { data: allUsers, loading: usersLoading } = useFirestoreCollection("users");
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -46,27 +47,27 @@ export default function CommunityClient() {
     const unsubscribeFriends = onSnapshot(friendsQuery, (snapshot) => {
         const friendsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Friend));
         setFriends(friendsData);
-        setDataLoading(false);
+        if(!usersLoading) setDataLoading(false);
     });
 
     const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
         const requestsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FriendRequest));
         setFriendRequests(requestsData);
-        setDataLoading(false);
+        if(!usersLoading) setDataLoading(false);
     });
 
     return () => {
         unsubscribeFriends();
         unsubscribeRequests();
     };
-  }, [user]);
+  }, [user, usersLoading]);
   
   const loading = authLoading || usersLoading || dataLoading;
 
   // Memoized data processing
-  const searchResults = useMemo(() => {
-    if (!searchTerm.trim() || !user) return [];
-    const lowercasedTerm = searchTerm.toLowerCase();
+  const findUsersResults = useMemo(() => {
+    if (!findUsersSearchTerm.trim() || !user) return [];
+    const lowercasedTerm = findUsersSearchTerm.toLowerCase();
     const adminUid = firebaseConfig.adminUid;
     return allUsers.filter(
       (u) =>
@@ -75,9 +76,9 @@ export default function CommunityClient() {
         (u.displayName?.toLowerCase().includes(lowercasedTerm) ||
           u.email?.toLowerCase().includes(lowercasedTerm))
     );
-  }, [searchTerm, allUsers, user]);
+  }, [findUsersSearchTerm, allUsers, user]);
   
-  const processedFriends = useMemo(() => {
+  const filteredFriends = useMemo(() => {
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
@@ -89,12 +90,23 @@ export default function CommunityClient() {
       };
     });
 
-    return friendsWithStatus.sort((a, b) => {
+    const sorted = friendsWithStatus.sort((a, b) => {
         if (a.isOnline && !b.isOnline) return -1;
         if (!a.isOnline && b.isOnline) return 1;
         return (a.displayName || "").localeCompare(b.displayName || "");
     });
-  }, [friends, allUsers]);
+    
+    if (!friendsSearchTerm.trim()) {
+        return sorted;
+    }
+
+    const lowercasedTerm = friendsSearchTerm.toLowerCase();
+    return sorted.filter(f => 
+        f.displayName?.toLowerCase().includes(lowercasedTerm) || 
+        f.email?.toLowerCase().includes(lowercasedTerm)
+    );
+
+  }, [friends, allUsers, friendsSearchTerm]);
 
   const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
   const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
@@ -195,11 +207,13 @@ export default function CommunityClient() {
   if (!user) return null;
 
   return (
+    <>
     <div className="flex justify-center">
       <Card className="w-full max-w-md">
         <Tabs defaultValue="friends" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
+            <CardDescription>Connect and chat with other users.</CardDescription>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="friends"><Users className="mr-1 h-4 w-4"/>Friends</TabsTrigger>
               <TabsTrigger value="requests">
@@ -210,24 +224,16 @@ export default function CommunityClient() {
             </TabsList>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-            <ScrollArea className="flex-1 p-6 pt-0 h-[calc(100vh-250px)]">
+            <ScrollArea className="flex-1 px-6 pb-6 pt-0 min-h-[450px]">
               <TabsContent value="friends">
-                {processedFriends.length > 0 ? (
+                 <div className="relative mb-4">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search friends..." className="pl-8" value={friendsSearchTerm} onChange={e => setFriendsSearchTerm(e.target.value)}/>
+                </div>
+                {filteredFriends.length > 0 ? (
                   <div className="space-y-1">
-                    {processedFriends.map(friend => (
-                       <CommunityChatPopover
-                        key={friend.id}
-                        friend={friend}
-                        currentUser={user}
-                        onOpenChange={(isOpen) => {
-                            if (isOpen) {
-                                setActiveChatFriendId(friend.id);
-                            } else if (activeChatFriendId === friend.id) {
-                                setActiveChatFriendId(null);
-                            }
-                        }}
-                       >
-                         <button className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
+                    {filteredFriends.map(friend => (
+                         <button key={friend.id} onClick={() => setActiveChatFriend(friend)} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
                             <div className="relative">
                                 <Avatar className="h-9 w-9">
                                     <AvatarImage src={friend.photoURL || undefined} />
@@ -241,11 +247,12 @@ export default function CommunityClient() {
                               <p className="text-xs truncate text-muted-foreground">{friend.email}</p>
                             </div>
                          </button>
-                      </CommunityChatPopover>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">Search for users to add friends.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {friendsSearchTerm ? "No friends found." : "Search for users to add friends."}
+                  </p>
                 )}
               </TabsContent>
               <TabsContent value="requests">
@@ -298,12 +305,12 @@ export default function CommunityClient() {
               <TabsContent value="find">
                 <div className="relative mb-4">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name or email..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}/>
+                  <Input placeholder="Search by name or email..." className="pl-8" value={findUsersSearchTerm} onChange={e => setFindUsersSearchTerm(e.target.value)}/>
                 </div>
-                 {searchTerm.trim() ? (
-                  searchResults.length > 0 ? (
+                 {findUsersSearchTerm.trim() ? (
+                  findUsersResults.length > 0 ? (
                       <div className="space-y-2">
-                          {searchResults.map(foundUser => {
+                          {findUsersResults.map(foundUser => {
                               const isFriend = friends.some(f => f.id === foundUser.id);
                               const requestSent = outgoingRequests.some(r => r.id === foundUser.id);
                               const requestReceived = incomingRequests.some(r => r.id === foundUser.id);
@@ -336,5 +343,14 @@ export default function CommunityClient() {
         </Tabs>
       </Card>
     </div>
+    {activeChatFriend && user && (
+        <CommunityChatDialog 
+            isOpen={!!activeChatFriend}
+            onClose={() => setActiveChatFriend(null)}
+            friend={activeChatFriend}
+            currentUser={user}
+        />
+    )}
+    </>
   );
 }

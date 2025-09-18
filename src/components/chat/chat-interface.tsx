@@ -4,7 +4,7 @@
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreSubcollection } from "@/hooks/use-firestore-subcollection";
 import type { ChatMessage } from "@/lib/types";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Loader2, Send } from "lucide-react";
@@ -24,13 +24,22 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
     const [newMessage, setNewMessage] = useState("");
     const viewportRef = useRef<HTMLDivElement>(null);
 
-    const chatId = isAdmin ? chatPartnerId : user?.uid;
+    // Determine chatId based on whether it's an admin or community chat
+    const chatId = useMemo(() => {
+        if (!user) return null;
+        // Admin chat (user to admin or vice-versa)
+        if (isAdmin || (user && chatPartnerId === "iNqXkJFtSIQVFTLWz6v5rvA9Lii1")) { // Using admin UID from config
+            return isAdmin ? chatPartnerId : user.uid;
+        }
+        // Community chat (peer-to-peer)
+        return [user.uid, chatPartnerId].sort().join("_");
+    }, [user, chatPartnerId, isAdmin]);
     
     // Fetch all users to get display names and avatars
     const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
 
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(
-        `chats/${chatId}/messages`
+        chatId ? `chats/${chatId}/messages` : null
     );
     
     useEffect(() => {
@@ -73,7 +82,7 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
     
     const getInitials = (name?: string | null) => {
         if (!name) return "U";
-        return name.split(" ").map((n) => n[0]).join("");
+        return name.split(" ").map((n) => n[0]).join("").toUpperCase();
     };
 
 
@@ -106,7 +115,7 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
                                         ? "bg-primary text-primary-foreground rounded-br-none" 
                                         : "bg-background text-foreground rounded-bl-none border"
                                )}>
-                                   <p className="text-sm">{msg.text}</p>
+                                   <p className="text-sm break-words">{msg.text}</p>
                                    <p className={cn(
                                        "text-xs mt-2 self-end",
                                        isSender ? "text-primary-foreground/70" : "text-muted-foreground"
