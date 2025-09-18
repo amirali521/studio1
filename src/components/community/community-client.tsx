@@ -20,6 +20,8 @@ import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "../ui/badge";
 
 export default function CommunityClient() {
   const { user, loading: authLoading } = useAuth();
@@ -180,66 +182,130 @@ export default function CommunityClient() {
   if (!user) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 h-[calc(100vh-100px)]">
-      {/* Left Panel: Friends & Requests */}
-      <Card className="md:col-span-1 lg:col-span-1 flex flex-col">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2"><Users/>Friends & Requests</CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col min-h-0">
-          <ScrollArea className="flex-1 pr-4 -mr-4">
-             {/* Friend Requests */}
-            {incomingRequests.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2"><Mail/>Incoming Requests</h3>
-                <div className="space-y-2">
-                  {incomingRequests.map(req => (
-                    <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={req.photoURL || undefined} />
-                        <AvatarFallback>{getInitials(req.displayName)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 truncate">
-                        <p className="text-sm font-medium truncate">{req.displayName}</p>
-                        <p className="text-xs text-muted-foreground truncate">{req.email}</p>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500" onClick={() => handleRequestResponse(req, true)}><Check className="h-4 w-4"/></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRequestResponse(req, false)}><X className="h-4 w-4"/></Button>
-                      </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
+      {/* Left Panel: Friends, Requests, Search */}
+      <Card className="lg:col-span-1 flex flex-col">
+        <Tabs defaultValue="friends" className="flex-1 flex flex-col min-h-0">
+          <CardHeader>
+            <CardTitle className="font-headline">Friends & Requests</CardTitle>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="friends"><Users className="mr-1 h-4 w-4"/>Friends</TabsTrigger>
+              <TabsTrigger value="requests">
+                <Mail className="mr-1 h-4 w-4"/>Requests
+                {incomingRequests.length > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="find"><Search className="mr-1 h-4 w-4"/>Find</TabsTrigger>
+            </TabsList>
+          </CardHeader>
+          <CardContent className="flex-1 flex flex-col min-h-0 p-0">
+            <ScrollArea className="flex-1 p-6 pt-0">
+              <TabsContent value="friends">
+                {friends.length > 0 ? (
+                  <div className="space-y-1">
+                    {friends.map(friend => (
+                      <button key={friend.id} onClick={() => setSelectedFriend(friend)} className={cn("w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors", selectedFriend?.id === friend.id ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src={friend.photoURL || undefined} />
+                          <AvatarFallback className={cn(selectedFriend?.id === friend.id ? "bg-primary-foreground text-primary" : "")}>{getInitials(friend.displayName)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 truncate">
+                          <p className="text-sm font-medium truncate">{friend.displayName}</p>
+                          <p className={cn("text-xs truncate", selectedFriend?.id === friend.id ? "text-primary-foreground/80" : "text-muted-foreground")}>{friend.email}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Search for users to add friends.</p>
+                )}
+              </TabsContent>
+              <TabsContent value="requests">
+                 {incomingRequests.length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Incoming</h3>
+                    <div className="space-y-2">
+                      {incomingRequests.map(req => (
+                        <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
+                          <Avatar className="h-9 w-9">
+                            <AvatarImage src={req.photoURL || undefined} />
+                            <AvatarFallback>{getInitials(req.displayName)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 truncate">
+                            <p className="text-sm font-medium truncate">{req.displayName}</p>
+                            <p className="text-xs text-muted-foreground truncate">{req.email}</p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500" onClick={() => handleRequestResponse(req, true)}><Check className="h-4 w-4"/></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500" onClick={() => handleRequestResponse(req, false)}><X className="h-4 w-4"/></Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                )}
+                 {outgoingRequests.length > 0 && (
+                    <div>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Sent</h3>
+                         <div className="space-y-2">
+                            {outgoingRequests.map(req => (
+                                <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage src={req.photoURL || undefined} />
+                                        <AvatarFallback>{getInitials(req.displayName)}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 truncate">
+                                        <p className="text-sm font-medium truncate">{req.displayName}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{req.email}</p>
+                                    </div>
+                                </div>
+                            ))}
+                         </div>
+                    </div>
+                )}
+                {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">No pending requests.</p>
+                )}
+              </TabsContent>
+              <TabsContent value="find">
+                <div className="relative mb-4">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search by name or email..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}/>
                 </div>
-              </div>
-            )}
-             {/* Friends List */}
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2"><MessageCircle/>My Friends</h3>
-              {friends.length > 0 ? (
-                <div className="space-y-1">
-                  {friends.map(friend => (
-                    <button key={friend.id} onClick={() => setSelectedFriend(friend)} className={cn("w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors", selectedFriend?.id === friend.id ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={friend.photoURL || undefined} />
-                        <AvatarFallback className={cn(selectedFriend?.id === friend.id ? "bg-primary-foreground text-primary" : "")}>{getInitials(friend.displayName)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 truncate">
-                        <p className="text-sm font-medium truncate">{friend.displayName}</p>
-                        <p className={cn("text-xs truncate", selectedFriend?.id === friend.id ? "text-primary-foreground/80" : "text-muted-foreground")}>{friend.email}</p>
+                 {searchTerm.trim() ? (
+                  searchResults.length > 0 ? (
+                      <div className="space-y-2">
+                          {searchResults.map(foundUser => {
+                              const isFriend = friends.some(f => f.id === foundUser.id);
+                              const requestSent = outgoingRequests.some(r => r.id === foundUser.id);
+                              return (
+                                  <div key={foundUser.id} className="flex items-center gap-3 p-2">
+                                      <Avatar className="h-9 w-9">
+                                          <AvatarImage src={foundUser.photoURL || undefined} />
+                                          <AvatarFallback>{getInitials(foundUser.displayName)}</AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 truncate">
+                                          <p className="text-sm font-medium truncate">{foundUser.displayName}</p>
+                                          <p className="text-xs text-muted-foreground truncate">{foundUser.email}</p>
+                                      </div>
+                                      <Button variant="outline" size="sm" onClick={() => handleSendRequest(foundUser)} disabled={isFriend || requestSent}>
+                                          {isFriend ? <Check className="h-4 w-4"/> : requestSent ? <Hourglass className="h-4 w-4"/> : <UserPlus className="h-4 w-4"/>}
+                                      </Button>
+                                  </div>
+                              )
+                          })}
                       </div>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                 <p className="text-sm text-muted-foreground text-center py-4">Search for users to add friends.</p>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
+                  ) : <p className="text-sm text-muted-foreground text-center py-4">No users found.</p>
+                ) : (
+                   <p className="text-sm text-muted-foreground text-center py-4">Start typing to find users.</p>
+                )}
+              </TabsContent>
+            </ScrollArea>
+          </CardContent>
+        </Tabs>
       </Card>
 
-      {/* Center Panel: Chat */}
-      <Card className="md:col-span-2 lg:col-span-2 flex flex-col">
+      {/* Right Panel: Chat */}
+      <Card className="lg:col-span-2 flex flex-col">
           {selectedFriend ? (
               <>
                  <CardHeader className="border-b">
@@ -303,73 +369,15 @@ export default function CommunityClient() {
                  </CardContent>
               </>
           ) : (
-            <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground">
+            <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
                 <MessagesSquare className="h-16 w-16 mb-4"/>
                 <h3 className="text-lg font-semibold">Select a friend to start chatting</h3>
-                <p className="max-w-xs">You can search for new friends on the right panel or select an existing friend from the list on the left.</p>
+                <p className="max-w-xs">You can find new friends in the 'Find' tab or select an existing friend from your friends list.</p>
             </div>
           )}
-      </Card>
-
-      {/* Right Panel: Search & Outgoing Requests */}
-      <Card className="md:col-span-3 lg:col-span-1 flex flex-col">
-        <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2"><Search/>Find Users</CardTitle>
-          <div className="relative">
-             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-             <Input placeholder="Search by name or email..." className="pl-8" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}/>
-          </div>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col min-h-0">
-           <ScrollArea className="flex-1 pr-4 -mr-4">
-              {searchTerm.trim() ? (
-                searchResults.length > 0 ? (
-                    <div className="space-y-2">
-                        {searchResults.map(foundUser => {
-                            const isFriend = friends.some(f => f.id === foundUser.id);
-                            const requestSent = outgoingRequests.some(r => r.id === foundUser.id);
-                            return (
-                                <div key={foundUser.id} className="flex items-center gap-3 p-2">
-                                    <Avatar className="h-9 w-9">
-                                        <AvatarImage src={foundUser.photoURL || undefined} />
-                                        <AvatarFallback>{getInitials(foundUser.displayName)}</AvatarFallback>
-                                    </Avatar>
-                                     <div className="flex-1 truncate">
-                                        <p className="text-sm font-medium truncate">{foundUser.displayName}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{foundUser.email}</p>
-                                    </div>
-                                    <Button variant="outline" size="sm" onClick={() => handleSendRequest(foundUser)} disabled={isFriend || requestSent}>
-                                        {isFriend ? <Check className="h-4 w-4"/> : requestSent ? <Hourglass className="h-4 w-4"/> : <UserPlus className="h-4 w-4"/>}
-                                    </Button>
-                                </div>
-                            )
-                        })}
-                    </div>
-                ) : <p className="text-sm text-muted-foreground text-center py-4">No users found.</p>
-              ) : (
-                outgoingRequests.length > 0 && (
-                    <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2"><Hourglass/>Sent Requests</h3>
-                         <div className="space-y-2">
-                            {outgoingRequests.map(req => (
-                                <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
-                                    <Avatar className="h-9 w-9">
-                                        <AvatarImage src={req.photoURL || undefined} />
-                                        <AvatarFallback>{getInitials(req.displayName)}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 truncate">
-                                        <p className="text-sm font-medium truncate">{req.displayName}</p>
-                                        <p className="text-xs text-muted-foreground truncate">{req.email}</p>
-                                    </div>
-                                </div>
-                            ))}
-                         </div>
-                    </div>
-                )
-              )}
-           </ScrollArea>
-        </CardContent>
       </Card>
     </div>
   );
 }
+
+    
