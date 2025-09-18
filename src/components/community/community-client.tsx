@@ -5,7 +5,6 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { useFirestoreUserSubcollection } from "@/hooks/use-firestore-user-subcollection";
 import { useFirestoreSubcollection } from "@/hooks/use-firestore-subcollection";
 import { type AppUser, type Friend, type FriendRequest, type ChatMessage } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, UserPlus, Mail, Check, X, Send, Hourglass, MessagesSquare, Users, MessageCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
-import { collection, doc, writeBatch } from "firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, writeBatch } from "firebase/firestore";
 import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,8 +32,38 @@ export default function CommunityClient() {
 
   // Data fetching
   const { data: allUsers, loading: usersLoading } = useFirestoreCollection("users");
-  const { data: friends, loading: friendsLoading } = useFirestoreUserSubcollection<Friend>("friends");
-  const { data: friendRequests, loading: requestsLoading } = useFirestoreUserSubcollection<FriendRequest>("friendRequests");
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+
+  useEffect(() => {
+    if (!user) {
+        setDataLoading(false);
+        return;
+    };
+
+    const friendsQuery = query(collection(db, "users", user.uid, "friends"), orderBy("displayName", "asc"));
+    const requestsQuery = query(collection(db, "users", user.uid, "friendRequests"), orderBy("createdAt", "desc"));
+
+    const unsubscribeFriends = onSnapshot(friendsQuery, (snapshot) => {
+        const friendsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Friend));
+        setFriends(friendsData);
+        setDataLoading(false);
+    });
+
+    const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
+        const requestsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FriendRequest));
+        setFriendRequests(requestsData);
+        setDataLoading(false);
+    });
+
+    return () => {
+        unsubscribeFriends();
+        unsubscribeRequests();
+    };
+  }, [user]);
+
 
   const chatId = useMemo(() => {
     if (!user || !selectedFriend) return null;
@@ -45,7 +74,7 @@ export default function CommunityClient() {
     chatId ? `chats/${chatId}/messages` : null
   );
 
-  const loading = authLoading || usersLoading || friendsLoading || requestsLoading;
+  const loading = authLoading || usersLoading || dataLoading;
 
   // Memoized data processing
   const searchResults = useMemo(() => {
@@ -95,6 +124,7 @@ export default function CommunityClient() {
       // Outgoing request for sender
       const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
       batch.set(senderRequestRef, {
+        id: recipient.id,
         direction: 'outgoing',
         status: 'pending',
         displayName: recipient.displayName,
@@ -106,6 +136,7 @@ export default function CommunityClient() {
       // Incoming request for recipient
       const recipientRequestRef = doc(db, "users", recipient.id, "friendRequests", user.uid);
       batch.set(recipientRequestRef, {
+        id: user.uid,
         direction: 'incoming',
         status: 'pending',
         displayName: user.displayName,
@@ -301,6 +332,9 @@ export default function CommunityClient() {
                           {searchResults.map(foundUser => {
                               const isFriend = friends.some(f => f.id === foundUser.id);
                               const requestSent = outgoingRequests.some(r => r.id === foundUser.id);
+                              const requestReceived = incomingRequests.some(r => r.id === foundUser.id);
+                              const isDisabled = isFriend || requestSent || requestReceived;
+
                               return (
                                   <div key={foundUser.id} className="flex items-center gap-3 p-2">
                                       <Avatar className="h-9 w-9">
@@ -311,8 +345,8 @@ export default function CommunityClient() {
                                           <p className="text-sm font-medium truncate">{foundUser.displayName}</p>
                                           <p className="text-xs text-muted-foreground truncate">{foundUser.email}</p>
                                       </div>
-                                      <Button variant="outline" size="sm" onClick={() => handleSendRequest(foundUser)} disabled={isFriend || requestSent}>
-                                          {isFriend ? <Check className="h-4 w-4"/> : requestSent ? <Hourglass className="h-4 w-4"/> : <UserPlus className="h-4 w-4"/>}
+                                      <Button variant="outline" size="sm" onClick={() => handleSendRequest(foundUser)} disabled={isDisabled}>
+                                          {isFriend ? <Check className="h-4 w-4"/> : (requestSent || requestReceived) ? <Hourglass className="h-4 w-4"/> : <UserPlus className="h-4 w-4"/>}
                                       </Button>
                                   </div>
                               )
@@ -403,5 +437,3 @@ export default function CommunityClient() {
     </div>
   );
 }
-
-    

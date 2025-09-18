@@ -23,6 +23,7 @@ export function useFirestoreUserSubcollection<T extends { id?: string }>(
     if (authLoading || !user) {
       if (!authLoading) {
         setLoading(false);
+        setData([]);
       }
       return;
     }
@@ -30,9 +31,14 @@ export function useFirestoreUserSubcollection<T extends { id?: string }>(
     const userDocRef = doc(db, "users", user.uid);
     const subcollectionRef = collection(userDocRef, subcollectionName);
     
-    // Order by creation time if available, otherwise just fetch
-    const q = query(subcollectionRef, orderBy("createdAt", "desc"));
+    // Fallback query without ordering
+    let q = query(subcollectionRef);
 
+    // Try to order by createdAt if it's likely to exist (e.g., for requests)
+    if (subcollectionName === 'friendRequests') {
+      q = query(subcollectionRef, orderBy("createdAt", "desc"));
+    }
+    
     const unsubscribe = onSnapshot(
       q,
       (querySnapshot) => {
@@ -44,8 +50,8 @@ export function useFirestoreUserSubcollection<T extends { id?: string }>(
         setLoading(false);
       },
       (error) => {
-        console.error(`Error fetching ${subcollectionName}:`, error);
-        // Attempt to fetch without ordering if 'createdAt' is the issue
+        console.error(`Error fetching ${subcollectionName} with ordering:`, error);
+        // Fallback to fetching without ordering if the ordered query fails
         const fallbackUnsubscribe = onSnapshot(subcollectionRef, (qs) => {
              const items = qs.docs.map((doc) => ({
                 id: doc.id,
@@ -66,5 +72,3 @@ export function useFirestoreUserSubcollection<T extends { id?: string }>(
 
   return { data, loading };
 }
-
-    
