@@ -1,6 +1,7 @@
 
 "use client";
 
+import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
