@@ -8,63 +8,36 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useFirestoreSubcollection } from "@/hooks/use-firestore-subcollection";
-import { type ChatMessage, type Friend } from "@/lib/types";
 import { User } from "firebase/auth";
-import { useState, useMemo, useRef, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Loader2, Send } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
-import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "../ui/card";
 import ChatInterface from "../chat/chat-interface";
+import { Users } from "lucide-react";
 
 interface CommunityChatDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  friend: Friend;
+  chatId: string;
+  chatName: string | null;
+  isGroup: boolean;
   currentUser: User;
+  photoURL?: string | null;
 }
 
 export default function CommunityChatDialog({
   isOpen,
   onClose,
-  friend,
+  chatId,
+  chatName,
+  isGroup,
   currentUser,
+  photoURL,
 }: CommunityChatDialogProps) {
-  const { toast } = useToast();
-  const previousMessagesCount = useRef(0);
 
-  const chatId = useMemo(() => {
-    return [currentUser.uid, friend.id].sort().join("_");
-  }, [currentUser.uid, friend.id]);
-
-  const { data: messages } = useFirestoreSubcollection<ChatMessage>(
-    chatId ? `chats/${chatId}/messages` : null
-  );
-
-  // Effect for new message notifications
-  useEffect(() => {
-    const currentMessagesCount = messages.length;
-    if (
-      isOpen &&
-      currentMessagesCount > 0 &&
-      currentMessagesCount > previousMessagesCount.current
-    ) {
-      const lastMessage = messages[currentMessagesCount - 1];
-      if (lastMessage && lastMessage.senderId !== currentUser.uid) {
-        toast({
-          title: `New message from ${friend.displayName}`,
-          description: lastMessage.text,
-        });
-      }
-    }
-    previousMessagesCount.current = currentMessagesCount;
-  }, [messages, currentUser.uid, friend.displayName, toast, isOpen]);
+  const getInitials = (name?: string | null) => {
+    if (!name) return "U";
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase();
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -72,19 +45,21 @@ export default function CommunityChatDialog({
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="font-headline flex items-center gap-2">
              <Avatar className="h-8 w-8">
-                <AvatarImage src={friend.photoURL || undefined} />
-                <AvatarFallback>{friend.displayName?.charAt(0)}</AvatarFallback>
+                <AvatarImage src={photoURL || undefined} />
+                <AvatarFallback>
+                    {isGroup ? <Users className="h-4 w-4"/> : getInitials(chatName)}
+                </AvatarFallback>
             </Avatar>
-            Chat with {friend.displayName}
+            {chatName}
           </DialogTitle>
           <DialogDescription>
-            You are now chatting directly with {friend.email}.
+            {isGroup ? "You are in a group conversation." : `You are now chatting directly with ${chatName}.`}
           </DialogDescription>
         </DialogHeader>
         <div className="h-[50vh] flex flex-col px-6 pb-6">
           <Card className="flex-1 flex flex-col">
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-              <ChatInterface chatPartnerId={friend.id} />
+              <ChatInterface chatPartnerId={chatId} isGroup={isGroup} />
             </CardContent>
           </Card>
         </div>

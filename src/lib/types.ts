@@ -59,6 +59,8 @@ export interface ChatMessage {
     text: string;
     senderId: string;
     timestamp: string;
+    senderName?: string;
+    senderPhotoURL?: string | null;
 }
 
 // Types for Community Chat
@@ -77,5 +79,14 @@ export interface FriendRequest {
     displayName: string | null;
     email: string | null;
     photoURL: string | null;
+    createdAt: string;
+}
+
+export interface GroupChat {
+    id: string;
+    name: string;
+    members: string[]; // Array of user UIDs
+    memberInfo: { [uid: string]: { displayName: string | null; photoURL: string | null; email: string | null } };
+    createdBy: string; // UID of the creator
     createdAt: string;
 }

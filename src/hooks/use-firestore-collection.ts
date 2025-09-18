@@ -19,12 +19,16 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { db } from "@/lib/firebase";
-import type { AppUser } from "@/lib/types";
+import type { AppUser, GroupChat } from "@/lib/types";
 
 
 // Overload signatures
 export function useFirestoreCollection(collectionName: "users"): { 
     data: AppUser[]; 
+    loading: boolean;
+};
+export function useFirestoreCollection(collectionName: "groupChats"): { 
+    data: GroupChat[]; 
     loading: boolean;
 };
 export function useFirestoreCollection<T extends { id?: string }>(
@@ -62,6 +66,27 @@ export function useFirestoreCollection<T extends { id?: string }>(
             setLoading(false);
         }, (error) => {
             console.error("Error fetching all users:", error);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }
+    
+    if (collectionName === 'groupChats') {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+        const groupsCollectionRef = collection(db, 'groupChats');
+        const q = query(groupsCollectionRef, where("members", "array-contains", user.uid), orderBy("createdAt", "desc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const groupsData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as T[];
+            setData(groupsData);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching group chats:", error);
             setLoading(false);
         });
         return () => unsubscribe();
@@ -115,8 +140,12 @@ export function useFirestoreCollection<T extends { id?: string }>(
   
   const addItem = async (item: Omit<T, "id" | 'createdAt'>) => {
     if (!user) throw new Error("User not authenticated");
-    const userDocRef = doc(db, "users", user.uid);
-    const dataCollectionRef = collection(userDocRef, collectionName);
+    const isGroupChat = collectionName === 'groupChats';
+    
+    const dataCollectionRef = isGroupChat 
+        ? collection(db, collectionName)
+        : collection(db, "users", user.uid, collectionName);
+
     const docRef = await addDoc(dataCollectionRef, {
         ...item,
         createdAt: new Date().toISOString()
@@ -142,7 +171,10 @@ export function useFirestoreCollection<T extends { id?: string }>(
 
   const deleteItem = async (itemId: string) => {
     if (!user) throw new Error("User not authenticated");
-    const itemDocRef = doc(db, "users", user.uid, collectionName, itemId);
+    const isGroupChat = collectionName === 'groupChats';
+     const itemDocRef = isGroupChat
+        ? doc(db, collectionName, itemId)
+        : doc(db, "users", user.uid, collectionName, itemId);
     await deleteDoc(itemDocRef);
   };
   

@@ -3,7 +3,7 @@
 
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreSubcollection } from "@/hooks/use-firestore-subcollection";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, AppUser, GroupChat } from "@/lib/types";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -13,34 +13,55 @@ import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import type { AppUser } from "@/lib/types";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 interface ChatInterfaceProps {
     chatPartnerId: string;
+    isGroup: boolean;
 }
 
-export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
+export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceProps) {
     const { user, loading: authLoading, isAdmin } = useAuth();
     const [newMessage, setNewMessage] = useState("");
     const viewportRef = useRef<HTMLDivElement>(null);
+    const [groupMembers, setGroupMembers] = useState<Record<string, { displayName: string | null, photoURL: string | null }>>({});
 
-    // Determine chatId based on whether it's an admin or community chat
-    const chatId = useMemo(() => {
+    // Determine collection path based on whether it's a group or individual chat
+    const collectionPath = useMemo(() => {
         if (!user) return null;
+        if (isGroup) {
+            return `groupChats/${chatPartnerId}/messages`;
+        }
         // Admin chat (user to admin or vice-versa)
         if (isAdmin || (user && chatPartnerId === "iNqXkJFtSIQVFTLWz6v5rvA9Lii1")) { // Using admin UID from config
-            return isAdmin ? chatPartnerId : user.uid;
+            const chatId = isAdmin ? chatPartnerId : user.uid;
+            return `chats/${chatId}/messages`;
         }
         // Community chat (peer-to-peer)
-        return [user.uid, chatPartnerId].sort().join("_");
-    }, [user, chatPartnerId, isAdmin]);
+        const chatId = [user.uid, chatPartnerId].sort().join("_");
+        return `chats/${chatId}/messages`;
+    }, [user, chatPartnerId, isAdmin, isGroup]);
     
-    // Fetch all users to get display names and avatars
+    // Fetch all users to get display names and avatars for 1-on-1 chats
     const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
 
-    const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(
-        chatId ? `chats/${chatId}/messages` : null
-    );
+    useEffect(() => {
+        const fetchGroupMembers = async () => {
+            if (isGroup && chatPartnerId) {
+                const groupRef = doc(db, "groupChats", chatPartnerId);
+                const groupSnap = await getDoc(groupRef);
+                if (groupSnap.exists()) {
+                    const groupData = groupSnap.data() as GroupChat;
+                    setGroupMembers(groupData.memberInfo);
+                }
+            }
+        };
+        fetchGroupMembers();
+    }, [isGroup, chatPartnerId]);
+
+
+    const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(collectionPath);
     
     useEffect(() => {
         if (viewportRef.current) {
@@ -56,6 +77,8 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
             text: newMessage,
             senderId: user.uid,
             timestamp: new Date().toISOString(),
+            senderName: user.displayName,
+            senderPhotoURL: user.photoURL,
         };
 
         try {
@@ -67,6 +90,14 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
     };
     
     const getParticipantInfo = (senderId: string) => {
+        if (isGroup) {
+            const member = groupMembers[senderId];
+            return {
+                displayName: member?.displayName || "Member",
+                photoURL: member?.photoURL,
+            }
+        }
+        
         if (senderId === user?.uid) {
             return {
                 displayName: user.displayName || "You",
@@ -86,7 +117,7 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
     };
 
 
-    const loading = authLoading || messagesLoading || usersLoading;
+    const loading = authLoading || messagesLoading || (usersLoading && !isGroup);
 
     if (loading) {
         return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -115,6 +146,9 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
                                         ? "bg-primary text-primary-foreground rounded-br-none" 
                                         : "bg-background text-foreground rounded-bl-none border"
                                )}>
+                                   {!isSender && isGroup && (
+                                       <p className="text-xs font-semibold mb-1 text-primary">{participant.displayName}</p>
+                                   )}
                                    <p className="text-sm break-words">{msg.text}</p>
                                    <p className={cn(
                                        "text-xs mt-2 self-end",
@@ -126,7 +160,7 @@ export default function ChatInterface({ chatPartnerId }: ChatInterfaceProps) {
                                 {isSender && (
                                      <Avatar className="h-8 w-8">
                                         <AvatarImage src={participant.photoURL || undefined} />
-                                        <AvatarFallback>{getInitials(participant.displayName)}</AvatarFallback>
+                                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                                     </Avatar>
                                 )}
                             </div>

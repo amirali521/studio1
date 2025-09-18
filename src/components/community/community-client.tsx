@@ -5,12 +5,12 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { type AppUser, type Friend, type FriendRequest } from "@/lib/types";
+import { type AppUser, type Friend, type FriendRequest, type GroupChat } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Hourglass, Users } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
 import { collection, onSnapshot, orderBy, query, writeBatch, doc } from "firebase/firestore";
@@ -20,17 +20,20 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "../ui/badge";
 import CommunityChatDialog from "./community-chat-dialog";
+import CreateGroupDialog from "./create-group-dialog";
 
 export default function CommunityClient() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [findUsersSearchTerm, setFindUsersSearchTerm] = useState("");
-  const [friendsSearchTerm, setFriendsSearchTerm] = useState("");
-  const [activeChatFriend, setActiveChatFriend] = useState<Friend | null>(null);
+  const [chatsSearchTerm, setChatsSearchTerm] = useState("");
+  const [activeChat, setActiveChat] = useState<{ id: string; name: string | null; isGroup: boolean; photoURL?: string | null } | null>(null);
+  const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   
   // Data fetching
   const { data: allUsers, loading: usersLoading } = useFirestoreCollection("users");
+  const { data: groupChats, loading: groupsLoading } = useFirestoreCollection("groupChats");
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -47,22 +50,22 @@ export default function CommunityClient() {
     const unsubscribeFriends = onSnapshot(friendsQuery, (snapshot) => {
         const friendsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Friend));
         setFriends(friendsData);
-        if(!usersLoading) setDataLoading(false);
+        if(!usersLoading && !groupsLoading) setDataLoading(false);
     });
 
     const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
         const requestsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FriendRequest));
         setFriendRequests(requestsData);
-        if(!usersLoading) setDataLoading(false);
+        if(!usersLoading && !groupsLoading) setDataLoading(false);
     });
 
     return () => {
         unsubscribeFriends();
         unsubscribeRequests();
     };
-  }, [user, usersLoading]);
+  }, [user, usersLoading, groupsLoading]);
   
-  const loading = authLoading || usersLoading || dataLoading;
+  const loading = authLoading || usersLoading || dataLoading || groupsLoading;
 
   // Memoized data processing
   const findUsersResults = useMemo(() => {
@@ -78,35 +81,52 @@ export default function CommunityClient() {
     );
   }, [findUsersSearchTerm, allUsers, user]);
   
-  const filteredFriends = useMemo(() => {
+  const filteredChats = useMemo(() => {
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
     const friendsWithStatus = friends.map(friend => {
       const friendData = allUsers.find(u => u.id === friend.id);
       return {
-        ...friend,
-        isOnline: friendData?.lastLogin && new Date(friendData.lastLogin) > fiveMinutesAgo
+        id: friend.id,
+        name: friend.displayName,
+        email: friend.email,
+        photoURL: friend.photoURL,
+        isGroup: false,
+        isOnline: friendData?.lastLogin && new Date(friendData.lastLogin) > fiveMinutesAgo,
+        lastActivity: new Date(friendData?.lastLogin || 0),
       };
     });
+    
+    const groupsAsChats = groupChats.map(group => ({
+        id: group.id,
+        name: group.name,
+        email: `${group.members.length} members`,
+        photoURL: null, // Groups can have a default icon
+        isGroup: true,
+        isOnline: false, // Group online status is complex, default to false
+        lastActivity: new Date(group.createdAt),
+    }));
 
-    const sorted = friendsWithStatus.sort((a, b) => {
+    const allChats = [...friendsWithStatus, ...groupsAsChats];
+
+    const sorted = allChats.sort((a, b) => {
         if (a.isOnline && !b.isOnline) return -1;
         if (!a.isOnline && b.isOnline) return 1;
-        return (a.displayName || "").localeCompare(b.displayName || "");
+        return b.lastActivity.getTime() - a.lastActivity.getTime();
     });
     
-    if (!friendsSearchTerm.trim()) {
+    if (!chatsSearchTerm.trim()) {
         return sorted;
     }
 
-    const lowercasedTerm = friendsSearchTerm.toLowerCase();
+    const lowercasedTerm = chatsSearchTerm.toLowerCase();
     return sorted.filter(f => 
-        f.displayName?.toLowerCase().includes(lowercasedTerm) || 
+        f.name?.toLowerCase().includes(lowercasedTerm) || 
         f.email?.toLowerCase().includes(lowercasedTerm)
     );
 
-  }, [friends, allUsers, friendsSearchTerm]);
+  }, [friends, groupChats, allUsers, chatsSearchTerm]);
 
   const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
   const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
@@ -210,12 +230,12 @@ export default function CommunityClient() {
     <>
     <div className="flex justify-center">
       <Card className="w-full max-w-md">
-        <Tabs defaultValue="friends" className="flex-1 flex flex-col min-h-0">
+        <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
-            <CardDescription>Connect and chat with other users.</CardDescription>
+            <CardDescription>Connect and chat with other users and groups.</CardDescription>
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="friends"><Users className="mr-1 h-4 w-4"/>Friends</TabsTrigger>
+              <TabsTrigger value="chats"><MessageSquare className="mr-1 h-4 w-4"/>Chats</TabsTrigger>
               <TabsTrigger value="requests">
                 <Mail className="mr-1 h-4 w-4"/>Requests
                 {incomingRequests.length > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length}</Badge>}
@@ -225,33 +245,40 @@ export default function CommunityClient() {
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
             <ScrollArea className="flex-1 px-6 pb-6 pt-0 min-h-[450px]">
-              <TabsContent value="friends">
+              <TabsContent value="chats">
                  <div className="relative mb-4">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search friends..." className="pl-8" value={friendsSearchTerm} onChange={e => setFriendsSearchTerm(e.target.value)}/>
+                  <Input placeholder="Search chats..." className="pl-8" value={chatsSearchTerm} onChange={e => setChatsSearchTerm(e.target.value)}/>
                 </div>
-                {filteredFriends.length > 0 ? (
+                 <Button variant="outline" className="w-full mb-4" onClick={() => setIsCreateGroupOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Create Group
+                </Button>
+                {filteredChats.length > 0 ? (
                   <div className="space-y-1">
-                    {filteredFriends.map(friend => (
-                         <button key={friend.id} onClick={() => setActiveChatFriend(friend)} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
+                    {filteredChats.map(chat => (
+                         <button key={chat.id} onClick={() => setActiveChat(chat)} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
                             <div className="relative">
                                 <Avatar className="h-9 w-9">
-                                    <AvatarImage src={friend.photoURL || undefined} />
-                                    <AvatarFallback>{getInitials(friend.displayName)}</AvatarFallback>
+                                    <AvatarImage src={chat.photoURL || undefined} />
+                                    <AvatarFallback>
+                                        {chat.isGroup ? <Users className="h-4 w-4"/> : getInitials(chat.name)}
+                                    </AvatarFallback>
                                 </Avatar>
-                                <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", friend.isOnline ? 'bg-green-500' : 'bg-red-500')} />
+                                {!chat.isGroup && (
+                                     <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", chat.isOnline ? 'bg-green-500' : 'bg-red-500')} />
+                                )}
                             </div>
-
                             <div className="flex-1 truncate">
-                              <p className="text-sm font-medium truncate">{friend.displayName}</p>
-                              <p className="text-xs truncate text-muted-foreground">{friend.email}</p>
+                              <p className="text-sm font-medium truncate">{chat.name}</p>
+                              <p className="text-xs truncate text-muted-foreground">{chat.email}</p>
                             </div>
                          </button>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {friendsSearchTerm ? "No friends found." : "Search for users to add friends."}
+                    {chatsSearchTerm ? "No chats found." : "No active chats. Find users to start a conversation."}
                   </p>
                 )}
               </TabsContent>
@@ -343,14 +370,23 @@ export default function CommunityClient() {
         </Tabs>
       </Card>
     </div>
-    {activeChatFriend && user && (
+    {activeChat && user && (
         <CommunityChatDialog 
-            isOpen={!!activeChatFriend}
-            onClose={() => setActiveChatFriend(null)}
-            friend={activeChatFriend}
+            isOpen={!!activeChat}
+            onClose={() => setActiveChat(null)}
+            chatId={activeChat.id}
+            chatName={activeChat.name}
+            isGroup={activeChat.isGroup}
             currentUser={user}
+            photoURL={activeChat.photoURL}
         />
     )}
+     <CreateGroupDialog
+        isOpen={isCreateGroupOpen}
+        onClose={() => setIsCreateGroupOpen(false)}
+        friends={friends}
+        currentUser={user}
+    />
     </>
   );
 }
