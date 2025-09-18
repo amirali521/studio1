@@ -82,7 +82,7 @@ export default function LandingPage() {
             <div className="bg-card rounded-2xl shadow-lg p-8 md:p-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div className="text-center md:text-left">
-                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight pt-4">
+                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
                             Smart & Powerful Inventory
                         </h1>
                         <p className="mt-4 max-w-md mx-auto md:mx-0 text-muted-foreground md:text-lg">
