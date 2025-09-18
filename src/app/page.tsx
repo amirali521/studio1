@@ -85,7 +85,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <section className="flex-1 flex items-start md:pt-8 pt-24 min-h-screen">
+        <section className="flex-1 flex items-start md:pt-8 pt-8 min-h-screen">
             <div className="container mx-auto px-4 py-6 sm:py-8">
                 <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
                     <div className="relative z-10 flex flex-col items-center text-center">
@@ -96,7 +96,7 @@ export default function LandingPage() {
                             <p className="mt-6 max-w-xl mx-auto text-muted-foreground text-center md:text-lg">
                                Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                             </p>
-                            <Button asChild size="lg" className="mt-6">
+                            <Button asChild size="lg" className="mt-8">
                                 <Link href="/signup">
                                     Learn More
                                 </Link>
