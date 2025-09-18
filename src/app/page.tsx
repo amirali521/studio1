@@ -85,7 +85,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <section className="flex-1 flex items-start pt-28 min-h-screen">
+        <section className="flex-1 flex items-start pt-6 min-h-screen">
             <div className="container mx-auto px-4 py-6 sm:py-8">
                 <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
                     <div className="relative z-10 flex flex-col items-center text-center">
