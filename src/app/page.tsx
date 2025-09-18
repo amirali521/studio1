@@ -69,12 +69,6 @@ export default function LandingPage() {
             <ScanBarcode className="h-7 w-7 text-primary" />
             <span className="text-xl font-bold font-headline text-foreground whitespace-nowrap">Stockpile Scan</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Home</Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About us</Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Work</Link>
-            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Info</Link>
-          </nav>
           <div className="flex items-center gap-4">
              <Button asChild variant="ghost" className="hidden md:inline-flex">
                  <Link href="/login">Sign In</Link>
@@ -137,6 +131,11 @@ export default function LandingPage() {
           </div>
       </section>
 
+      <footer className="bg-card mt-20">
+          <div className="container mx-auto px-4 py-6 text-center text-muted-foreground">
+              <p className="text-sm">&copy; {new Date().getFullYear()} Stockpile Scan. All rights reserved.</p>
+          </div>
+      </footer>
     </div>
   );
 }
