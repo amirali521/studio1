@@ -31,6 +31,7 @@ export function useFirestoreCollection(collectionName: "groupChats"): {
     data: GroupChat[]; 
     loading: boolean;
     addItem: (item: Omit<GroupChat, "id" | 'createdAt'>) => Promise<any>;
+    updateItem: (itemId: string, itemData: Partial<GroupChat>) => Promise<void>;
 };
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string
@@ -156,7 +157,10 @@ export function useFirestoreCollection<T extends { id?: string }>(
 
   const updateItem = async (itemId: string, itemData: Partial<T>) => {
     if (!user) throw new Error("User not authenticated");
-    const itemDocRef = doc(db, "users", user.uid, collectionName, itemId);
+    const isGroupChat = collectionName === 'groupChats';
+    const itemDocRef = isGroupChat
+        ? doc(db, collectionName, itemId)
+        : doc(db, "users", user.uid, collectionName, itemId);
     await updateDoc(itemDocRef, itemData);
   };
   

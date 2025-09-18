@@ -76,7 +76,7 @@ export interface Friend {
 export interface FriendRequest {
     id: string; // UID of the user who sent/received the request
     direction: 'incoming' | 'outgoing';
-    status: 'pending' | 'accepted' | 'declined';
+    status: 'pending' | 'accepted' | 'declined' | 'blocked';
     displayName: string | null;
     email: string | null;
     photoURL: string | null;
@@ -86,8 +86,25 @@ export interface FriendRequest {
 export interface GroupChat {
     id: string;
     name: string;
-    members: string[]; // Array of user UIDs
+    members: string[]; // Array of user UIDs who have accepted
+    invited: string[]; // Array of user UIDs who are invited but haven't accepted
     memberInfo: { [uid: string]: { displayName: string | null; photoURL: string | null; email: string | null } };
     createdBy: string; // UID of the creator
     createdAt: string;
+}
+
+export interface GroupInvitation {
+    id: string; // The ID of the invitation document, usually the groupId
+    groupId: string;
+    groupName: string;
+    inviterId: string;
+    inviterName: string | null;
+    status: 'pending' | 'accepted' | 'declined';
+    createdAt: string;
+}
+
+export interface BlockedUser {
+    id: string; // UID of the blocked user
+    displayName: string | null;
+    blockedAt: string;
 }

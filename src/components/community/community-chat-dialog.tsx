@@ -7,12 +7,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { User } from "firebase/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Card, CardContent } from "../ui/card";
 import ChatInterface from "../chat/chat-interface";
-import { Users } from "lucide-react";
+import { Users, LogOut } from "lucide-react";
+import { Button } from "../ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+
 
 interface CommunityChatDialogProps {
   isOpen: boolean;
@@ -22,6 +26,7 @@ interface CommunityChatDialogProps {
   isGroup: boolean;
   currentUser: User;
   photoURL?: string | null;
+  onLeaveGroup?: (groupId: string) => void;
 }
 
 export default function CommunityChatDialog({
@@ -32,6 +37,7 @@ export default function CommunityChatDialog({
   isGroup,
   currentUser,
   photoURL,
+  onLeaveGroup,
 }: CommunityChatDialogProps) {
 
   const getInitials = (name?: string | null) => {
@@ -42,19 +48,47 @@ export default function CommunityChatDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg p-0">
-        <DialogHeader className="p-6 pb-4">
-          <DialogTitle className="font-headline flex items-center gap-2">
-             <Avatar className="h-8 w-8">
-                <AvatarImage src={photoURL || undefined} />
-                <AvatarFallback>
-                    {isGroup ? <Users className="h-4 w-4"/> : getInitials(chatName)}
-                </AvatarFallback>
+        <DialogHeader className="p-6 pb-4 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={photoURL || undefined} />
+              <AvatarFallback>
+                  {isGroup ? <Users className="h-4 w-4"/> : getInitials(chatName)}
+              </AvatarFallback>
             </Avatar>
-            {chatName}
-          </DialogTitle>
-          <DialogDescription>
-            {isGroup ? "You are in a group conversation." : `You are now chatting directly with ${chatName}.`}
-          </DialogDescription>
+            <div>
+              <DialogTitle className="font-headline text-left">{chatName}</DialogTitle>
+              <DialogDescription className="text-left">
+                {isGroup ? "Group conversation" : `Chatting with ${chatName}`}
+              </DialogDescription>
+            </div>
+          </div>
+          {isGroup && onLeaveGroup && (
+             <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-destructive">
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave Group?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to leave the group "{chatName}"? You will need to be invited again to rejoin.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onClick={() => onLeaveGroup(chatId)}
+                    >
+                      Leave
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+          )}
         </DialogHeader>
         <div className="h-[50vh] flex flex-col px-6 pb-6">
           <Card className="flex-1 flex flex-col">

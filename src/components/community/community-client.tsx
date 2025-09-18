@@ -5,15 +5,15 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { type AppUser, type Friend, type FriendRequest, type GroupChat } from "@/lib/types";
+import { type AppUser, type Friend, type FriendRequest, type GroupChat, type BlockedUser, GroupInvitation } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle, EllipsisVertical, UserX, Trash2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
-import { collection, onSnapshot, orderBy, query, writeBatch, doc } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, writeBatch, doc, arrayRemove, getDocs, where, deleteDoc, setDoc, arrayUnion } from "firebase/firestore";
 import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -21,10 +21,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "../ui/badge";
 import CommunityChatDialog from "./community-chat-dialog";
 import CreateGroupDialog from "./create-group-dialog";
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+
 
 export default function CommunityClient() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
+  useRealtimeNotifications();
 
   const [findUsersSearchTerm, setFindUsersSearchTerm] = useState("");
   const [chatsSearchTerm, setChatsSearchTerm] = useState("");
@@ -33,9 +38,11 @@ export default function CommunityClient() {
   
   // Data fetching
   const { data: allUsers, loading: usersLoading } = useFirestoreCollection("users");
-  const { data: groupChats, loading: groupsLoading } = useFirestoreCollection("groupChats");
+  const { data: groupChats, loading: groupsLoading, updateItem: updateGroup } = useFirestoreCollection("groupChats");
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [groupInvites, setGroupInvites] = useState<GroupInvitation[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -44,42 +51,62 @@ export default function CommunityClient() {
         return;
     };
 
-    const friendsQuery = query(collection(db, "users", user.uid, "friends"), orderBy("displayName", "asc"));
-    const requestsQuery = query(collection(db, "users", user.uid, "friendRequests"), orderBy("createdAt", "desc"));
+    const unsubscribes: (() => void)[] = [];
+    const collectionsToWatch = [
+        { name: "friends", setter: setFriends, orderByField: "displayName" },
+        { name: "friendRequests", setter: setFriendRequests, orderByField: "createdAt" },
+        { name: "blockedUsers", setter: setBlockedUsers, orderByField: "blockedAt" },
+        { name: "groupInvitations", setter: setGroupInvites, orderByField: "createdAt" },
+    ];
 
-    const unsubscribeFriends = onSnapshot(friendsQuery, (snapshot) => {
-        const friendsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Friend));
-        setFriends(friendsData);
-        if(!usersLoading && !groupsLoading) setDataLoading(false);
+    collectionsToWatch.forEach(({ name, setter, orderByField }) => {
+        const q = query(collection(db, "users", user.uid, name), orderBy(orderByField, "desc"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+            setter(data);
+        });
+        unsubscribes.push(unsubscribe);
     });
+    
+    // Check if all data has loaded
+    const checkLoading = () => {
+        if(!usersLoading && !groupsLoading) setDataLoading(false);
+    };
+    checkLoading();
 
-    const unsubscribeRequests = onSnapshot(requestsQuery, (snapshot) => {
-        const requestsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as FriendRequest));
-        setFriendRequests(requestsData);
-        if(!usersLoading && !groupsLoading) setDataLoading(false);
-    });
 
     return () => {
-        unsubscribeFriends();
-        unsubscribeRequests();
+        unsubscribes.forEach(unsub => unsub());
     };
   }, [user, usersLoading, groupsLoading]);
   
   const loading = authLoading || usersLoading || dataLoading || groupsLoading;
 
   // Memoized data processing
+  const onlineFriends = useMemo(() => {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    return friends.filter(friend => {
+        const friendData = allUsers.find(u => u.id === friend.id);
+        return friendData?.lastLogin && new Date(friendData.lastLogin) > fiveMinutesAgo;
+    });
+  }, [friends, allUsers]);
+
   const findUsersResults = useMemo(() => {
     if (!findUsersSearchTerm.trim() || !user) return [];
     const lowercasedTerm = findUsersSearchTerm.toLowerCase();
     const adminUid = firebaseConfig.adminUid;
+    const blockedIds = new Set(blockedUsers.map(b => b.id));
+
     return allUsers.filter(
       (u) =>
         u.id !== user.uid &&
         u.id !== adminUid &&
+        !blockedIds.has(u.id) &&
         (u.displayName?.toLowerCase().includes(lowercasedTerm) ||
           u.email?.toLowerCase().includes(lowercasedTerm))
     );
-  }, [findUsersSearchTerm, allUsers, user]);
+  }, [findUsersSearchTerm, allUsers, user, blockedUsers]);
   
   const filteredChats = useMemo(() => {
     const now = new Date();
@@ -102,9 +129,9 @@ export default function CommunityClient() {
         id: group.id,
         name: group.name,
         email: `${group.members.length} members`,
-        photoURL: null, // Groups can have a default icon
+        photoURL: null,
         isGroup: true,
-        isOnline: false, // Group online status is complex, default to false
+        isOnline: false,
         lastActivity: new Date(group.createdAt),
     }));
 
@@ -134,37 +161,22 @@ export default function CommunityClient() {
   // Event Handlers
   const handleSendRequest = async (recipient: AppUser) => {
     if (!user || !recipient.id) return;
+    
+    // Check if the current user has been blocked by the recipient
+    const blockedQuery = query(collection(db, "users", recipient.id, "blockedUsers"), where("id", "==", user.uid));
+    const blockedSnapshot = await getDocs(blockedQuery);
+    if (!blockedSnapshot.empty) {
+        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests." });
+        return;
+    }
 
     try {
       const batch = writeBatch(db);
       const timestamp = new Date().toISOString();
-
-      // Outgoing request for sender
-      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
-      batch.set(senderRequestRef, {
-        id: recipient.id,
-        direction: 'outgoing',
-        status: 'pending',
-        displayName: recipient.displayName,
-        email: recipient.email,
-        photoURL: recipient.photoURL,
-        createdAt: timestamp,
-      });
-
-      // Incoming request for recipient
-      const recipientRequestRef = doc(db, "users", recipient.id, "friendRequests", user.uid);
-      batch.set(recipientRequestRef, {
-        id: user.uid,
-        direction: 'incoming',
-        status: 'pending',
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        createdAt: timestamp,
-      });
-
+      batch.set(doc(db, "users", user.uid, "friendRequests", recipient.id), { direction: 'outgoing', status: 'pending', displayName: recipient.displayName, email: recipient.email, photoURL: recipient.photoURL, createdAt: timestamp });
+      batch.set(doc(db, "users", recipient.id, "friendRequests", user.uid), { direction: 'incoming', status: 'pending', displayName: user.displayName, email: user.email, photoURL: user.photoURL, createdAt: timestamp });
       await batch.commit();
-      toast({ title: "Friend Request Sent", description: `Your request to ${recipient.displayName} has been sent.` });
+      toast({ title: "Friend Request Sent" });
     } catch (error) {
       console.error("Error sending friend request:", error);
       toast({ variant: "destructive", title: "Error", description: "Could not send friend request." });
@@ -175,45 +187,76 @@ export default function CommunityClient() {
     if (!user || !sender.id) return;
     try {
       const batch = writeBatch(db);
-      const timestamp = new Date().toISOString();
       const status = accept ? 'accepted' : 'declined';
+      const timestamp = new Date().toISOString();
 
-      // Update sender's request doc
-      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", sender.id);
-      batch.update(senderRequestRef, { status });
-
-      // Update recipient's request doc
-      const recipientRequestRef = doc(db, "users", sender.id, "friendRequests", user.uid);
-      batch.update(recipientRequestRef, { status });
+      batch.update(doc(db, "users", user.uid, "friendRequests", sender.id), { status });
+      batch.update(doc(db, "users", sender.id, "friendRequests", user.uid), { status });
 
       if (accept) {
-        // Add to each other's friends list
-        const userFriendRef = doc(db, "users", user.uid, "friends", sender.id);
-        batch.set(userFriendRef, {
-          id: sender.id,
-          displayName: sender.displayName,
-          email: sender.email,
-          photoURL: sender.photoURL,
-          addedAt: timestamp,
-        });
-
-        const senderFriendRef = doc(db, "users", sender.id, "friends", user.uid);
-        batch.set(senderFriendRef, {
-          id: user.uid,
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          addedAt: timestamp,
-        });
+        batch.set(doc(db, "users", user.uid, "friends", sender.id), { displayName: sender.displayName, email: sender.email, photoURL: sender.photoURL, addedAt: timestamp });
+        batch.set(doc(db, "users", sender.id, "friends", user.uid), { displayName: user.displayName, email: user.email, photoURL: user.photoURL, addedAt: timestamp });
       }
 
       await batch.commit();
-      toast({ title: `Request ${status}`, description: `You have ${status} the friend request.` });
+      toast({ title: `Request ${status}` });
     } catch (error) {
       console.error("Error responding to request:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not process the request." });
+      toast({ variant: "destructive", title: "Error" });
     }
   };
+
+  const handleLeaveGroup = async (groupId: string) => {
+    if (!user) return;
+    try {
+        await updateGroup(groupId, { members: arrayRemove(user.uid) });
+        toast({ title: "Group Left", description: "You have left the group." });
+        setActiveChat(null);
+    } catch (error) {
+        console.error("Error leaving group:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not leave the group." });
+    }
+  };
+
+  const handleRemoveFriend = async (friendId: string) => {
+     if (!user) return;
+     try {
+        const batch = writeBatch(db);
+        batch.delete(doc(db, "users", user.uid, "friends", friendId));
+        batch.delete(doc(db, "users", friendId, "friends", user.uid));
+        await batch.commit();
+        toast({ title: "Friend Removed" });
+     } catch (error) {
+        console.error("Error removing friend:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not remove friend." });
+     }
+  };
+  
+  const handleBlockUser = async (userToBlock: { id: string, displayName: string | null }) => {
+    if (!user) return;
+    try {
+        const batch = writeBatch(db);
+        const timestamp = new Date().toISOString();
+        
+        // Add to my blocked list
+        batch.set(doc(db, "users", user.uid, "blockedUsers", userToBlock.id), { displayName: userToBlock.displayName, blockedAt: timestamp });
+
+        // Remove from friends if they are one
+        batch.delete(doc(db, "users", user.uid, "friends", userToBlock.id));
+        batch.delete(doc(db, "users", userToBlock.id, "friends", user.uid));
+
+        // Decline any pending friend requests between them
+        batch.update(doc(db, "users", user.uid, "friendRequests", userToBlock.id), { status: 'blocked' });
+        batch.update(doc(db, "users", userToBlock.id, "friendRequests", user.uid), { status: 'blocked' });
+
+        await batch.commit();
+        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked.` });
+    } catch (error) {
+        console.error("Error blocking user:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not block user." });
+    }
+  };
+
     
    const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -233,12 +276,12 @@ export default function CommunityClient() {
         <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
-            <CardDescription>Connect and chat with other users and groups.</CardDescription>
+            <CardDescription>Connect with other users and groups.</CardDescription>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="chats"><MessageSquare className="mr-1 h-4 w-4"/>Chats</TabsTrigger>
               <TabsTrigger value="requests">
                 <Mail className="mr-1 h-4 w-4"/>Requests
-                {incomingRequests.length > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length}</Badge>}
+                {(incomingRequests.length + groupInvites.length) > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length + groupInvites.length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="find"><Search className="mr-1 h-4 w-4"/>Find</TabsTrigger>
             </TabsList>
@@ -257,35 +300,90 @@ export default function CommunityClient() {
                 {filteredChats.length > 0 ? (
                   <div className="space-y-1">
                     {filteredChats.map(chat => (
-                         <button key={chat.id} onClick={() => setActiveChat(chat)} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
-                            <div className="relative">
-                                <Avatar className="h-9 w-9">
-                                    <AvatarImage src={chat.photoURL || undefined} />
-                                    <AvatarFallback>
-                                        {chat.isGroup ? <Users className="h-4 w-4"/> : getInitials(chat.name)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                {!chat.isGroup && (
-                                     <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", chat.isOnline ? 'bg-green-500' : 'bg-red-500')} />
-                                )}
-                            </div>
-                            <div className="flex-1 truncate">
-                              <p className="text-sm font-medium truncate">{chat.name}</p>
-                              <p className="text-xs truncate text-muted-foreground">{chat.email}</p>
-                            </div>
-                         </button>
+                         <div key={chat.id} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent group">
+                            <button onClick={() => setActiveChat(chat)} className="flex items-center gap-3 flex-1">
+                                <div className="relative">
+                                    <Avatar className="h-9 w-9">
+                                        <AvatarImage src={chat.photoURL || undefined} />
+                                        <AvatarFallback>
+                                            {chat.isGroup ? <Users className="h-4 w-4"/> : getInitials(chat.name)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    {!chat.isGroup && (
+                                         <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", chat.isOnline ? 'bg-green-500' : 'bg-red-500')} />
+                                    )}
+                                </div>
+                                <div className="flex-1 truncate">
+                                  <p className="text-sm font-medium truncate">{chat.name}</p>
+                                  <p className="text-xs truncate text-muted-foreground">{chat.email}</p>
+                                </div>
+                            </button>
+                            {!chat.isGroup && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                                            <EllipsisVertical className="h-4 w-4"/>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                    <Trash2 className="mr-2 h-4 w-4"/> Remove Friend
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Remove {chat.name}?</AlertDialogTitle>
+                                                    <AlertDialogDescription>This will remove them from your friends list. You will need to send a new friend request to chat again.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction variant="destructive" onClick={() => handleRemoveFriend(chat.id)}>Remove</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                         <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                                    <UserX className="mr-2 h-4 w-4"/> Block User
+                                                </DropdownMenuItem>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Block {chat.name}?</AlertDialogTitle>
+                                                    <AlertDialogDescription>They will be removed as a friend and will not be able to send you friend requests. This cannot be undone.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction variant="destructive" onClick={() => handleBlockUser({id: chat.id, displayName: chat.name})}>Block</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                         </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {chatsSearchTerm ? "No chats found." : "No active chats. Find users to start a conversation."}
+                    {chatsSearchTerm ? "No chats found." : "No active chats."}
                   </p>
                 )}
               </TabsContent>
               <TabsContent value="requests">
+                 {groupInvites.length > 0 && (
+                    <div className="mb-6">
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Group Invites</h3>
+                        <div className="space-y-2">
+                           {/* Content handled by useRealtimeNotifications hook */}
+                        </div>
+                    </div>
+                 )}
                  {incomingRequests.length > 0 && (
                   <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Incoming</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Friend Requests</h3>
                     <div className="space-y-2">
                       {incomingRequests.map(req => (
                         <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
@@ -308,7 +406,7 @@ export default function CommunityClient() {
                 )}
                  {outgoingRequests.length > 0 && (
                     <div>
-                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Sent</h3>
+                        <h3 className="text-sm font-semibold text-muted-foreground mb-2">Sent Requests</h3>
                          <div className="space-y-2">
                             {outgoingRequests.map(req => (
                                 <div key={req.id} className="flex items-center gap-3 p-2 bg-secondary rounded-lg">
@@ -320,12 +418,13 @@ export default function CommunityClient() {
                                         <p className="text-sm font-medium truncate">{req.displayName}</p>
                                         <p className="text-xs text-muted-foreground truncate">{req.email}</p>
                                     </div>
+                                    <Hourglass className="h-4 w-4 text-muted-foreground"/>
                                 </div>
                             ))}
                          </div>
                     </div>
                 )}
-                {incomingRequests.length === 0 && outgoingRequests.length === 0 && (
+                {incomingRequests.length === 0 && outgoingRequests.length === 0 && groupInvites.length === 0 && (
                     <p className="text-sm text-muted-foreground text-center py-4">No pending requests.</p>
                 )}
               </TabsContent>
@@ -379,12 +478,13 @@ export default function CommunityClient() {
             isGroup={activeChat.isGroup}
             currentUser={user}
             photoURL={activeChat.photoURL}
+            onLeaveGroup={handleLeaveGroup}
         />
     )}
      <CreateGroupDialog
         isOpen={isCreateGroupOpen}
         onClose={() => setIsCreateGroupOpen(false)}
-        friends={friends}
+        onlineFriends={onlineFriends}
         currentUser={user}
     />
     </>

@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -17,10 +16,12 @@ import { User } from "firebase/auth";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Label } from "../ui/label";
+import { doc, writeBatch } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const createGroupSchema = z.object({
   groupName: z.string().min(3, "Group name must be at least 3 characters."),
-  members: z.array(z.string()).min(1, "You must select at least one friend."),
+  membersToInvite: z.array(z.string()).min(1, "You must invite at least one friend."),
 });
 
 type CreateGroupFormData = z.infer<typeof createGroupSchema>;
@@ -28,11 +29,11 @@ type CreateGroupFormData = z.infer<typeof createGroupSchema>;
 interface CreateGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  friends: Friend[];
+  onlineFriends: Friend[];
   currentUser: User;
 }
 
-export default function CreateGroupDialog({ isOpen, onClose, friends, currentUser }: CreateGroupDialogProps) {
+export default function CreateGroupDialog({ isOpen, onClose, onlineFriends, currentUser }: CreateGroupDialogProps) {
   const { toast } = useToast();
   const { addItem: addGroupChat } = useFirestoreCollection("groupChats");
 
@@ -40,7 +41,7 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
     resolver: zodResolver(createGroupSchema),
     defaultValues: {
       groupName: "",
-      members: [],
+      membersToInvite: [],
     },
   });
 
@@ -50,38 +51,47 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
   };
   
   const handleCreateGroup = async (data: CreateGroupFormData) => {
-    const memberIds = [...data.members, currentUser.uid];
-    
-    const memberInfo = memberIds.reduce((acc, uid) => {
-        let memberData;
-        if (uid === currentUser.uid) {
-            memberData = currentUser;
-        } else {
-            memberData = friends.find(f => f.id === uid);
-        }
-        
-        if (memberData) {
-            acc[uid] = {
-                displayName: memberData.displayName,
-                photoURL: memberData.photoURL,
-                email: memberData.email,
-            };
-        }
-        return acc;
-    }, {} as GroupChat['memberInfo']);
+    const batch = writeBatch(db);
+    const timestamp = new Date().toISOString();
 
-    const newGroup: Omit<GroupChat, 'id' | 'createdAt'> = {
+    // 1. Create the Group Chat document
+    const groupChatRef = doc(collection(db, "groupChats"));
+    const memberInfo = {
+        [currentUser.uid]: {
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            email: currentUser.email,
+        }
+    };
+    
+    const newGroup: Omit<GroupChat, 'id'> = {
         name: data.groupName,
-        members: memberIds,
+        members: [currentUser.uid], // Creator is the first member
+        invited: data.membersToInvite,
         memberInfo,
         createdBy: currentUser.uid,
+        createdAt: timestamp,
     };
+    batch.set(groupChatRef, newGroup);
+
+    // 2. Create invitation documents for each invited user
+    data.membersToInvite.forEach(friendId => {
+        const invitationRef = doc(db, "users", friendId, "groupInvitations", groupChatRef.id);
+        batch.set(invitationRef, {
+            groupId: groupChatRef.id,
+            groupName: data.groupName,
+            inviterId: currentUser.uid,
+            inviterName: currentUser.displayName,
+            status: 'pending',
+            createdAt: timestamp,
+        });
+    });
 
     try {
-        await addGroupChat(newGroup);
+        await batch.commit();
         toast({
-            title: "Group Created",
-            description: `The group "${data.groupName}" has been created successfully.`,
+            title: "Group Created & Invites Sent",
+            description: `Invites for "${data.groupName}" have been sent to ${data.membersToInvite.length} friend(s).`,
         });
         onClose();
         form.reset();
@@ -106,7 +116,7 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
         <DialogHeader>
           <DialogTitle>Create a New Group</DialogTitle>
           <DialogDescription>
-            Give your group a name and select friends to invite.
+            Give your group a name and select online friends to invite.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -126,18 +136,18 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
             />
             <FormField
               control={form.control}
-              name="members"
+              name="membersToInvite"
               render={() => (
                 <FormItem>
                     <div className="mb-4">
-                        <FormLabel>Select Friends</FormLabel>
+                        <FormLabel>Invite Online Friends</FormLabel>
                     </div>
                   <ScrollArea className="h-48 rounded-md border p-4">
-                    {friends.map((friend) => (
+                    {onlineFriends.length > 0 ? onlineFriends.map((friend) => (
                       <FormField
                         key={friend.id}
                         control={form.control}
-                        name="members"
+                        name="membersToInvite"
                         render={({ field }) => {
                           return (
                             <FormItem
@@ -174,7 +184,7 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
                           );
                         }}
                       />
-                    ))}
+                    )) : <p className="text-sm text-center text-muted-foreground py-4">No friends currently online.</p>}
                   </ScrollArea>
                    <FormMessage />
                 </FormItem>
@@ -184,7 +194,7 @@ export default function CreateGroupDialog({ isOpen, onClose, friends, currentUse
               <Button type="button" variant="outline" onClick={() => { onClose(); form.reset(); }}>
                 Cancel
               </Button>
-              <Button type="submit">Create Group</Button>
+              <Button type="submit" disabled={onlineFriends.length === 0}>Create and Invite</Button>
             </DialogFooter>
           </form>
         </Form>
