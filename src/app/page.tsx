@@ -10,6 +10,7 @@ import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
 import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare, Facebook, Twitter, Instagram } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AnimatedAnalyticsBackground from "@/components/animated-analytics-background";
 
 const features = [
     {
@@ -60,8 +61,9 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background font-body overflow-x-hidden">
-      <div className="absolute top-0 left-0 w-72 h-72 bg-accent/30 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/20 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl -z-10"></div>
+      <div className="absolute top-0 left-0 w-full h-full -z-10 opacity-50">
+          <AnimatedAnalyticsBackground />
+      </div>
       
       <header className="w-full">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
@@ -80,8 +82,8 @@ export default function LandingPage() {
       <main className="flex-1 flex items-center">
         <div className="container mx-auto px-4 py-6 sm:py-8">
             <div className="bg-card rounded-2xl shadow-lg p-8 md:p-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-                    <div className="text-center md:text-left">
+                <div className="flex flex-col items-center text-center gap-8">
+                    <div>
                         <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
                             Smart & Powerful Inventory
                         </h1>
