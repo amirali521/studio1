@@ -7,9 +7,9 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
-import LandingHero from "@/components/landing-hero";
 import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare, Facebook, Twitter, Instagram } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AnimatedLandingHero from "@/components/animated-landing-hero";
 
 const features = [
     {
@@ -86,8 +86,12 @@ export default function LandingPage() {
 
       <main className="flex-1 flex items-center">
         <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 md:p-12">
-                <div className="flex flex-col items-center text-center gap-8">
+            <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
+                <div className="absolute inset-0 z-0 opacity-10">
+                    <AnimatedLandingHero className="w-full h-full object-cover"/>
+                </div>
+                 <div className="absolute inset-0 z-0 bg-gradient-to-t from-card via-card/80 to-transparent"/>
+                <div className="relative z-10 flex flex-col items-center text-center gap-8">
                     <div>
                         <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
                             Smart & Powerful Inventory
@@ -100,9 +104,6 @@ export default function LandingPage() {
                                 Learn More
                             </Link>
                         </Button>
-                    </div>
-                    <div>
-                        <LandingHero className="w-full h-auto max-w-2xl mx-auto"/>
                     </div>
                 </div>
             </div>
