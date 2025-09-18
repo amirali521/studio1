@@ -35,8 +35,8 @@ export default function UserProfile() {
   };
 
   const handleLogout = async () => {
-    await auth.signOut();
     router.push('/login');
+    await auth.signOut();
   };
 
   if (!user) return null;
