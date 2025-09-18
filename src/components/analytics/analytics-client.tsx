@@ -63,7 +63,7 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <main className="flex-1 p-4 sm:p-6 space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-end items-center gap-2">
         <div className="flex items-center gap-2 overflow-x-auto">
             {(['7d', '30d', '90d', '1y', 'all'] as TimeRange[]).map((range) => (
@@ -125,6 +125,6 @@ export default function AnalyticsClient() {
              <SalesHistoryTable sales={filteredSales} />
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -5,11 +5,13 @@ import UserProfile from "@/components/layout/user-profile";
 
 export default function BarcodesPage() {
   return (
-    <div className="flex h-full flex-col">
+    <>
       <AppHeader title="Generate QR Codes">
         <UserProfile />
       </AppHeader>
-      <BarcodeClient />
-    </div>
+      <main className="flex-1 p-4 sm:p-6">
+        <BarcodeClient />
+      </main>
+    </>
   );
 }

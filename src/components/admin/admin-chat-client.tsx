@@ -35,19 +35,19 @@ export default function AdminChatClient() {
   
   if (!chatUserId || !chatPartner) {
     return (
-        <main className="flex-1 p-6 flex flex-col justify-center items-center text-center">
+        <div className="flex-1 p-6 flex flex-col justify-center items-center text-center">
             <h2 className="text-xl font-semibold">User Not Found</h2>
             <p className="text-muted-foreground mt-2">The selected user does not exist.</p>
              <Button variant="outline" onClick={() => router.push('/admin')} className="mt-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users
             </Button>
-        </main>
+        </div>
     )
   }
 
   return (
-    <main className="flex flex-col flex-1 p-4 sm:p-6">
+    <div className="flex flex-col flex-1">
         <div className="mb-4">
             <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -66,6 +66,6 @@ export default function AdminChatClient() {
             </CardContent>
         </Card>
 
-    </main>
+    </div>
   );
 }

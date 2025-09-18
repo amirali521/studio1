@@ -5,11 +5,13 @@ import UserProfile from "@/components/layout/user-profile";
 
 export default function AdminChatPage() {
   return (
-    <div className="flex h-full flex-col">
-       <AppHeader title="Admin Chat">
+    <>
+      <AppHeader title="Admin Chat">
         <UserProfile />
-       </AppHeader>
-      <AdminChatClient />
-    </div>
+      </AppHeader>
+      <main className="flex-1 p-4 sm:p-6">
+        <AdminChatClient />
+      </main>
+    </>
   );
 }

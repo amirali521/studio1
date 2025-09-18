@@ -5,11 +5,13 @@ import UserProfile from "@/components/layout/user-profile";
 
 export default function AdminPage() {
   return (
-    <div className="flex h-full flex-col">
-       <AppHeader title="Admin Panel">
+    <>
+      <AppHeader title="Admin Panel">
         <UserProfile />
-       </AppHeader>
-      <AdminClient />
-    </div>
+      </AppHeader>
+      <main className="flex-1 p-4 sm:p-6">
+        <AdminClient />
+      </main>
+    </>
   );
 }

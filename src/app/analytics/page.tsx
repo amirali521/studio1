@@ -5,11 +5,13 @@ import UserProfile from "@/components/layout/user-profile";
 
 export default function AnalyticsPage() {
   return (
-    <div className="flex h-full flex-col">
-       <AppHeader title="Sales Analytics">
+    <>
+      <AppHeader title="Sales Analytics">
         <UserProfile />
-       </AppHeader>
-      <AnalyticsClient />
-    </div>
+      </AppHeader>
+      <main className="flex-1 p-4 sm:p-6">
+        <AnalyticsClient />
+      </main>
+    </>
   );
 }

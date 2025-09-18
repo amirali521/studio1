@@ -248,7 +248,7 @@ export default function SalesClient() {
 
   if (!stockAvailable && !loading) {
     return (
-        <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
                 <h2 className="text-2xl font-bold mb-2">No Stock Available</h2>
                 <p className="text-muted-foreground mb-4">You need to add products to your inventory before you can make a sale.</p>
@@ -256,13 +256,13 @@ export default function SalesClient() {
                     <Link href="/dashboard">Go to Dashboard</Link>
                 </Button>
             </div>
-        </main>
+        </div>
     )
   }
 
   return (
     <>
-    <main className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-4 sm:p-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {/* Current Sale Section */}
       <div className="md:col-span-2">
         <Card>
@@ -401,7 +401,7 @@ export default function SalesClient() {
             </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
     <CameraScannerDialog 
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}

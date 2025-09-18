@@ -42,20 +42,20 @@ export default function ProductQRCodesPage() {
   
   if (loading) {
     return (
-      <div className="flex h-full flex-col">
+      <>
         <AppHeader title="Loading QR Codes...">
           <UserProfile />
         </AppHeader>
         <main className="flex-1 p-6 flex justify-center items-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </main>
-      </div>
+      </>
     );
   }
 
   if (!product) {
      return (
-      <div className="flex h-full flex-col">
+      <>
         <AppHeader title="Product Not Found">
             <Button variant="ghost" size="icon" onClick={() => router.push('/dashboard')}>
                 <ArrowLeft />
@@ -64,12 +64,12 @@ export default function ProductQRCodesPage() {
         <main className="flex-1 p-6 flex justify-center items-center">
             <p>The product you are looking for does not exist.</p>
         </main>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <>
       <AppHeader title={`QR Codes for ${product.name}`}>
           <Button variant="outline" onClick={() => router.push('/dashboard')}>
               <ArrowLeft className="mr-2 h-4 w-4"/>
@@ -111,6 +111,6 @@ export default function ProductQRCodesPage() {
             }
             }
         `}</style>
-    </div>
+    </>
   );
 }

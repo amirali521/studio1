@@ -9,11 +9,13 @@ import UserProfile from "@/components/layout/user-profile";
 export default function DashboardPage() {
   const { user } = useAuth();
   return (
-    <div className="flex h-full flex-col">
-       <AppHeader title={`Welcome, ${user?.displayName || 'User'}`}>
+    <>
+      <AppHeader title={`Welcome, ${user?.displayName || "User"}`}>
         <UserProfile />
       </AppHeader>
-      <DashboardClient />
-    </div>
+      <main className="flex-1 p-4 sm:p-6">
+        <DashboardClient />
+      </main>
+    </>
   );
 }

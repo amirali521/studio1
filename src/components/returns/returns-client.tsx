@@ -146,7 +146,7 @@ export default function ReturnsClient() {
   const soldItemsExist = serializedItems.some(item => item.status === 'sold');
    if (!soldItemsExist && !loading) {
     return (
-        <main className="flex-1 p-4 sm:p-6 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
                 <h2 className="text-2xl font-bold mb-2">No Sold Items</h2>
                 <p className="text-muted-foreground mb-4">There are no items marked as 'sold' to process for a return.</p>
@@ -154,13 +154,13 @@ export default function ReturnsClient() {
                     <Link href="/sales">Go to POS</Link>
                 </Button>
             </div>
-        </main>
+        </div>
     )
   }
 
   return (
     <>
-    <main className="flex-1 p-4 sm:p-6 flex justify-center items-start">
+    <div className="flex-1 flex justify-center items-start">
       <Card className="w-full max-w-lg">
         <CardHeader>
             <CardTitle className="font-headline">Process a Return</CardTitle>
@@ -190,7 +190,7 @@ export default function ReturnsClient() {
              <SalesHistoryDialog sales={sales} />
         </CardContent>
       </Card>
-    </main>
+    </div>
     <ReturnCameraScannerDialog
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
