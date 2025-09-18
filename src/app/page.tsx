@@ -3,49 +3,12 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, LayoutGrid, ShoppingCart, AreaChart, QrCode, Undo2, MessageSquare } from "lucide-react";
-import { Logo } from "@/components/logo";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
-import AnimatedLandingHero from "@/components/animated-landing-hero";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AnimatedAnalyticsBackground from "@/components/animated-analytics-background";
-
-const features = [
-  {
-    icon: <LayoutGrid className="h-8 w-8 text-primary" />,
-    title: "Inventory Management",
-    description: "Easily add, edit, and track products. Know your stock levels at all times.",
-  },
-  {
-    icon: <ShoppingCart className="h-8 w-8 text-primary" />,
-    title: "Point of Sale (POS)",
-    description: "A simple and fast POS system. Scan items with your device camera to finalize sales.",
-  },
-  {
-    icon: <AreaChart className="h-8 w-8 text-primary" />,
-    title: "Sales Analytics",
-    description: "Track revenue, profit, and trends with powerful, easy-to-read charts.",
-  },
-  {
-    icon: <QrCode className="h-8 w-8 text-primary" />,
-    title: "QR Code Generation",
-    description: "Generate and print unique QR codes for your items for easy scanning and tracking.",
-  },
-  {
-    icon: <Undo2 className="h-8 w-8 text-primary" />,
-    title: "Effortless Returns",
-    description: "Process customer returns with a quick scan, automatically updating your inventory.",
-  },
-  {
-    icon: <MessageSquare className="h-8 w-8 text-primary" />,
-    title: "Community Chat",
-    description: "Connect with other business owners, share tips, and build your network.",
-  },
-];
-
+import LandingHero from "@/components/landing-hero";
+import { ScanBarcode } from "lucide-react";
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -62,105 +25,57 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-       <AnimatedAnalyticsBackground className="fixed inset-0 w-full h-full object-cover -z-10 opacity-30" />
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 max-w-screen-2xl items-center px-4">
-          <div className="mr-4 flex">
-            <Link href="/" className="flex items-center space-x-2">
-              <Logo />
-            </Link>
-          </div>
-          <div className="flex flex-1 items-center justify-end space-x-2">
-            <nav className="flex items-center">
-              <Button asChild>
-                <Link href="/login">Sign In</Link>
-              </Button>
-            </nav>
+    <div className="flex flex-col min-h-screen bg-background font-body overflow-hidden">
+      <div className="absolute top-0 left-0 w-72 h-72 bg-accent/30 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-primary/20 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl -z-10"></div>
+      
+      <header className="w-full">
+        <div className="container mx-auto flex h-20 items-center justify-between px-4">
+          <Link href="/" className="flex items-center space-x-2">
+            <ScanBarcode className="h-7 w-7 text-primary" />
+            <span className="text-xl font-bold font-headline text-foreground whitespace-nowrap">Stockpile Scan</span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Home</Link>
+            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About us</Link>
+            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Work</Link>
+            <Link href="#" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Info</Link>
+          </nav>
+          <div className="flex items-center gap-4">
+             <Button asChild variant="ghost" className="hidden md:inline-flex">
+                 <Link href="/login">Sign In</Link>
+             </Button>
+            <Button asChild>
+              <Link href="/signup">Get Started</Link>
+            </Button>
           </div>
         </div>
       </header>
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-16">
-          <div className="container flex flex-col items-start gap-8 px-4 text-left">
-            <h1 className="w-full font-headline text-3xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
-              Effortless Inventory, Powerful Sales
-            </h1>
-            <div className="grid w-full grid-cols-1 items-center gap-8 md:grid-cols-2">
-              <div className="flex flex-col items-start gap-4 text-left">
-                <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-                  Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales with a quick scan, and gain valuable insights into your business performance.
-                </p>
-                <div className="space-x-4">
-                  <Button asChild size="lg">
-                    <Link href="/signup">
-                      Get Started Free
-                      <ArrowRight className="ml-2" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="relative mt-8 md:mt-0">
-                 <AnimatedLandingHero className="rounded-xl border bg-card shadow-lg"/>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Features Section */}
-        <section className="bg-muted/30 py-12 md:py-24 lg:py-32">
-          <div className="container flex max-w-[64rem] flex-col items-center gap-8 text-center px-4">
-            <div className="mx-auto max-w-3xl text-center">
-                <h2 className="font-headline text-3xl font-bold sm:text-5xl">Everything You Need</h2>
-                <p className="mt-4 text-muted-foreground sm:text-xl">
-                    From your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage and grow your business.
-                </p>
-            </div>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((feature) => (
-                <Card key={feature.title} className="text-center transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                  <CardHeader>
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-                      {feature.icon}
+      <main className="flex-1 flex items-center">
+        <div className="container mx-auto px-4 py-12">
+            <div className="bg-card rounded-2xl shadow-lg p-8 md:p-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div className="text-center md:text-left">
+                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
+                            Inventory Management
+                        </h1>
+                        <p className="mt-4 max-w-md mx-auto md:mx-0 text-muted-foreground md:text-lg">
+                           Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights.
+                        </p>
+                        <Button asChild size="lg" className="mt-8">
+                            <Link href="/signup">
+                                Learn More
+                            </Link>
+                        </Button>
                     </div>
-                    <CardTitle className="font-headline text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* New CTA Section */}
-        <section className="space-y-6 py-12 md:py-24 lg:py-32">
-            <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center px-4">
-                <h2 className="font-headline text-3xl font-bold sm:text-5xl">Ready to Take Control?</h2>
-                <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-                    Stop letting inventory manage you. Start your free account today and see how simple running your business can be.
-                </p>
-                <div className="space-x-4">
-                    <Button asChild size="lg">
-                        <Link href="/signup">
-                            Sign Up Now
-                            <ArrowRight className="ml-2" />
-                        </Link>
-                    </Button>
+                    <div>
+                        <LandingHero className="w-full h-auto max-w-lg mx-auto"/>
+                    </div>
                 </div>
             </div>
-        </section>
-
-      </main>
-      <footer className="py-6 md:px-8 md:py-0 border-t">
-        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row px-4">
-            <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-left">
-                &copy; 2024 Stockpile Scan. All rights reserved.
-            </p>
         </div>
-      </footer>
+      </main>
     </div>
   );
 }
