@@ -194,8 +194,9 @@ export default function CommunityClient() {
       const status = accept ? 'accepted' : 'declined';
       const timestamp = new Date().toISOString();
 
-      batch.update(doc(db, "users", user.uid, "friendRequests", sender.id), { status });
-      batch.update(doc(db, "users", sender.id, "friendRequests", user.uid), { status });
+      // Delete the requests from both sides instead of updating
+      batch.delete(doc(db, "users", user.uid, "friendRequests", sender.id));
+      batch.delete(doc(db, "users", sender.id, "friendRequests", user.uid));
 
       if (accept) {
         batch.set(doc(db, "users", user.uid, "friends", sender.id), { displayName: sender.displayName, email: sender.email, photoURL: sender.photoURL, addedAt: timestamp });
@@ -226,8 +227,12 @@ export default function CommunityClient() {
      if (!user) return;
      try {
         const batch = writeBatch(db);
+        // Remove from friends on both sides
         batch.delete(doc(db, "users", user.uid, "friends", friendId));
         batch.delete(doc(db, "users", friendId, "friends", user.uid));
+        // Delete any pending friend requests between them on both sides
+        batch.delete(doc(db, "users", user.uid, "friendRequests", friendId));
+        batch.delete(doc(db, "users", friendId, "friendRequests", user.uid));
         await batch.commit();
         toast({ title: "Friend Removed" });
      } catch (error) {
@@ -242,16 +247,21 @@ export default function CommunityClient() {
         const batch = writeBatch(db);
         const timestamp = new Date().toISOString();
         
-        // Add to my blocked list
-        batch.set(doc(db, "users", user.uid, "blockedUsers", userToBlock.id), { displayName: userToBlock.displayName, blockedAt: timestamp });
+        // 1. Add to my blocked list
+        const myBlockedUserRef = doc(db, "users", user.uid, "blockedUsers", userToBlock.id);
+        batch.set(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
 
-        // Remove from friends on both sides
-        batch.delete(doc(db, "users", user.uid, "friends", userToBlock.id));
-        batch.delete(doc(db, "users", userToBlock.id, "friends", user.uid));
+        // 2. Remove from friends on both sides
+        const myFriendRef = doc(db, "users", user.uid, "friends", userToBlock.id);
+        const theirFriendRef = doc(db, "users", userToBlock.id, "friends", user.uid);
+        batch.delete(myFriendRef);
+        batch.delete(theirFriendRef);
 
-        // Delete any pending friend requests between them on both sides
-        batch.delete(doc(db, "users", user.uid, "friendRequests", userToBlock.id));
-        batch.delete(doc(db, "users", userToBlock.id, "friendRequests", user.uid));
+        // 3. Delete any pending friend requests between them on both sides
+        const myFriendRequestRef = doc(db, "users", user.uid, "friendRequests", userToBlock.id);
+        const theirFriendRequestRef = doc(db, "users", userToBlock.id, "friendRequests", user.uid);
+        batch.delete(myFriendRequestRef);
+        batch.delete(theirFriendRequestRef);
 
         await batch.commit();
         toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked.` });
@@ -527,3 +537,5 @@ export default function CommunityClient() {
     </>
   );
 }
+
+    
