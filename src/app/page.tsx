@@ -93,7 +93,7 @@ export default function LandingPage() {
                             <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
                                 Smart & Powerful Inventory
                             </h1>
-                            <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-bold">
+                            <p className="mt-8 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-bold">
                                Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                             </p>
                             <Button asChild size="lg" className="mt-8">
@@ -102,7 +102,7 @@ export default function LandingPage() {
                                 </Link>
                             </Button>
                         </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mt-4 mb-[-2rem]"/>
+                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto mt-2 mb-[-3rem]"/>
                     </div>
                 </div>
             </div>
@@ -148,4 +148,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
