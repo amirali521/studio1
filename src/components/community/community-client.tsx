@@ -249,9 +249,9 @@ export default function CommunityClient() {
         batch.delete(doc(db, "users", user.uid, "friends", userToBlock.id));
         batch.delete(doc(db, "users", userToBlock.id, "friends", user.uid));
 
-        // Decline any pending friend requests between them
-        batch.update(doc(db, "users", user.uid, "friendRequests", userToBlock.id), { status: 'blocked' });
-        batch.update(doc(db, "users", userToBlock.id, "friendRequests", user.uid), { status: 'blocked' });
+        // Delete any pending friend requests between them
+        batch.delete(doc(db, "users", user.uid, "friendRequests", userToBlock.id));
+        batch.delete(doc(db, "users", userToBlock.id, "friendRequests", user.uid));
 
         await batch.commit();
         toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked.` });
