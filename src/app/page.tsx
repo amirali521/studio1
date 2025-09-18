@@ -80,15 +80,15 @@ export default function LandingPage() {
       </header>
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-24">
-          <div className="container flex flex-col items-center gap-8 px-4 text-center md:items-start md:text-left">
-            <h1 className="font-headline text-3xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
+        <section className="space-y-6 pb-8 pt-4 md:pb-12 md:pt-8 lg:py-16">
+          <div className="container flex flex-col items-start gap-8 px-4 text-left">
+            <h1 className="w-full font-headline text-3xl font-bold sm:text-5xl md:text-6xl lg:text-7xl">
               Effortless Inventory, Powerful Sales
             </h1>
-            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-2">
-              <div className="flex flex-col items-center gap-4 text-center md:items-start md:text-left">
+            <div className="grid w-full grid-cols-1 items-center gap-8 md:grid-cols-2">
+              <div className="flex flex-col items-start gap-4 text-left">
                 <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-                  Stockpile Scan turns your device into a powerful inventory management and point-of-sale system. Scan, sell, and track your products with ease.
+                  Stockpile Scan turns your device into an all-in-one inventory management and point-of-sale powerhouse. Seamlessly track stock levels, process sales with a quick scan, and gain valuable insights into your business performance. It's designed for simplicity and power, giving you back time to focus on what matters most: growing your business.
                 </p>
                 <div className="space-x-4">
                   <Button asChild size="lg">
