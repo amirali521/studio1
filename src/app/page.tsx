@@ -70,9 +70,6 @@ export default function LandingPage() {
             <span className="text-xl font-bold font-headline text-foreground whitespace-nowrap">Stockpile Scan</span>
           </Link>
           <div className="flex items-center gap-4">
-             <Button asChild variant="ghost" className="hidden md:inline-flex">
-                 <Link href="/login">Sign In</Link>
-             </Button>
             <Button asChild>
               <Link href="/signup">Get Started</Link>
             </Button>
@@ -86,7 +83,7 @@ export default function LandingPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     <div className="text-center md:text-left">
                         <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
-                            Smart Inventory, Seamless Sales
+                            Smart Inventory
                         </h1>
                         <p className="mt-4 max-w-md mx-auto md:mx-0 text-muted-foreground md:text-lg">
                            Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights.
