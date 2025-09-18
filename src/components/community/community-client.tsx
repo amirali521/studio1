@@ -207,7 +207,7 @@ export default function CommunityClient() {
       <Card className="lg:col-span-1 flex flex-col">
         <Tabs defaultValue="friends" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
-            <CardTitle className="font-headline">Friends & Requests</CardTitle>
+            <CardTitle className="font-headline">Community</CardTitle>
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="friends"><Users className="mr-1 h-4 w-4"/>Friends</TabsTrigger>
               <TabsTrigger value="requests">
@@ -403,3 +403,5 @@ export default function CommunityClient() {
     </div>
   );
 }
+
+    
