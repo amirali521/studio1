@@ -253,6 +253,7 @@ export default function CommunityClient() {
     try {
         const timestamp = new Date().toISOString();
         const myBlockedUserRef = doc(db, "users", user.uid, "blockedUsers", userToBlock.id);
+        
         await setDoc(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
         
         toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked. They will not be able to send you friend requests.` });
@@ -492,9 +493,23 @@ export default function CommunityClient() {
                                 <div className="flex-1 truncate">
                                     <p className="text-sm font-medium truncate">{blockedUser.displayName || 'Unnamed User'}</p>
                                 </div>
-                                <Button variant="outline" size="sm" onClick={() => handleUnblockUser(blockedUser.id)}>
-                                    <ShieldOff className="mr-2 h-4 w-4"/> Unblock
-                                </Button>
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <ShieldOff className="mr-2 h-4 w-4"/> Unblock
+                                        </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Unblock {blockedUser.displayName}?</AlertDialogTitle>
+                                            <AlertDialogDescription>They will be able to send you friend requests again.</AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={() => handleUnblockUser(blockedUser.id)}>Unblock</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         ))}
                     </div>
