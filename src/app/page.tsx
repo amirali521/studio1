@@ -98,7 +98,7 @@ export default function LandingPage() {
                 </Button>
               </div>
             </div>
-            <div className="hidden md:block">
+            <div className="relative mt-8 md:mt-0">
                <AnimatedLandingHero className="rounded-xl border bg-card shadow-lg"/>
             </div>
           </div>
