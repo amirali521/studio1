@@ -23,7 +23,7 @@ import CommunityChatDialog from "./community-chat-dialog";
 import CreateGroupDialog from "./create-group-dialog";
 import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 export default function CommunityClient() {
@@ -32,7 +32,7 @@ export default function CommunityClient() {
   useRealtimeNotifications();
 
   const [findUsersSearchTerm, setFindUsersSearchTerm] = useState("");
-  const [chatsSearchTerm, setChatsSearchTerm] = useState("");
+  const [friendsSearchTerm, setFriendsSearchTerm] = useState("");
   const [activeChat, setActiveChat] = useState<{ id: string; name: string | null; isGroup: boolean; photoURL?: string | null } | null>(null);
   const [isCreateGroupOpen, setIsCreateGroupOpen] = useState(false);
   
@@ -147,17 +147,17 @@ export default function CommunityClient() {
         return b.lastActivity.getTime() - a.lastActivity.getTime(); // Most recent activity first
     });
     
-    if (!chatsSearchTerm.trim()) {
+    if (!friendsSearchTerm.trim()) {
         return sorted;
     }
 
-    const lowercasedTerm = chatsSearchTerm.toLowerCase();
+    const lowercasedTerm = friendsSearchTerm.toLowerCase();
     return sorted.filter(f => 
         f.name?.toLowerCase().includes(lowercasedTerm) || 
         f.email?.toLowerCase().includes(lowercasedTerm)
     );
 
-  }, [friends, groupChats, allUsers, chatsSearchTerm]);
+  }, [friends, groupChats, allUsers, friendsSearchTerm]);
 
   const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
   const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
@@ -287,7 +287,7 @@ export default function CommunityClient() {
   return (
     <>
     <div className="flex justify-center">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <Tabs defaultValue="chats" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
@@ -307,7 +307,7 @@ export default function CommunityClient() {
               <TabsContent value="chats">
                  <div className="relative mb-4">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search chats..." className="pl-8" value={chatsSearchTerm} onChange={e => setChatsSearchTerm(e.target.value)}/>
+                  <Input placeholder="Search chats..." className="pl-8" value={friendsSearchTerm} onChange={e => setFriendsSearchTerm(e.target.value)}/>
                 </div>
                  <Button variant="outline" className="w-full mb-4" onClick={() => setIsCreateGroupOpen(true)}>
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -384,7 +384,7 @@ export default function CommunityClient() {
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {chatsSearchTerm ? "No chats found." : "No active chats."}
+                    {friendsSearchTerm ? "No chats found." : "No active chats."}
                   </p>
                 )}
               </TabsContent>
@@ -527,3 +527,5 @@ export default function CommunityClient() {
     </>
   );
 }
+
+    
