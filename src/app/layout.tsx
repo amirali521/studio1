@@ -10,8 +10,9 @@ import { CurrencyProvider } from "@/contexts/currency-context";
 import { ShopSettingsProvider } from "@/contexts/shop-settings-context";
 
 export const metadata: Metadata = {
-  title: "Stockpile Scan",
-  description: "A modern inventory management and sales tracking application.",
+  title: "Stockpile Scan - Inventory Management & POS",
+  description: "Stockpile Scan is a modern, all-in-one inventory management and point-of-sale (POS) system for small businesses. Track stock, process sales, generate QR codes, and analyze performance with ease.",
+  keywords: ["inventory management", "point of sale", "POS", "small business", "stock tracking", "sales analytics", "QR code inventory", "retail management"],
 };
 
 export default function RootLayout({

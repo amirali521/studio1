@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, LayoutGrid, ShoppingCart, AreaChart, QrCode } from "lucide-react";
+import { ArrowRight, LayoutGrid, ShoppingCart, AreaChart, QrCode, Undo2, MessageSquare } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
@@ -21,17 +21,27 @@ const features = [
   {
     icon: <ShoppingCart className="h-8 w-8 text-primary" />,
     title: "Point of Sale (POS)",
-    description: "A simple and fast POS system. Scan items with your camera to finalize sales.",
+    description: "A simple and fast POS system. Scan items with your device camera to finalize sales.",
   },
   {
     icon: <AreaChart className="h-8 w-8 text-primary" />,
     title: "Sales Analytics",
-    description: "Track revenue, profit, and inventory value with powerful, easy-to-read charts.",
+    description: "Track revenue, profit, and trends with powerful, easy-to-read charts.",
   },
-    {
+  {
     icon: <QrCode className="h-8 w-8 text-primary" />,
     title: "QR Code Generation",
     description: "Generate and print unique QR codes for your items for easy scanning and tracking.",
+  },
+  {
+    icon: <Undo2 className="h-8 w-8 text-primary" />,
+    title: "Effortless Returns",
+    description: "Process customer returns with a quick scan, automatically updating your inventory.",
+  },
+  {
+    icon: <MessageSquare className="h-8 w-8 text-primary" />,
+    title: "Community Chat",
+    description: "Connect with other business owners, share tips, and build your network.",
   },
 ];
 
@@ -99,10 +109,10 @@ export default function LandingPage() {
             <div className="mx-auto max-w-3xl text-center">
                 <h2 className="font-headline text-3xl font-bold sm:text-5xl">Everything You Need</h2>
                 <p className="mt-4 text-muted-foreground sm:text-xl">
-                    From scanning your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage your business.
+                    From your first product to analyzing sales trends, Stockpile Scan provides a seamless workflow to manage and grow your business.
                 </p>
             </div>
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-2">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((feature) => (
                 <Card key={feature.title} className="text-center transition-all duration-300 hover:scale-105 hover:shadow-xl">
                   <CardHeader>
