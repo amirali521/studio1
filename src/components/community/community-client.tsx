@@ -5,37 +5,34 @@ import * as React from "react";
 import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { useFirestoreSubcollection } from "@/hooks/use-firestore-subcollection";
 import { type AppUser, type Friend, type FriendRequest, type ChatMessage } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Send, Hourglass, MessagesSquare, Users, MessageCircle } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Send, Hourglass, Users } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
 import { collection, doc, onSnapshot, orderBy, query, writeBatch } from "firebase/firestore";
 import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "../ui/badge";
+import CommunityChatPopover from "./community-chat-popover";
 
 export default function CommunityClient() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const [newMessage, setNewMessage] = useState("");
+  const [activeChatFriendId, setActiveChatFriendId] = useState<string | null>(null);
 
   // Data fetching
   const { data: allUsers, loading: usersLoading } = useFirestoreCollection("users");
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-
 
   useEffect(() => {
     if (!user) {
@@ -63,17 +60,7 @@ export default function CommunityClient() {
         unsubscribeRequests();
     };
   }, [user]);
-
-
-  const chatId = useMemo(() => {
-    if (!user || !selectedFriend) return null;
-    return [user.uid, selectedFriend.id].sort().join('_');
-  }, [user, selectedFriend]);
-
-  const { data: messages, addItem: addMessage, loading: messagesLoading } = useFirestoreSubcollection<ChatMessage>(
-    chatId ? `chats/${chatId}/messages` : null
-  );
-
+  
   const loading = authLoading || usersLoading || dataLoading;
 
   // Memoized data processing
@@ -108,7 +95,6 @@ export default function CommunityClient() {
         return (a.displayName || "").localeCompare(b.displayName || "");
     });
   }, [friends, allUsers]);
-
 
   const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
   const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
@@ -196,35 +182,11 @@ export default function CommunityClient() {
       toast({ variant: "destructive", title: "Error", description: "Could not process the request." });
     }
   };
-  
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !user || !selectedFriend) return;
-     const messageData: Omit<ChatMessage, 'id'> = {
-        text: newMessage,
-        senderId: user.uid,
-        timestamp: new Date().toISOString(),
-    };
-    try {
-        await addMessage(messageData);
-        setNewMessage("");
-    } catch (error) {
-        console.error("Error sending message:", error);
-    }
-  }
-  
+    
    const getInitials = (name?: string | null) => {
     if (!name) return "U";
     return name.split(" ").map((n) => n[0]).join("").toUpperCase();
   };
-  
-  const viewportRef = React.useRef<HTMLDivElement>(null);
-   useEffect(() => {
-        if (viewportRef.current) {
-            viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
-        }
-    }, [messages]);
-
 
   if (loading) {
     return <LoadingScreen />;
@@ -233,9 +195,8 @@ export default function CommunityClient() {
   if (!user) return null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-100px)]">
-      {/* Left Panel: Friends, Requests, Search */}
-      <Card className="lg:col-span-1 flex flex-col">
+    <div className="flex justify-center">
+      <Card className="w-full max-w-md">
         <Tabs defaultValue="friends" className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
@@ -249,25 +210,38 @@ export default function CommunityClient() {
             </TabsList>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-            <ScrollArea className="flex-1 p-6 pt-0">
+            <ScrollArea className="flex-1 p-6 pt-0 h-[calc(100vh-250px)]">
               <TabsContent value="friends">
                 {processedFriends.length > 0 ? (
                   <div className="space-y-1">
                     {processedFriends.map(friend => (
-                      <button key={friend.id} onClick={() => setSelectedFriend(friend)} className={cn("w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors", selectedFriend?.id === friend.id ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>
-                        <div className="relative">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={friend.photoURL || undefined} />
-                                <AvatarFallback className={cn(selectedFriend?.id === friend.id ? "bg-primary-foreground text-primary" : "")}>{getInitials(friend.displayName)}</AvatarFallback>
-                            </Avatar>
-                            <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", friend.isOnline ? 'bg-green-500' : 'bg-red-500')} />
-                        </div>
+                       <CommunityChatPopover
+                        key={friend.id}
+                        friend={friend}
+                        currentUser={user}
+                        onOpenChange={(isOpen) => {
+                            if (isOpen) {
+                                setActiveChatFriendId(friend.id);
+                            } else if (activeChatFriendId === friend.id) {
+                                setActiveChatFriendId(null);
+                            }
+                        }}
+                       >
+                         <button className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent">
+                            <div className="relative">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={friend.photoURL || undefined} />
+                                    <AvatarFallback>{getInitials(friend.displayName)}</AvatarFallback>
+                                </Avatar>
+                                <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", friend.isOnline ? 'bg-green-500' : 'bg-red-500')} />
+                            </div>
 
-                        <div className="flex-1 truncate">
-                          <p className="text-sm font-medium truncate">{friend.displayName}</p>
-                          <p className={cn("text-xs truncate", selectedFriend?.id === friend.id ? "text-primary-foreground/80" : "text-muted-foreground")}>{friend.email}</p>
-                        </div>
-                      </button>
+                            <div className="flex-1 truncate">
+                              <p className="text-sm font-medium truncate">{friend.displayName}</p>
+                              <p className="text-xs truncate text-muted-foreground">{friend.email}</p>
+                            </div>
+                         </button>
+                      </CommunityChatPopover>
                     ))}
                   </div>
                 ) : (
@@ -360,79 +334,6 @@ export default function CommunityClient() {
             </ScrollArea>
           </CardContent>
         </Tabs>
-      </Card>
-
-      {/* Right Panel: Chat */}
-      <Card className="lg:col-span-2 flex flex-col">
-          {selectedFriend ? (
-              <>
-                 <CardHeader className="border-b flex-row items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={selectedFriend.photoURL || undefined} />
-                            <AvatarFallback>{getInitials(selectedFriend.displayName)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <CardTitle className="font-headline">{selectedFriend.displayName}</CardTitle>
-                            <CardDescription>{selectedFriend.email}</CardDescription>
-                        </div>
-                    </div>
-                 </CardHeader>
-                 <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-                    <ScrollArea className="flex-1 p-4" viewportRef={viewportRef}>
-                         {messagesLoading ? (
-                            <div className="flex justify-center items-center h-full"><Search className="h-8 w-8 animate-spin" /></div>
-                        ) : messages.length > 0 ? (
-                             <div className="space-y-6">
-                                {messages.map(msg => {
-                                    const isSender = msg.senderId === user.uid;
-                                    return (
-                                        <div key={msg.id} className={cn("flex items-end gap-3", isSender ? "justify-end" : "justify-start")}>
-                                            {!isSender && (
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={selectedFriend.photoURL || undefined} />
-                                                    <AvatarFallback>{getInitials(selectedFriend.displayName)}</AvatarFallback>
-                                                </Avatar>
-                                            )}
-                                            <div className={cn("max-w-xs md:max-w-md p-3 rounded-lg flex flex-col", isSender ? "bg-primary text-primary-foreground rounded-br-none" : "bg-background text-foreground rounded-bl-none border")}>
-                                                <p className="text-sm">{msg.text}</p>
-                                                <p className={cn("text-xs mt-2 self-end", isSender ? "text-primary-foreground/70" : "text-muted-foreground")}>
-                                                    {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
-                                                </p>
-                                            </div>
-                                            {isSender && (
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage src={user.photoURL || undefined} />
-                                                    <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                                                </Avatar>
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                             </div>
-                         ) : (
-                            <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground">
-                                <MessageCircle className="h-12 w-12 mb-2"/>
-                                <p>No messages yet.</p>
-                                <p className="text-xs">Start the conversation!</p>
-                            </div>
-                        )}
-                    </ScrollArea>
-                    <div className="p-4 border-t bg-background/80">
-                         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                            <Input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." className="flex-1" />
-                            <Button type="submit" size="icon" disabled={!newMessage.trim()}><Send /></Button>
-                        </form>
-                    </div>
-                 </CardContent>
-              </>
-          ) : (
-            <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
-                <MessagesSquare className="h-16 w-16 mb-4"/>
-                <h3 className="text-lg font-semibold">Select a friend to start chatting</h3>
-                <p className="max-w-xs">You can find new friends in the 'Find' tab or select an existing friend from your friends list.</p>
-            </div>
-          )}
       </Card>
     </div>
   );
