@@ -102,15 +102,10 @@ export default function LandingPage() {
                                 </Link>
                             </Button>
                         </div>
+                        <AnimatedLandingHero className="w-full h-auto max-w-2xl mx-auto"/>
                     </div>
                 </div>
             </div>
-        </section>
-
-        <section className="pb-12 sm:pb-20">
-             <div className="container mx-auto px-4">
-                 <AnimatedLandingHero className="w-full h-auto max-w-2xl mx-auto"/>
-             </div>
         </section>
 
         <section className="py-12 sm:py-20">
