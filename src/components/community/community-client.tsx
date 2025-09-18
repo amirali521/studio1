@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle, EllipsisVertical, UserX, Trash2 } from "lucide-react";
+import { Search, UserPlus, Mail, Check, X, Hourglass, Users, MessageSquare, PlusCircle, EllipsisVertical, UserX, Trash2, ShieldOff } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
 import { collection, onSnapshot, orderBy, query, writeBatch, doc, arrayRemove, getDocs, where, deleteDoc, setDoc, arrayUnion } from "firebase/firestore";
@@ -261,6 +261,17 @@ export default function CommunityClient() {
     }
   };
 
+  const handleUnblockUser = async (userIdToUnblock: string) => {
+    if (!user) return;
+    try {
+        await deleteDoc(doc(db, "users", user.uid, "blockedUsers", userIdToUnblock));
+        toast({ title: "User Unblocked" });
+    } catch (error) {
+        console.error("Error unblocking user:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not unblock user." });
+    }
+  };
+
     
    const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -281,13 +292,14 @@ export default function CommunityClient() {
           <CardHeader>
             <CardTitle className="font-headline">Community</CardTitle>
             <CardDescription>Connect with other users and groups.</CardDescription>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="chats"><MessageSquare className="mr-1 h-4 w-4"/>Chats</TabsTrigger>
               <TabsTrigger value="requests">
                 <Mail className="mr-1 h-4 w-4"/>Requests
                 {(incomingRequests.length + groupInvites.length) > 0 && <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center">{incomingRequests.length + groupInvites.length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="find"><Search className="mr-1 h-4 w-4"/>Find</TabsTrigger>
+              <TabsTrigger value="blocked"><UserX className="mr-1 h-4 w-4"/>Blocked</TabsTrigger>
             </TabsList>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
@@ -467,6 +479,27 @@ export default function CommunityClient() {
                 ) : (
                    <p className="text-sm text-muted-foreground text-center py-4">Start typing to find users.</p>
                 )}
+              </TabsContent>
+               <TabsContent value="blocked">
+                 {blockedUsers.length > 0 ? (
+                    <div className="space-y-2">
+                        {blockedUsers.map(blockedUser => (
+                            <div key={blockedUser.id} className="flex items-center gap-3 p-2">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarFallback>{getInitials(blockedUser.displayName)}</AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 truncate">
+                                    <p className="text-sm font-medium truncate">{blockedUser.displayName || 'Unnamed User'}</p>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => handleUnblockUser(blockedUser.id)}>
+                                    <ShieldOff className="mr-2 h-4 w-4"/> Unblock
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                 ) : (
+                    <p className="text-sm text-muted-foreground text-center py-4">You haven't blocked any users.</p>
+                 )}
               </TabsContent>
             </ScrollArea>
           </CardContent>
