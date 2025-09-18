@@ -102,7 +102,7 @@ export default function LandingPage() {
                                 </Link>
                             </Button>
                         </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-2xl mx-auto"/>
+                        <AnimatedLandingHero className="w-full h-auto max-w-2xl mx-auto mt-4"/>
                     </div>
                 </div>
             </div>
