@@ -13,7 +13,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
-import { LayoutGrid, ShoppingCart, QrCode, Settings, Undo2, AreaChart, ShieldCheck } from "lucide-react";
+import { LayoutGrid, ShoppingCart, QrCode, Settings, Undo2, AreaChart, ShieldCheck, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
@@ -22,6 +22,7 @@ const navItems = [
   { href: "/barcodes", icon: QrCode, label: "Barcodes" },
   { href: "/sales", icon: ShoppingCart, label: "POS" },
   { href: "/returns", icon: Undo2, label: "Returns" },
+  { href: "/community", icon: MessageSquare, label: "Community"},
   { href: "/settings", icon: Settings, label: "Settings"},
 ];
 

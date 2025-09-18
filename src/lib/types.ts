@@ -1,8 +1,8 @@
 
-
 import type { User as FirebaseUser } from 'firebase/auth';
 
 export interface AppUser extends FirebaseUser {
+    id: string; // Add id to AppUser for easier identification
     isAdmin?: boolean;
 }
 export interface Product {
@@ -61,3 +61,21 @@ export interface ChatMessage {
     timestamp: string;
 }
 
+// Types for Community Chat
+export interface Friend {
+    id: string; // friend's UID
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+    addedAt: string;
+}
+
+export interface FriendRequest {
+    id: string; // UID of the user who sent/received the request
+    direction: 'incoming' | 'outgoing';
+    status: 'pending' | 'accepted' | 'declined';
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+    createdAt: string;
+}

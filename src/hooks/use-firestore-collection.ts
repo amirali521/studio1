@@ -24,7 +24,7 @@ import type { AppUser } from "@/lib/types";
 
 // Overload signatures
 export function useFirestoreCollection(collectionName: "users"): { 
-    data: (AppUser & { id: string })[]; 
+    data: AppUser[]; 
     loading: boolean;
 };
 export function useFirestoreCollection<T extends { id?: string }>(
@@ -52,11 +52,6 @@ export function useFirestoreCollection<T extends { id?: string }>(
     if (authLoading) return;
 
     if (collectionName === 'users') {
-        if (!isAdmin) {
-             setData([]);
-             setLoading(false);
-             return;
-        }
         const usersCollectionRef = collection(db, 'users');
         const unsubscribe = onSnapshot(usersCollectionRef, (querySnapshot) => {
             const usersData = querySnapshot.docs.map(doc => ({
