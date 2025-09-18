@@ -170,15 +170,21 @@ export default function CommunityClient() {
     const blockedQuery = query(collection(db, "users", recipient.id, "blockedUsers"), where("id", "==", user.uid));
     const blockedSnapshot = await getDocs(blockedQuery);
     if (!blockedSnapshot.empty) {
-        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests." });
+        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests from you at this time." });
         return;
     }
 
     try {
       const batch = writeBatch(db);
       const timestamp = new Date().toISOString();
-      batch.set(doc(db, "users", user.uid, "friendRequests", recipient.id), { direction: 'outgoing', status: 'pending', displayName: recipient.displayName, email: recipient.email, photoURL: recipient.photoURL, createdAt: timestamp });
-      batch.set(doc(db, "users", recipient.id, "friendRequests", user.uid), { direction: 'incoming', status: 'pending', displayName: user.displayName, email: user.email, photoURL: user.photoURL, createdAt: timestamp });
+      // Sender's request doc
+      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
+      batch.set(senderRequestRef, { direction: 'outgoing', status: 'pending', displayName: recipient.displayName, email: recipient.email, photoURL: recipient.photoURL, createdAt: timestamp });
+      
+      // Recipient's request doc
+      const recipientRequestRef = doc(db, "users", recipient.id, "friendRequests", user.uid);
+      batch.set(recipientRequestRef, { direction: 'incoming', status: 'pending', displayName: user.displayName, email: user.email, photoURL: user.photoURL, createdAt: timestamp });
+      
       await batch.commit();
       toast({ title: "Friend Request Sent" });
     } catch (error) {
@@ -194,7 +200,7 @@ export default function CommunityClient() {
       const status = accept ? 'accepted' : 'declined';
       const timestamp = new Date().toISOString();
 
-      // Delete the requests from both sides instead of updating
+      // Delete the requests from both sides
       batch.delete(doc(db, "users", user.uid, "friendRequests", sender.id));
       batch.delete(doc(db, "users", sender.id, "friendRequests", user.uid));
 
@@ -223,18 +229,19 @@ export default function CommunityClient() {
     }
   };
 
-  const handleRemoveFriend = async (friendId: string) => {
+  const handleRemoveFriend = async (friendId: string, friendName: string | null) => {
      if (!user) return;
      try {
         const batch = writeBatch(db);
         // Remove from friends on both sides
         batch.delete(doc(db, "users", user.uid, "friends", friendId));
         batch.delete(doc(db, "users", friendId, "friends", user.uid));
-        // Delete any pending friend requests between them on both sides
+        // Also delete any lingering friend requests
         batch.delete(doc(db, "users", user.uid, "friendRequests", friendId));
         batch.delete(doc(db, "users", friendId, "friendRequests", user.uid));
+
         await batch.commit();
-        toast({ title: "Friend Removed" });
+        toast({ title: "Friend Removed", description: `You are no longer friends with ${friendName}.` });
      } catch (error) {
         console.error("Error removing friend:", error);
         toast({ variant: "destructive", title: "Error", description: "Could not remove friend." });
@@ -244,27 +251,11 @@ export default function CommunityClient() {
   const handleBlockUser = async (userToBlock: { id: string, displayName: string | null }) => {
     if (!user) return;
     try {
-        const batch = writeBatch(db);
         const timestamp = new Date().toISOString();
-        
-        // 1. Add to my blocked list
         const myBlockedUserRef = doc(db, "users", user.uid, "blockedUsers", userToBlock.id);
-        batch.set(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
-
-        // 2. Remove from friends on both sides
-        const myFriendRef = doc(db, "users", user.uid, "friends", userToBlock.id);
-        const theirFriendRef = doc(db, "users", userToBlock.id, "friends", user.uid);
-        batch.delete(myFriendRef);
-        batch.delete(theirFriendRef);
-
-        // 3. Delete any pending friend requests between them on both sides
-        const myFriendRequestRef = doc(db, "users", user.uid, "friendRequests", userToBlock.id);
-        const theirFriendRequestRef = doc(db, "users", userToBlock.id, "friendRequests", user.uid);
-        batch.delete(myFriendRequestRef);
-        batch.delete(theirFriendRequestRef);
-
-        await batch.commit();
-        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked.` });
+        await setDoc(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
+        
+        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked. They will not be able to send you friend requests.` });
     } catch (error) {
         console.error("Error blocking user:", error);
         toast({ variant: "destructive", title: "Error", description: "Could not block user." });
@@ -361,11 +352,11 @@ export default function CommunityClient() {
                                             <AlertDialogContent>
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Remove {chat.name}?</AlertDialogTitle>
-                                                    <AlertDialogDescription>This will remove them from your friends list. You will need to send a new friend request to chat again.</AlertDialogDescription>
+                                                    <AlertDialogDescription>This will permanently remove them from your friends list. You will need to send a new friend request to chat again.</AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction variant="destructive" onClick={() => handleRemoveFriend(chat.id)}>Remove</AlertDialogAction>
+                                                    <AlertDialogAction variant="destructive" onClick={() => handleRemoveFriend(chat.id, chat.name)}>Remove</AlertDialogAction>
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
@@ -378,7 +369,7 @@ export default function CommunityClient() {
                                             <AlertDialogContent>
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Block {chat.name}?</AlertDialogTitle>
-                                                    <AlertDialogDescription>They will be removed as a friend and will not be able to send you friend requests. This cannot be undone.</AlertDialogDescription>
+                                                    <AlertDialogDescription>They will not be able to send you friend requests. This will not remove them from your friends list. You can unblock them later from the 'Blocked' tab.</AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -537,5 +528,7 @@ export default function CommunityClient() {
     </>
   );
 }
+
+    
 
     
