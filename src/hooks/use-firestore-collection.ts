@@ -30,6 +30,7 @@ export function useFirestoreCollection(collectionName: "users"): {
 export function useFirestoreCollection(collectionName: "groupChats"): { 
     data: GroupChat[]; 
     loading: boolean;
+    addItem: (item: Omit<GroupChat, "id" | 'createdAt'>) => Promise<any>;
 };
 export function useFirestoreCollection<T extends { id?: string }>(
   collectionName: string

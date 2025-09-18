@@ -34,7 +34,7 @@ interface CreateGroupDialogProps {
 
 export default function CreateGroupDialog({ isOpen, onClose, friends, currentUser }: CreateGroupDialogProps) {
   const { toast } = useToast();
-  const { addItem: addGroupChat } = useFirestoreCollection<GroupChat>("groupChats");
+  const { addItem: addGroupChat } = useFirestoreCollection("groupChats");
 
   const form = useForm<CreateGroupFormData>({
     resolver: zodResolver(createGroupSchema),
