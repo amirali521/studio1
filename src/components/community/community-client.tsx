@@ -60,6 +60,26 @@ export default function CommunityClient() {
           u.email?.toLowerCase().includes(lowercasedTerm))
     );
   }, [searchTerm, allUsers, user]);
+  
+  const processedFriends = useMemo(() => {
+    const now = new Date();
+    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+
+    const friendsWithStatus = friends.map(friend => {
+      const friendData = allUsers.find(u => u.id === friend.id);
+      return {
+        ...friend,
+        isOnline: friendData?.lastLogin && new Date(friendData.lastLogin) > fiveMinutesAgo
+      };
+    });
+
+    return friendsWithStatus.sort((a, b) => {
+        if (a.isOnline && !b.isOnline) return -1;
+        if (!a.isOnline && b.isOnline) return 1;
+        return (a.displayName || "").localeCompare(b.displayName || "");
+    });
+  }, [friends, allUsers]);
+
 
   const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
   const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
@@ -200,14 +220,18 @@ export default function CommunityClient() {
           <CardContent className="flex-1 flex flex-col min-h-0 p-0">
             <ScrollArea className="flex-1 p-6 pt-0">
               <TabsContent value="friends">
-                {friends.length > 0 ? (
+                {processedFriends.length > 0 ? (
                   <div className="space-y-1">
-                    {friends.map(friend => (
+                    {processedFriends.map(friend => (
                       <button key={friend.id} onClick={() => setSelectedFriend(friend)} className={cn("w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors", selectedFriend?.id === friend.id ? "bg-primary text-primary-foreground" : "hover:bg-accent")}>
-                        <Avatar className="h-9 w-9">
-                          <AvatarImage src={friend.photoURL || undefined} />
-                          <AvatarFallback className={cn(selectedFriend?.id === friend.id ? "bg-primary-foreground text-primary" : "")}>{getInitials(friend.displayName)}</AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                            <Avatar className="h-9 w-9">
+                                <AvatarImage src={friend.photoURL || undefined} />
+                                <AvatarFallback className={cn(selectedFriend?.id === friend.id ? "bg-primary-foreground text-primary" : "")}>{getInitials(friend.displayName)}</AvatarFallback>
+                            </Avatar>
+                            <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", friend.isOnline ? 'bg-green-500' : 'bg-red-500')} />
+                        </div>
+
                         <div className="flex-1 truncate">
                           <p className="text-sm font-medium truncate">{friend.displayName}</p>
                           <p className={cn("text-xs truncate", selectedFriend?.id === friend.id ? "text-primary-foreground/80" : "text-muted-foreground")}>{friend.email}</p>
@@ -308,7 +332,7 @@ export default function CommunityClient() {
       <Card className="lg:col-span-2 flex flex-col">
           {selectedFriend ? (
               <>
-                 <CardHeader className="border-b">
+                 <CardHeader className="border-b flex-row items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                             <AvatarImage src={selectedFriend.photoURL || undefined} />
@@ -379,5 +403,3 @@ export default function CommunityClient() {
     </div>
   );
 }
-
-    
