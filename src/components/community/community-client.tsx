@@ -245,11 +245,11 @@ export default function CommunityClient() {
         // Add to my blocked list
         batch.set(doc(db, "users", user.uid, "blockedUsers", userToBlock.id), { displayName: userToBlock.displayName, blockedAt: timestamp });
 
-        // Remove from friends if they are one
+        // Remove from friends on both sides
         batch.delete(doc(db, "users", user.uid, "friends", userToBlock.id));
         batch.delete(doc(db, "users", userToBlock.id, "friends", user.uid));
 
-        // Delete any pending friend requests between them
+        // Delete any pending friend requests between them on both sides
         batch.delete(doc(db, "users", user.uid, "friendRequests", userToBlock.id));
         batch.delete(doc(db, "users", userToBlock.id, "friendRequests", user.uid));
 
