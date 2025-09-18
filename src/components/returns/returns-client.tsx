@@ -133,6 +133,7 @@ export default function ReturnsClient() {
   };
 
   const handleCameraScan = (text: string) => {
+    setScannedValue(text);
     handleScanReturn(text);
     setIsScannerOpen(false);
   }
@@ -160,7 +161,7 @@ export default function ReturnsClient() {
 
   return (
     <>
-    <div className="flex-1 flex justify-center items-start">
+    <div className="flex-1 flex justify-center items-start pt-4 sm:pt-6">
       <Card className="w-full max-w-lg">
         <CardHeader>
             <CardTitle className="font-headline">Process a Return</CardTitle>
