@@ -10,7 +10,6 @@ import LoadingScreen from "@/components/layout/loading-screen";
 import LandingHero from "@/components/landing-hero";
 import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare, Facebook, Twitter, Instagram } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import AnimatedAnalyticsBackground from "@/components/animated-analytics-background";
 
 const features = [
     {
@@ -61,8 +60,14 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background font-body overflow-x-hidden">
-      <div className="absolute top-0 left-0 w-full h-full -z-10 opacity-50">
-          <AnimatedAnalyticsBackground />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="w-[800px] h-[800px] bg-primary/20 rounded-full blur-3xl" />
+      </div>
+       <div className="absolute bottom-0 left-0 translate-x-[-20%] translate-y-[20%]">
+          <div className="w-[600px] h-[600px] bg-accent/20 rounded-full blur-3xl" />
+      </div>
+       <div className="absolute top-0 right-0 -translate-y-[20%] translate-x-[20%]">
+          <div className="w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
       </div>
       
       <header className="w-full">
@@ -81,13 +86,13 @@ export default function LandingPage() {
 
       <main className="flex-1 flex items-center">
         <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div className="bg-card rounded-2xl shadow-lg p-8 md:p-12">
+            <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 md:p-12">
                 <div className="flex flex-col items-center text-center gap-8">
                     <div>
                         <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
                             Smart & Powerful Inventory
                         </h1>
-                        <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-center md:text-lg">
+                        <p className="mt-4 max-w-xl mx-auto text-muted-foreground text-center md:text-lg font-semibold">
                            Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
                         </p>
                         <Button asChild size="lg" className="mt-8">
