@@ -166,30 +166,41 @@ export default function CommunityClient() {
   const handleSendRequest = async (recipient: AppUser) => {
     if (!user || !recipient.id) return;
     
-    // Check if the current user has been blocked by the recipient
-    const blockedQuery = query(collection(db, "users", recipient.id, "blockedUsers"), where("id", "==", user.uid));
-    const blockedSnapshot = await getDocs(blockedQuery);
-    if (!blockedSnapshot.empty) {
-        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests from you at this time." });
-        return;
-    }
-
     try {
       const batch = writeBatch(db);
       const timestamp = new Date().toISOString();
-      // Sender's request doc
-      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
-      batch.set(senderRequestRef, { direction: 'outgoing', status: 'pending', displayName: recipient.displayName, email: recipient.email, photoURL: recipient.photoURL, createdAt: timestamp });
       
-      // Recipient's request doc
+      // Create outgoing request in sender's subcollection
+      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
+      batch.set(senderRequestRef, { 
+          direction: 'outgoing', 
+          status: 'pending', 
+          displayName: recipient.displayName, 
+          email: recipient.email, 
+          photoURL: recipient.photoURL, 
+          createdAt: timestamp 
+      });
+      
+      // Create incoming request in recipient's subcollection
       const recipientRequestRef = doc(db, "users", recipient.id, "friendRequests", user.uid);
-      batch.set(recipientRequestRef, { direction: 'incoming', status: 'pending', displayName: user.displayName, email: user.email, photoURL: user.photoURL, createdAt: timestamp });
+      batch.set(recipientRequestRef, { 
+          direction: 'incoming', 
+          status: 'pending', 
+          displayName: user.displayName, 
+          email: user.email, 
+          photoURL: user.photoURL, 
+          createdAt: timestamp 
+      });
       
       await batch.commit();
       toast({ title: "Friend Request Sent" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending friend request:", error);
-      toast({ variant: "destructive", title: "Error", description: "Could not send friend request." });
+      if (error.code === 'permission-denied') {
+        toast({ variant: "destructive", title: "Cannot Send Request", description: "This user is not accepting friend requests at this time." });
+      } else {
+        toast({ variant: "destructive", title: "Error", description: "Could not send friend request." });
+      }
     }
   };
 
@@ -233,12 +244,11 @@ export default function CommunityClient() {
      if (!user) return;
      try {
         const batch = writeBatch(db);
-        // Remove from friends on both sides
+        
+        // Remove friend from current user's friend list
         batch.delete(doc(db, "users", user.uid, "friends", friendId));
+        // Remove current user from the other user's friend list
         batch.delete(doc(db, "users", friendId, "friends", user.uid));
-        // Also delete any lingering friend requests
-        batch.delete(doc(db, "users", user.uid, "friendRequests", friendId));
-        batch.delete(doc(db, "users", friendId, "friendRequests", user.uid));
 
         await batch.commit();
         toast({ title: "Friend Removed", description: `You are no longer friends with ${friendName}.` });
@@ -254,9 +264,10 @@ export default function CommunityClient() {
         const timestamp = new Date().toISOString();
         const myBlockedUserRef = doc(db, "users", user.uid, "blockedUsers", userToBlock.id);
         
+        // Just add to the blocked list. Do not remove friend or requests.
         await setDoc(myBlockedUserRef, { displayName: userToBlock.displayName, blockedAt: timestamp });
         
-        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked. They will not be able to send you friend requests.` });
+        toast({ title: "User Blocked", description: `${userToBlock.displayName} has been blocked. They will not be able to send you friend requests if you unfriend them.` });
     } catch (error) {
         console.error("Error blocking user:", error);
         toast({ variant: "destructive", title: "Error", description: "Could not block user." });
@@ -273,7 +284,6 @@ export default function CommunityClient() {
         toast({ variant: "destructive", title: "Error", description: "Could not unblock user." });
     }
   };
-
     
    const getInitials = (name?: string | null) => {
     if (!name) return "U";
@@ -370,7 +380,7 @@ export default function CommunityClient() {
                                             <AlertDialogContent>
                                                 <AlertDialogHeader>
                                                     <AlertDialogTitle>Block {chat.name}?</AlertDialogTitle>
-                                                    <AlertDialogDescription>They will not be able to send you friend requests. This will not remove them from your friends list. You can unblock them later from the 'Blocked' tab.</AlertDialogDescription>
+                                                    <AlertDialogDescription>They will still be your friend, but if you unfriend them, they won't be able to send you a new friend request until you unblock them.</AlertDialogDescription>
                                                 </AlertDialogHeader>
                                                 <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -502,7 +512,7 @@ export default function CommunityClient() {
                                     <AlertDialogContent>
                                         <AlertDialogHeader>
                                             <AlertDialogTitle>Unblock {blockedUser.displayName}?</AlertDialogTitle>
-                                            <AlertDialogDescription>They will be able to send you friend requests again.</AlertDialogDescription>
+                                            <AlertDialogDescription>They will be able to send you friend requests again if you are not friends.</AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -543,7 +553,3 @@ export default function CommunityClient() {
     </>
   );
 }
-
-    
-
-    
