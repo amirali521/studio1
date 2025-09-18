@@ -67,11 +67,9 @@ export default function CommunityClient() {
     });
     
     // Check if all data has loaded
-    const checkLoading = () => {
-        if(!usersLoading && !groupsLoading) setDataLoading(false);
-    };
-    checkLoading();
-
+    if(!usersLoading && !groupsLoading) {
+      setDataLoading(false);
+    }
 
     return () => {
         unsubscribes.forEach(unsub => unsub());
@@ -465,5 +463,3 @@ export default function CommunityClient() {
     </>
   );
 }
-
-    
