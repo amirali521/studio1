@@ -86,11 +86,11 @@ export default function LandingPage() {
 
       <main className="flex-1 flex items-center">
         <div className="container mx-auto px-4 py-6 sm:py-8">
-            <div className="relative bg-card/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
-                <div className="absolute inset-0 z-0 opacity-10">
+            <div className="relative bg-card/60 backdrop-blur-sm rounded-2xl shadow-lg p-8 md:p-12 overflow-hidden">
+                <div className="absolute inset-0 z-0 opacity-20">
                     <AnimatedLandingHero className="w-full h-full object-cover"/>
                 </div>
-                 <div className="absolute inset-0 z-0 bg-gradient-to-t from-card via-card/80 to-transparent"/>
+                 <div className="absolute inset-0 z-0 bg-gradient-to-t from-card via-card/60 to-transparent"/>
                 <div className="relative z-10 flex flex-col items-center text-center gap-8">
                     <div>
                         <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
