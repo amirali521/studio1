@@ -316,7 +316,7 @@ export default function CommunityClient() {
                 {filteredChats.length > 0 ? (
                   <div className="space-y-1">
                     {filteredChats.map(chat => (
-                         <div key={chat.id} className="w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent group">
+                         <div key={chat.id} className="w-full flex items-center justify-between gap-3 p-2 rounded-lg text-left transition-colors hover:bg-accent group">
                             <button onClick={() => setActiveChat(chat)} className="flex items-center gap-3 flex-1">
                                 <div className="relative">
                                     <Avatar className="h-9 w-9">
@@ -329,7 +329,7 @@ export default function CommunityClient() {
                                          <span className={cn("absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background", chat.isOnline ? 'bg-green-500' : 'bg-red-500')} />
                                     )}
                                 </div>
-                                <div className="flex-1 truncate">
+                                <div className="flex-1 truncate text-left">
                                   <p className="text-sm font-medium truncate">{chat.name}</p>
                                   <p className="text-xs truncate text-muted-foreground">{chat.email}</p>
                                 </div>
@@ -337,7 +337,7 @@ export default function CommunityClient() {
                             {!chat.isGroup && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0">
                                             <EllipsisVertical className="h-4 w-4"/>
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -527,5 +527,3 @@ export default function CommunityClient() {
     </>
   );
 }
-
-    
