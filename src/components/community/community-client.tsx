@@ -16,7 +16,7 @@ import { Search, UserPlus, Mail, Check, X, Send, Hourglass, MessagesSquare, User
 import { ScrollArea } from "@/components/ui/scroll-area";
 import LoadingScreen from "../layout/loading-screen";
 import { collection, doc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, firebaseConfig } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -49,9 +49,11 @@ export default function CommunityClient() {
   const searchResults = useMemo(() => {
     if (!searchTerm.trim() || !user) return [];
     const lowercasedTerm = searchTerm.toLowerCase();
+    const adminUid = firebaseConfig.adminUid;
     return allUsers.filter(
       (u) =>
         u.id !== user.uid &&
+        u.id !== adminUid &&
         (u.displayName?.toLowerCase().includes(lowercasedTerm) ||
           u.email?.toLowerCase().includes(lowercasedTerm))
     );
