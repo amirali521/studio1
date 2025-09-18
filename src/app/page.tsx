@@ -71,7 +71,7 @@ export default function LandingPage() {
       
       <header className="w-full absolute top-0 left-0 z-20">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
-          <Link href="/" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
             <ScanBarcode className="h-7 w-7 text-primary" />
             <span className="text-xl font-bold font-headline text-foreground whitespace-nowrap">Stockpile Scan</span>
           </Link>
@@ -85,8 +85,8 @@ export default function LandingPage() {
 
       <main className="flex-1 flex flex-col">
         <section className="w-full mt-2">
-            <div className="container mx-auto px-4">
-                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-4 pt-4 pb-5 md:p-12 md:pt-4 md:pb-7 overflow-hidden w-full">
+            <div className="container mx-auto px-4 mt-2">
+                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-4 pt-4 md:p-12 md:pt-4 pb-5 md:pb-7 overflow-hidden w-full">
                     <div className="relative z-10 flex flex-col items-center text-center">
                         <div className="flex flex-col items-center">
                             <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
