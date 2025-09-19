@@ -206,8 +206,21 @@ export default function CommunityClient() {
       batch.delete(doc(db, "users", sender.id, "friendRequests", user.uid));
 
       if (accept) {
-        batch.set(doc(db, "users", user.uid, "friends", sender.id), { displayName: sender.displayName, email: sender.email, photoURL: sender.photoURL, addedAt: timestamp });
-        batch.set(doc(db, "users", sender.id, "friends", user.uid), { displayName: user.displayName, email: user.email, photoURL: user.photoURL, addedAt: timestamp });
+        const currentUserFriendRef = doc(db, "users", user.uid, "friends", sender.id);
+        const senderFriendRef = doc(db, "users", sender.id, "friends", user.uid);
+        
+        batch.set(currentUserFriendRef, { 
+            displayName: sender.displayName, 
+            email: sender.email, 
+            photoURL: sender.photoURL, 
+            addedAt: timestamp 
+        });
+        batch.set(senderFriendRef, { 
+            displayName: user.displayName, 
+            email: user.email, 
+            photoURL: user.photoURL, 
+            addedAt: timestamp 
+        });
       }
 
       await batch.commit();
