@@ -29,6 +29,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   const codeReader = useRef<BrowserQRCodeReader | null>(null);
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
+  const isScanning = useRef(true);
 
   useEffect(() => {
     import('@zxing/library').then(({ BrowserQRCodeReader }) => {
@@ -46,6 +47,8 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
       }
       setIsFlashOn(false);
       setScannedItems([]);
+      setLastScanResult(null);
+      isScanning.current = true;
       return;
     }
 
@@ -65,7 +68,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
           }
 
           codeReader.current.decodeFromStream(stream, videoRef.current, (result, error) => {
-            if (result) {
+            if (result && isScanning.current) {
               handleDecode(result.getText());
             }
           });
@@ -84,6 +87,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
       }
+      isScanning.current = true;
     };
   }, [isOpen]);
   
@@ -103,6 +107,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   };
 
   const handleDecode = (text: string) => {
+    isScanning.current = false; // Lock scanning
     let scannedData: QrCodeData;
     try {
         scannedData = JSON.parse(text);
@@ -129,7 +134,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
 
     const itemInStock = serializedItems.find(i => i.serialNumber === scannedData.serialNumber && i.status === 'in_stock');
     if (!itemInStock) {
-        setLastScanResult({ success: false, message: "Item not in stock or already scanned." });
+        setLastScanResult({ success: false, message: "Item not in stock or already sold." });
         return;
     }
     
@@ -153,6 +158,8 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !codeReader.current) return;
+
+    isScanning.current = false; // Lock scanning during file processing
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -181,7 +188,10 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
 
   useEffect(() => {
     if(lastScanResult) {
-        const timer = setTimeout(() => setLastScanResult(null), 1500);
+        const timer = setTimeout(() => {
+            setLastScanResult(null);
+            isScanning.current = true; // Unlock scanning
+        }, 1500);
         return () => clearTimeout(timer);
     }
   }, [lastScanResult]);
@@ -237,8 +247,8 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
              <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md rounded-t-2xl p-4 max-h-[40vh] flex flex-col">
                 <h3 className="font-bold text-lg text-center mb-2">Scanned Items ({scannedItems.length})</h3>
                 <div className="flex-1 overflow-y-auto space-y-2">
-                     {scannedItems.length > 0 ? scannedItems.map((item, index) => (
-                        <div key={`${item.serialNumber}-${index}`} className="flex justify-between items-center bg-secondary p-2 rounded-md">
+                     {scannedItems.length > 0 ? scannedItems.map((item) => (
+                        <div key={item.serialNumber} className="flex justify-between items-center bg-secondary p-2 rounded-md">
                             <div>
                                 <p className="text-sm font-medium">{item.name}</p>
                                 <p className="text-xs text-muted-foreground font-mono">{item.serialNumber}</p>
@@ -278,4 +288,3 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     </Dialog>
   );
 }
-
