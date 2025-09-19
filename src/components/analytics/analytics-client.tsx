@@ -91,14 +91,14 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
              <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="w-full sm:w-auto">
+                <SelectTrigger className="w-full sm:flex-1">
                     <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +111,7 @@ export default function AnalyticsClient() {
                 <Button
                     id="date"
                     variant={"outline"}
-                    className="w-full sm:w-auto justify-start text-left font-normal"
+                    className="w-full sm:flex-1 justify-start text-left font-normal"
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dateRange?.from ? (
@@ -190,33 +190,33 @@ export default function AnalyticsClient() {
         </Card>
       </div>
 
-       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <Card>
+       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
             <CardDescription>Daily revenue from sales.</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2 min-w-0">
+          <CardContent className="flex-1 pl-2 min-w-0">
             <SalesChart data={filteredSales} dateRange={dateRange}/>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="flex flex-col">
             <CardHeader>
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
             </CardHeader>
-            <CardContent className="pl-2 min-w-0">
+            <CardContent className="flex-1 pl-2 min-w-0">
                  <ProductPerformanceChart sales={filteredSales} products={products} serializedItems={serializedItems}/>
             </CardContent>
         </Card>
       </div>
-       <div className="grid gap-4">
-          <Card>
+       <div className="grid gap-6">
+          <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Profit Trend</CardTitle>
               <CardDescription>Daily profit from sales.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-1 min-w-0">
               <ProfitTrendChart data={filteredSales} dateRange={dateRange}/>
             </CardContent>
           </Card>

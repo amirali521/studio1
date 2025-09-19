@@ -69,7 +69,7 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
   }
 
   return (
-    <div className="h-[350px] w-full">
+    <div className="w-full h-[300px] sm:h-[350px]">
          <ChartContainer
             config={{}}
             className="mx-auto h-full w-full"

@@ -57,7 +57,7 @@ export default function SalesChart({ data, dateRange }: SalesChartProps) {
   };
 
   return (
-    <div className="h-[350px] w-full">
+    <div className="w-full h-[300px] sm:h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" />
