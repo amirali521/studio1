@@ -121,20 +121,20 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
          return;
     }
     
-    // Prevent multiple scans of the same code
-    if (scannedItems.some(item => item.serialNumber === scannedData.serialNumber)) {
-        setLastScanResult({ success: false, message: "Duplicate scan." });
-        return;
-    }
-
     if (user && scannedData.uid !== user.uid) {
         setLastScanResult({ success: false, message: "Item belongs to another user." });
         return;
     }
+    
+    const itemInStock = serializedItems.find(i => i.serialNumber === scannedData.serialNumber);
 
-    const itemInStock = serializedItems.find(i => i.serialNumber === scannedData.serialNumber && i.status === 'in_stock');
-    if (!itemInStock) {
+    if (!itemInStock || itemInStock.status !== 'in_stock') {
         setLastScanResult({ success: false, message: "Item not in stock or already sold." });
+        return;
+    }
+
+    if (scannedItems.some(item => item.serialNumber === scannedData.serialNumber)) {
+        setLastScanResult({ success: false, message: "Duplicate scan." });
         return;
     }
     
@@ -247,8 +247,8 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
              <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md rounded-t-2xl p-4 max-h-[40vh] flex flex-col">
                 <h3 className="font-bold text-lg text-center mb-2">Scanned Items ({scannedItems.length})</h3>
                 <div className="flex-1 overflow-y-auto space-y-2">
-                     {scannedItems.length > 0 ? scannedItems.map((item) => (
-                        <div key={item.serialNumber} className="flex justify-between items-center bg-secondary p-2 rounded-md">
+                     {scannedItems.length > 0 ? scannedItems.map((item, index) => (
+                        <div key={`${item.serialNumber}-${index}`} className="flex justify-between items-center bg-secondary p-2 rounded-md">
                             <div>
                                 <p className="text-sm font-medium">{item.name}</p>
                                 <p className="text-xs text-muted-foreground font-mono">{item.serialNumber}</p>
@@ -288,3 +288,5 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     </Dialog>
   );
 }
+
+    
