@@ -3,9 +3,36 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users can only read and write to their own document subcollections.
-    match /users/{userId}/{subcollection}/{docId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+  
+    // Helper function to check if a user is an admin
+    function isAdmin() {
+      // Admins are defined by having a specific field in their user document.
+      // This requires you to set `isAdmin: true` in the Firestore doc for the admin user.
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // --- USER PROFILE RULES ---
+    // Users can view public profile information of others.
+    // Users can only create and modify their own profile.
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth.uid == userId;
+
+      // --- USER SUBCOLLECTION RULES (Products, Sales, etc.) ---
+      // Users can only access their own private subcollections.
+      match /products/{docId} { allow read, write: if request.auth.uid == userId; }
+      match /sales/{docId} { allow read, write: if request.auth.uid == userId; }
+      match /serializedItems/{docId} { allow read, write: if request.auth.uid == userId; }
+    }
+    
+    // --- ADMIN SUPPORT CHAT RULES ---
+    // This secures the 1-on-1 chat between a user and an admin.
+    // The chatId for these conversations is simply the user's UID.
+    // An admin can read/write to any user's chat document.
+    // A user can only read/write to their own chat document.
+    match /chats/{userId}/messages/{messageId} {
+      allow read, write: if request.auth.uid == userId || isAdmin();
     }
   }
 }
