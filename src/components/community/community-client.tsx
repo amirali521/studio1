@@ -1,4 +1,3 @@
-
 "use client";
 
 import * as React from "react";
@@ -24,6 +23,7 @@ import CreateGroupDialog from "./create-group-dialog";
 import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { manageFriendRequest } from "@/ai/flows/manage-friend-request";
 
 
 export default function CommunityClient() {
@@ -197,37 +197,34 @@ export default function CommunityClient() {
   const handleRequestResponse = async (sender: FriendRequest, accept: boolean) => {
     if (!user || !sender.id) return;
     try {
-      const batch = writeBatch(db);
-      const status = accept ? 'accepted' : 'declined';
-      const timestamp = new Date().toISOString();
+      const response = await manageFriendRequest({
+        action: accept ? 'accept' : 'decline',
+        currentUserId: user.uid,
+        senderId: sender.id,
+        currentUserProfile: {
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        },
+        senderProfile: {
+          displayName: sender.displayName,
+          email: sender.email,
+          photoURL: sender.photoURL,
+        },
+      });
 
-      // Delete the requests from both sides
-      batch.delete(doc(db, "users", user.uid, "friendRequests", sender.id));
-      batch.delete(doc(db, "users", sender.id, "friendRequests", user.uid));
-
-      if (accept) {
-        const currentUserFriendRef = doc(db, "users", user.uid, "friends", sender.id);
-        const senderFriendRef = doc(db, "users", sender.id, "friends", user.uid);
-        
-        batch.set(currentUserFriendRef, { 
-            displayName: sender.displayName, 
-            email: sender.email, 
-            photoURL: sender.photoURL, 
-            addedAt: timestamp 
-        });
-        batch.set(senderFriendRef, { 
-            displayName: user.displayName, 
-            email: user.email, 
-            photoURL: user.photoURL, 
-            addedAt: timestamp 
-        });
+      if (response.success) {
+        toast({ title: `Request ${accept ? 'accepted' : 'declined'}` });
+      } else {
+        throw new Error(response.message);
       }
-
-      await batch.commit();
-      toast({ title: `Request ${status}` });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error responding to request:", error);
-      toast({ variant: "destructive", title: "Error" });
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Could not process the request.",
+      });
     }
   };
 
