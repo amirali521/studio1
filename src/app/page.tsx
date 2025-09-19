@@ -55,16 +55,6 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background font-body">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="w-[800px] h-[800px] bg-primary/20 rounded-full blur-3xl" />
-      </div>
-       <div className="absolute bottom-0 left-0 translate-x-[-20%] translate-y-[20%]">
-          <div className="w-[600px] h-[600px] bg-accent/20 rounded-full blur-3xl" />
-      </div>
-       <div className="absolute top-0 right-0 -translate-y-[20%] translate-x-[20%]">
-          <div className="w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
-      </div>
-      
       <header className="w-full fixed top-0 left-0 z-20 bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
           <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
@@ -80,30 +70,28 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 flex flex-col pt-20">
-        <section className="w-full mt-16">
-            <div className="container mx-auto px-4">
-                <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-4 pt-4 md:p-12 md:pt-4 pb-5 md:pb-7 overflow-hidden w-full">
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                        <div className="flex flex-col items-center">
-                            <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
-                                Smart & Powerful Inventory
-                            </h1>
-                            <p className="mt-6 max-w-xl mx-auto text-muted-foreground text-center md:text-lg">
-                               Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
-                            </p>
-                            <Button asChild size="lg" className="mt-8">
-                                <Link href="/signup">
-                                    Learn More
-                                </Link>
-                            </Button>
-                        </div>
-                        <AnimatedLandingHero className="w-full h-auto max-w-xl mx-auto"/>
+        <section className="w-full flex-1 flex flex-col justify-center">
+            <div className="container mx-auto px-4 py-16">
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="flex flex-col items-center">
+                        <h1 className="font-headline text-4xl md:text-6xl font-bold text-foreground leading-tight">
+                            Smart & Powerful Inventory
+                        </h1>
+                        <p className="mt-6 max-w-xl mx-auto text-muted-foreground text-center md:text-lg">
+                           Stockpile Scan is the all-in-one solution for small businesses. Seamlessly track stock levels, process sales, and gain valuable insights with our intuitive platform.
+                        </p>
+                        <Button asChild size="lg" className="mt-8">
+                            <Link href="/signup">
+                                Learn More
+                            </Link>
+                        </Button>
                     </div>
+                    <AnimatedLandingHero className="w-full h-auto max-w-2xl mx-auto mt-8"/>
                 </div>
             </div>
         </section>
 
-        <section className="py-5 sm:py-20 mt-5">
+        <section className="py-16 sm:py-20 bg-muted/30">
             <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
                     <h2 className="font-headline text-3xl md:text-4xl font-bold">All-in-One Business Solution</h2>
@@ -113,7 +101,7 @@ export default function LandingPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {features.map((feature, index) => (
-                        <Card key={index} className="bg-card/80 backdrop-blur-sm transform hover:-translate-y-2 transition-transform duration-300">
+                        <Card key={index} className="bg-card transform hover:-translate-y-2 transition-transform duration-300">
                             <CardHeader className="flex flex-row items-center gap-4">
                                 <div className="bg-primary/10 p-3 rounded-lg">
                                    <feature.icon className="h-6 w-6 text-primary" />
@@ -130,7 +118,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="bg-card mt-20">
+      <footer className="bg-card">
           <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
               <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Stockpile Scan. All rights reserved.</p>
                <div className="flex gap-4 mt-4 sm:mt-0">
