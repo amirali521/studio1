@@ -2,7 +2,6 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import Papa from 'papaparse';
 import { useFirestoreCollection } from '@/hooks/use-firestore-collection';
 import { type Product, type SerializedProductItem, type Sale } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
@@ -27,28 +26,39 @@ export default function ImportExport() {
   const handleExport = () => {
     setIsExporting(true);
 
-    const dataToExport = {
-      products,
-      serializedItems,
-      sales,
-    };
+    try {
+      const dataToExport = {
+        products,
+        serializedItems,
+        sales,
+      };
 
-    const csv = Papa.unparse(JSON.stringify(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `stockpile_scan_backup_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    setIsExporting(false);
-    toast({
-        title: "Export Successful",
-        description: "Your data has been downloaded as a CSV file."
-    })
+      const jsonString = JSON.stringify(dataToExport, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `stockpile_scan_backup_${new Date().toISOString().split('T')[0]}.json`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+          title: "Export Successful",
+          description: "Your data has been downloaded as a JSON file."
+      });
+    } catch (error) {
+        console.error("Export error:", error);
+        toast({
+            variant: "destructive",
+            title: "Export Failed",
+            description: "An unexpected error occurred during export."
+        });
+    } finally {
+        setIsExporting(false);
+    }
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,54 +67,54 @@ export default function ImportExport() {
 
     setIsImporting(true);
 
-    Papa.parse(file, {
-      complete: async (results) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
         try {
-          // The data is stringified JSON within a single cell, so we need to parse it back.
-          const jsonString = (results.data[0] as any)[0];
-          const importedData = JSON.parse(jsonString);
+            const text = e.target?.result;
+            if (typeof text !== 'string') {
+                throw new Error("File could not be read.");
+            }
+            const importedData = JSON.parse(text);
 
-          const { products: importedProducts, serializedItems: importedItems, sales: importedSales } = importedData;
+            const { products: importedProducts, serializedItems: importedItems, sales: importedSales } = importedData;
 
-          if (!user) {
-              throw new Error("You must be logged in to import data.");
-          }
+            if (!user) {
+                throw new Error("You must be logged in to import data.");
+            }
 
-          // Here you would typically add logic to prevent duplicates or merge data.
-          // For a simple backup/restore, we'll just add all the data.
-          // This assumes the user is importing into a fresh account.
-          if (importedProducts?.length) await addProducts(importedProducts.map(({id, ...p}: Product) => p));
-          if (importedItems?.length) await addSerializedItems(importedItems.map(({id, ...i}: SerializedProductItem) => i));
-          if (importedSales?.length) await addSales(importedSales.map(({id, ...s}: Sale) => s));
+            // Simple import: assumes user is importing into a fresh account.
+            if (importedProducts?.length) await addProducts(importedProducts.map(({id, ...p}: Product) => p));
+            if (importedItems?.length) await addSerializedItems(importedItems.map(({id, ...i}: SerializedProductItem) => i));
+            if (importedSales?.length) await addSales(importedSales.map(({id, ...s}: Sale) => s));
 
-          toast({
-              title: "Import Successful",
-              description: "Your data has been restored from the backup file."
-          });
+            toast({
+                title: "Import Successful",
+                description: "Your data has been restored from the backup file."
+            });
+
         } catch (error: any) {
-          console.error("Import error:", error);
-          toast({
-              variant: "destructive",
-              title: "Import Failed",
-              description: error.message || "Please check the file format and try again."
-          });
+            console.error("Import error:", error);
+            toast({
+                variant: "destructive",
+                title: "Import Failed",
+                description: error.message || "Please check the file format and try again."
+            });
         } finally {
-          setIsImporting(false);
-          // Reset file input
-          if(fileInputRef.current) fileInputRef.current.value = "";
+            setIsImporting(false);
+            if(fileInputRef.current) fileInputRef.current.value = "";
         }
-      },
-      error: (error) => {
-        console.error("CSV parsing error:", error);
+    };
+    reader.onerror = () => {
         toast({
             variant: "destructive",
             title: "Import Failed",
-            description: "Could not parse the CSV file. Please ensure it's a valid backup."
+            description: "Could not read the file."
         });
         setIsImporting(false);
-      }
-    });
+    };
+    reader.readAsText(file);
   };
+
 
   const loading = productsLoading || itemsLoading || salesLoading;
 
@@ -113,14 +123,14 @@ export default function ImportExport() {
       <CardHeader>
         <CardTitle className="font-headline">Backup & Restore</CardTitle>
         <CardDescription>
-          Export all your inventory and sales data to a CSV file for backup, or import it to a new account.
+          Export all your inventory and sales data to a JSON file for backup, or import it to a new account.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
           <h3 className="font-semibold mb-2">Export Data</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Download a single CSV file containing all your products, serialized stock items, and sales history. Keep this file in a safe place.
+            Download a single JSON file containing all your products, serialized stock items, and sales history. Keep this file in a safe place.
           </p>
           <Button onClick={handleExport} disabled={loading || isExporting}>
             {loading ? <Loader2 className="mr-2 animate-spin" /> : <Download className="mr-2" />}
@@ -130,14 +140,14 @@ export default function ImportExport() {
         <div className="pt-4 border-t">
           <h3 className="font-semibold mb-2">Import Data</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Restore data from a previously exported CSV file. This is best used on a new or empty account. It does not merge data.
+            Restore data from a previously exported JSON file. This is best used on a new or empty account as it does not merge data.
           </p>
            <div className="flex items-center gap-2">
             <Label htmlFor="import-file" className="sr-only">Choose file</Label>
-            <Input id="import-file" type="file" accept=".csv" ref={fileInputRef} onChange={handleImport} disabled={isImporting} className="max-w-xs"/>
+            <Input id="import-file" type="file" accept=".json" ref={fileInputRef} onChange={handleImport} disabled={isImporting} className="max-w-xs"/>
             <Button onClick={() => fileInputRef.current?.click()} disabled={isImporting}>
                 {isImporting ? <Loader2 className="mr-2 animate-spin" /> : <Upload className="mr-2" />}
-                {isImporting ? "Importing..." : "Import from CSV"}
+                {isImporting ? "Importing..." : "Import from JSON"}
             </Button>
            </div>
         </div>
