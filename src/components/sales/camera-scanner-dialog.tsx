@@ -118,7 +118,7 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
     
     // Prevent multiple scans of the same code
     if (scannedItems.some(item => item.serialNumber === scannedData.serialNumber)) {
-        // You might want to give feedback that it's already scanned, but for now we just ignore.
+        setLastScanResult({ success: false, message: "Duplicate scan." });
         return;
     }
 
@@ -279,4 +279,3 @@ export default function CameraScannerDialog({ isOpen, onClose, onScan, products,
   );
 }
 
-    
