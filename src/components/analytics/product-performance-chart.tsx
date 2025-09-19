@@ -70,7 +70,7 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
     <div className="h-[350px] w-full">
          <ChartContainer
             config={{}}
-            className="mx-auto aspect-square h-full w-full"
+            className="mx-auto h-full w-full"
         >
             <ResponsiveContainer width="100%" height="100%">
                  <PieChart>
