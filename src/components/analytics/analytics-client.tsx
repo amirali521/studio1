@@ -96,9 +96,9 @@ export default function AnalyticsClient() {
         <CardHeader>
              <CardTitle>Filters</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="w-full sm:w-auto flex-1">
+                <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +111,7 @@ export default function AnalyticsClient() {
                 <Button
                     id="date"
                     variant={"outline"}
-                    className="w-full sm:w-auto flex-1 justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal"
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dateRange?.from ? (
