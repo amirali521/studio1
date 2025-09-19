@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BrowserQRCodeReader, BarcodeFormat } from '@zxing/library';
+import type { BrowserQRCodeReader } from '@zxing/library';
 import { X, Zap, ZapOff, CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,14 +20,20 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lastScanResult, setLastScanResult] = useState<{ success: boolean; message: string } | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-  const codeReader = useRef(new BrowserQRCodeReader());
+  const codeReader = useRef<BrowserQRCodeReader | null>(null);
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [hasFlash, setHasFlash] = useState(false);
   const isScanning = useRef(true);
 
   useEffect(() => {
+    import('@zxing/library').then(({ BrowserQRCodeReader }) => {
+      codeReader.current = new BrowserQRCodeReader();
+    });
+  }, []);
+
+  useEffect(() => {
     if (!isOpen) {
-      codeReader.current.reset();
+      codeReader.current?.reset();
       if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
@@ -38,6 +44,7 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
     }
 
     const startScanning = async () => {
+      if (!codeReader.current) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         setHasCameraPermission(true);
@@ -66,7 +73,7 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
     startScanning();
 
     return () => {
-      codeReader.current.reset();
+      codeReader.current?.reset();
       if (videoRef.current?.srcObject) {
         const stream = videoRef.current.srcObject as MediaStream;
         stream.getTracks().forEach(track => track.stop());
@@ -101,13 +108,13 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !codeReader.current) return;
 
     const reader = new FileReader();
     reader.onload = async (e) => {
       if (e.target?.result) {
         try {
-          const result = await codeReader.current.decodeFromImageUrl(e.target.result as string);
+          const result = await codeReader.current!.decodeFromImageUrl(e.target.result as string);
           handleDecode(result.getText());
         } catch (error) {
            setLastScanResult({ success: false, message: 'No QR code found in image.' });
@@ -192,3 +199,5 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
     </Dialog>
   );
 }
+
+    
