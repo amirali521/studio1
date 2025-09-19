@@ -94,7 +94,7 @@ export default function AnalyticsClient() {
     <div className="space-y-6">
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <h2 className="text-lg font-semibold">Filters</h2>
+            <h2 className="text-lg font-semibold shrink-0">Filters</h2>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                  <Select value={selectedProductId} onValueChange={setSelectedProductId}>
                     <SelectTrigger className="w-full sm:w-[200px]">
@@ -110,7 +110,7 @@ export default function AnalyticsClient() {
                     <Button
                         id="date"
                         variant={"outline"}
-                        className="w-full sm:w-[260px] justify-start text-left font-normal"
+                        className="w-full sm:w-auto justify-start text-left font-normal"
                     >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateRange?.from ? (
@@ -142,7 +142,7 @@ export default function AnalyticsClient() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -179,7 +179,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Selling Product</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -190,8 +190,8 @@ export default function AnalyticsClient() {
         </Card>
       </div>
 
-       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card>
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
             <CardDescription>Daily revenue from sales.</CardDescription>
@@ -200,7 +200,7 @@ export default function AnalyticsClient() {
             <SalesChart data={filteredSales} dateRange={dateRange}/>
           </CardContent>
         </Card>
-        <Card className="col-span-4 lg:col-span-3">
+        <Card>
             <CardHeader>
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
@@ -211,7 +211,7 @@ export default function AnalyticsClient() {
         </Card>
       </div>
        <div className="grid gap-4">
-          <Card className="col-span-1">
+          <Card>
             <CardHeader>
               <CardTitle>Profit Trend</CardTitle>
               <CardDescription>Daily profit from sales.</CardDescription>
