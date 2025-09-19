@@ -15,9 +15,6 @@ export const metadata: Metadata = {
   title: "Stockpile Scan - Inventory Management & POS",
   description: "Stockpile Scan is a modern, all-in-one inventory management and point-of-sale (POS) system for small businesses. Track stock, process sales, generate QR codes, and analyze performance with ease.",
   keywords: ["inventory management", "point of sale", "POS", "small business", "stock tracking", "sales analytics", "QR code inventory", "retail management"],
-  verification: {
-    google: "LFrxc8MX3bfV2x9--yAcAivXcKA5eZYoB08oXs0rOm0",
-  },
 };
 
 export default function RootLayout({
@@ -28,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content="LFrxc8MX3bfV2x9--yAcAivXcKA5eZYoB08oXs0rOm0" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
