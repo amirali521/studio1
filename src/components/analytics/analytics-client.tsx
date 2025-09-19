@@ -73,7 +73,7 @@ export default function AnalyticsClient() {
         return acc;
       }, {} as Record<string, number>);
       
-    const topProductId = Object.keys(productSalesCount).sort((a, b) => productSalesCount[b] - productSalesCount[a])[0];
+    const topProductId = Object.keys(productSalesCount).sort((a, b) => productSalesCount[b] - a)[0];
     const topProduct = products.find(p => p.id === topProductId);
     
     return {
@@ -91,61 +91,59 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-2 sm:p-4">
       <Card>
         <CardHeader>
              <CardTitle>Filters</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4 justify-start items-center">
-            <div className="flex flex-col sm:flex-row gap-2 w-full">
-                 <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                    <SelectTrigger className="w-full sm:w-[240px]">
-                        <SelectValue placeholder="Select a product" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Products</SelectItem>
-                        {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                </Select>
-                <Popover>
-                    <PopoverTrigger asChild>
-                    <Button
-                        id="date"
-                        variant={"outline"}
-                        className="w-full sm:w-auto justify-start text-left font-normal"
-                    >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dateRange?.from ? (
-                        dateRange.to ? (
-                            <>
-                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                            {format(dateRange.to, "LLL dd, y")}
-                            </>
-                        ) : (
-                            format(dateRange.from, "LLL dd, y")
-                        )
-                        ) : (
-                        <span>Pick a date</span>
-                        )}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={setDateRange}
-                        numberOfMonths={2}
-                    />
-                    </PopoverContent>
-                </Popover>
-            </div>
+        <CardContent className="flex flex-col sm:flex-row gap-4">
+             <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                <SelectTrigger className="w-full sm:w-auto flex-1">
+                    <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Products</SelectItem>
+                    {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+            </Select>
+            <Popover>
+                <PopoverTrigger asChild>
+                <Button
+                    id="date"
+                    variant={"outline"}
+                    className="w-full sm:w-auto flex-1 justify-start text-left font-normal"
+                >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                    dateRange.to ? (
+                        <>
+                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                        {format(dateRange.to, "LLL dd, y")}
+                        </>
+                    ) : (
+                        format(dateRange.from, "LLL dd, y")
+                    )
+                    ) : (
+                    <span>Pick a date</span>
+                    )}
+                </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                />
+                </PopoverContent>
+            </Popover>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <Card>
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+        <Card className="col-span-2 md:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -181,7 +179,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
+         <Card className="col-span-2 md:col-span-3 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Selling Product</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -207,7 +205,7 @@ export default function AnalyticsClient() {
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
                  <ProductPerformanceChart sales={filteredSales} products={products} serializedItems={serializedItems}/>
             </CardContent>
         </Card>

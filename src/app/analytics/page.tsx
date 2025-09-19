@@ -9,7 +9,7 @@ export default function AnalyticsPage() {
       <AppHeader title="Sales Analytics">
         <UserProfile />
       </AppHeader>
-      <main className="flex-1 bg-muted/30 p-4">
+      <main className="flex-1 bg-muted/30 p-1 sm:p-2">
           <AnalyticsClient />
       </main>
     </>
