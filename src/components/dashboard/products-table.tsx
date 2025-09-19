@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Trash2, Edit, ArrowUp, ArrowDown, Wand2 } from "lucide-react";
+import { Trash2, Edit, ArrowUp, ArrowDown, Wand2, ChevronsUpDown } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +28,16 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 
 type ProductWithStock = Product & { quantity: number };
-type SortKey = keyof ProductWithStock | null;
+type SortKey = keyof ProductWithStock | 'createdAt';
 
 interface ProductsTableProps {
   products: ProductWithStock[];
@@ -47,14 +54,9 @@ export default function ProductsTable({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const { currency } = useCurrency();
 
-  const handleSort = (key: keyof ProductWithStock) => {
+  const handleSort = (key: SortKey) => {
     if (sortKey === key) {
-      if (sortOrder === "desc") {
-        setSortOrder("asc");
-      } else {
-        setSortKey(null); // Return to default sort
-        setSortOrder("desc");
-      }
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortKey(key);
       setSortOrder("desc");
@@ -71,19 +73,26 @@ export default function ProductsTable({
             if (aValue === undefined || aValue === null) return 1;
             if (bValue === undefined || bValue === null) return -1;
             
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                 if (sortKey === 'createdAt') {
+                    return sortOrder === 'asc' 
+                        ? new Date(aValue).getTime() - new Date(bValue).getTime() 
+                        : new Date(bValue).getTime() - new Date(aValue).getTime();
+                }
+                return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            }
+            
             if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
             if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
             return 0;
         });
-    } else {
-       sortableProducts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
     return sortableProducts;
   }, [products, sortKey, sortOrder]);
 
 
-  const renderSortArrow = (key: keyof ProductWithStock) => {
-    if (sortKey !== key) return null;
+  const renderSortArrow = (key: SortKey) => {
+    if (sortKey !== key) return <ChevronsUpDown className="ml-2 h-4 w-4 text-muted-foreground/50" />;
     return sortOrder === "asc" ? (
       <ArrowUp className="ml-2 h-4 w-4" />
     ) : (
@@ -92,13 +101,13 @@ export default function ProductsTable({
   };
   
   const lowStockProducts = products.filter(p => p.quantity > 0 && p.quantity <= 10);
-  const bestSellingProducts = [...products].sort((a,b) => b.price - a.price).slice(0, 3);
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline">Inventory</CardTitle>
-          <Popover>
+        <div className="flex items-center gap-2">
+           <Popover>
               <PopoverTrigger asChild>
                   <Button variant="outline" size="sm">
                       <Wand2 className="mr-2 h-4 w-4" />
@@ -110,7 +119,7 @@ export default function ProductsTable({
                       <div className="space-y-2">
                           <h4 className="font-medium leading-none">Inventory Insights</h4>
                           <p className="text-sm text-muted-foreground">
-                              Quick insights based on your current inventory.
+                              Quick insights based on your current stock levels.
                           </p>
                       </div>
                       <div className="grid gap-2">
@@ -121,31 +130,31 @@ export default function ProductsTable({
                                   <ul className="space-y-1 text-sm">
                                       {lowStockProducts.map(p => (
                                           <li key={p.id} className="flex justify-between">
-                                              <span>{p.name}</span>
+                                              <span className="truncate pr-2">{p.name}</span>
                                               <span className="font-bold text-destructive">{p.quantity} left</span>
                                           </li>
                                       ))}
                                   </ul>
                               ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
                           </div>
-                           <div className="rounded-lg border bg-background p-4">
-                              <h3 className="font-semibold">Top Value Products</h3>
-                              <p className="text-sm text-muted-foreground mb-2">Your most valuable items currently in stock.</p>
-                               {bestSellingProducts.length > 0 ? (
-                                  <ul className="space-y-1 text-sm">
-                                      {bestSellingProducts.map(p => (
-                                          <li key={p.id} className="flex justify-between">
-                                              <span>{p.name}</span>
-                                              <span className="font-bold text-primary">{formatCurrency(p.price, currency)}</span>
-                                          </li>
-                                      ))}
-                                  </ul>
-                              ) : <p className="text-sm text-muted-foreground">No products in inventory.</p>}
-                          </div>
                       </div>
                   </div>
               </PopoverContent>
           </Popover>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                Sort By {renderSortArrow(sortKey as SortKey)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleSort('name')}>Name</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('quantity')}>In Stock</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('price')}>Price</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSort('createdAt')}>Date Added</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </CardHeader>
       <CardContent>
         {products.length > 0 ? (
@@ -153,30 +162,9 @@ export default function ProductsTable({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort("name")}
-                  >
-                    <div className="flex items-center">
-                      Name {renderSortArrow("name")}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort("quantity")}
-                  >
-                    <div className="flex items-center">
-                      In Stock {renderSortArrow("quantity")}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer hover:bg-muted"
-                    onClick={() => handleSort("price")}
-                  >
-                    <div className="flex items-center">
-                      Price {renderSortArrow("price")}
-                    </div>
-                  </TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>In Stock</TableHead>
+                  <TableHead>Price</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
