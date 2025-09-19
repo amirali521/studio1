@@ -93,9 +93,7 @@ export default function ProductsTable({
   
   const lowStockProducts = products.filter(p => p.quantity > 0 && p.quantity <= 10);
   const bestSellingProducts = [...products].sort((a,b) => b.price - a.price).slice(0, 3);
-  const totalStockValue = products.reduce((acc, p) => acc + p.purchasePrice * p.quantity, 0);
-  const totalStockRevenue = products.reduce((acc, p) => acc + p.price * p.quantity, 0);
-
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -116,15 +114,6 @@ export default function ProductsTable({
                           </p>
                       </div>
                       <div className="grid gap-2">
-                           <div className="rounded-lg border bg-background p-3">
-                                <h3 className="font-semibold text-sm">Potential Revenue</h3>
-                                <p className="text-2xl font-bold text-primary">{formatCurrency(totalStockRevenue, currency)}</p>
-                                <p className="text-xs text-muted-foreground">from {formatNumberCompact(products.reduce((acc, p) => acc + p.quantity, 0))} items</p>
-                            </div>
-                            <div className="rounded-lg border bg-background p-3">
-                                <h3 className="font-semibold text-sm">Total Stock Cost</h3>
-                                 <p className="text-2xl font-bold">{formatCurrency(totalStockValue, currency)}</p>
-                            </div>
                           <div className="rounded-lg border bg-background p-4">
                               <h3 className="font-semibold">Low Stock Alert</h3>
                               <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>

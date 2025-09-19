@@ -6,7 +6,7 @@ import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { type Sale, type Product, type SerializedProductItem } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2 } from "lucide-react";
+import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2, Archive, BarChart, Banknote } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency, formatNumberCompact } from "@/lib/utils";
 import { subDays, startOfDay, endOfDay } from "date-fns";
@@ -87,6 +87,27 @@ export default function AnalyticsClient() {
     };
   }, [filteredSales, products, serializedItems]);
 
+  const {
+      inventoryCost,
+      potentialRevenue,
+      potentialProfit
+  } = useMemo(() => {
+      const inStockItems = serializedItems.filter(i => i.status === 'in_stock');
+      const cost = inStockItems.reduce((acc, item) => {
+          const product = products.find(p => p.id === item.productId);
+          return acc + (product?.purchasePrice || 0);
+      }, 0);
+      const revenue = inStockItems.reduce((acc, item) => {
+          const product = products.find(p => p.id === item.productId);
+          return acc + (product?.price || 0);
+      }, 0);
+      return {
+          inventoryCost: cost,
+          potentialRevenue: revenue,
+          potentialProfit: revenue - cost,
+      }
+  }, [products, serializedItems]);
+
 
   if (loading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>;
@@ -149,7 +170,8 @@ export default function AnalyticsClient() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+        {/* Sales Stats */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -186,7 +208,35 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card className="col-span-2 md:col-span-1 lg:col-span-1">
+        {/* Inventory Stats */}
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Inventory Cost</CardTitle>
+            <Archive className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(inventoryCost, currency)}</div>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Potential Revenue</CardTitle>
+            <BarChart className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(potentialRevenue, currency)}</div>
+          </CardContent>
+        </Card>
+         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Potential Profit</CardTitle>
+            <Banknote className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(potentialProfit, currency)}</div>
+          </CardContent>
+        </Card>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Selling</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
