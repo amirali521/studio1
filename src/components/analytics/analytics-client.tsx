@@ -6,7 +6,7 @@ import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { type Sale, type Product, type SerializedProductItem } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag } from "lucide-react";
+import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2 } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency, formatNumberCompact } from "@/lib/utils";
 import { subDays, startOfDay, endOfDay } from "date-fns";
@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ProfitTrendChart from "./profit-trend-chart";
 import ProductPerformanceChart from "./product-performance-chart";
+import AiAnalysisDialog from "./ai-analysis-dialog";
 
 export default function AnalyticsClient() {
   const { data: sales, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
@@ -27,6 +28,7 @@ export default function AnalyticsClient() {
   const { currency } = useCurrency();
   const loading = salesLoading || productsLoading || itemsLoading;
 
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
@@ -91,10 +93,15 @@ export default function AnalyticsClient() {
   }
 
   return (
+    <>
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
              <CardTitle>Filters</CardTitle>
+             <Button variant="outline" size="sm" onClick={() => setIsAiDialogOpen(true)}>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Ask AI
+             </Button>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
@@ -190,8 +197,8 @@ export default function AnalyticsClient() {
         </Card>
       </div>
 
-       <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        <Card className="flex flex-col">
+       <div className="grid gap-6 grid-cols-1 lg:grid-cols-5">
+        <Card className="flex flex-col lg:col-span-3">
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
             <CardDescription>Daily revenue from sales.</CardDescription>
@@ -200,7 +207,7 @@ export default function AnalyticsClient() {
             <SalesChart data={filteredSales} dateRange={dateRange}/>
           </CardContent>
         </Card>
-        <Card className="flex flex-col">
+        <Card className="flex flex-col lg:col-span-2">
             <CardHeader>
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
@@ -216,7 +223,7 @@ export default function AnalyticsClient() {
               <CardTitle>Profit Trend</CardTitle>
               <CardDescription>Daily profit from sales.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 min-w-0">
+            <CardContent className="flex-1 min-w-0 pl-2">
               <ProfitTrendChart data={filteredSales} dateRange={dateRange}/>
             </CardContent>
           </Card>
@@ -225,5 +232,13 @@ export default function AnalyticsClient() {
             <SalesHistoryTable sales={filteredSales} />
        </div>
     </div>
+    <AiAnalysisDialog
+      isOpen={isAiDialogOpen}
+      onClose={() => setIsAiDialogOpen(false)}
+      products={products}
+      sales={sales}
+      serializedItems={serializedItems}
+    />
+    </>
   );
 }
