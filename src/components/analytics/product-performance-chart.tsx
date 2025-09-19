@@ -62,14 +62,14 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
 
   if (chartData.length === 0) {
       return (
-          <div className="flex justify-center items-center h-[300px] sm:h-[350px] text-muted-foreground">
+          <div className="flex justify-center items-center h-[300px] text-muted-foreground">
               No sales data for the selected period.
           </div>
       )
   }
 
   return (
-    <div className="h-[300px] sm:h-[350px] w-full">
+    <div className="h-[350px] w-full">
          <ChartContainer
             config={{}}
             className="mx-auto h-full w-full"
@@ -87,7 +87,7 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
                         cx="50%"
                         cy="50%"
                         innerRadius={isMobile ? "50%" : "60%"}
-                        outerRadius={isMobile ? "70%" : "70%"}
+                        outerRadius="70%"
                         paddingAngle={5}
                         >
                         {chartData.map((entry, index) => (

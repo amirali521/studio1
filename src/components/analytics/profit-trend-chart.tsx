@@ -57,33 +57,35 @@ export default function ProfitTrendChart({ data, dateRange }: ProfitTrendChartPr
   };
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <LineChart data={chartData}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis
-          dataKey="name"
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
-        />
-        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1 }}/>
-        <Line 
-          type="monotone" 
-          dataKey="profit" 
-          stroke="hsl(var(--chart-2))" 
-          strokeWidth={2} 
-          dot={{ r: 4, fill: "hsl(var(--chart-2))" }}
-          activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <div className="h-[350px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis
+            dataKey="name"
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1 }}/>
+          <Line 
+            type="monotone" 
+            dataKey="profit" 
+            stroke="hsl(var(--chart-2))" 
+            strokeWidth={2} 
+            dot={{ r: 4, fill: "hsl(var(--chart-2))" }}
+            activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
   );
 }

@@ -91,14 +91,14 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
              <CardTitle>Filters</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <CardContent className="flex flex-col sm:flex-row gap-4">
              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger>
+                <SelectTrigger className="w-full sm:w-auto">
                     <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
                 <SelectContent>
@@ -111,7 +111,7 @@ export default function AnalyticsClient() {
                 <Button
                     id="date"
                     variant={"outline"}
-                    className="w-full justify-start text-left font-normal"
+                    className="w-full sm:w-auto justify-start text-left font-normal"
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dateRange?.from ? (
@@ -179,9 +179,9 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card className="col-span-2 md:col-span-3 lg:col-span-full">
+         <Card className="col-span-2 md:col-span-1 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top Selling Product</CardTitle>
+            <CardTitle className="text-sm font-medium">Top Selling</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>

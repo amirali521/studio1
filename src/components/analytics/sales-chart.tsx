@@ -57,26 +57,28 @@ export default function SalesChart({ data, dateRange }: SalesChartProps) {
   };
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
-      <BarChart data={chartData}>
-        <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis
-          dataKey="name"
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-        />
-        <YAxis
-          stroke="#888888"
-          fontSize={12}
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
-        />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--secondary))', radius: 4 }}/>
-        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="h-[350px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis
+            dataKey="name"
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="#888888"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
+          />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--secondary))', radius: 4 }}/>
+          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
