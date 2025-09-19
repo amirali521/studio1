@@ -17,21 +17,27 @@ import {z} from 'genkit';
 const SuggestProductNameInputSchema = z.object({
   barcode: z
     .string()
-    .describe("The barcode of the product, obtained from a barcode scanner."),
+    .describe('The barcode of the product, obtained from a barcode scanner.'),
 });
-export type SuggestProductNameInput = z.infer<typeof SuggestProductNameInputSchema>;
+export type SuggestProductNameInput = z.infer<
+  typeof SuggestProductNameInputSchema
+>;
 
 const SuggestProductNameOutputSchema = z.object({
-  productName: z.string().describe("The suggested name for the product."),
+  productName: z.string().describe('The suggested name for the product.'),
 });
-export type SuggestProductNameOutput = z.infer<typeof SuggestProductNameOutputSchema>;
+export type SuggestProductNameOutput = z.infer<
+  typeof SuggestProductNameOutputSchema
+>;
 
 /**
  * Asynchronously suggests a product name based on the provided barcode.
  * @param input - The input object containing the barcode.
  * @returns A promise that resolves to the suggested product name.
  */
-export async function suggestProductName(input: SuggestProductNameInput): Promise<SuggestProductNameOutput> {
+export async function suggestProductName(
+  input: SuggestProductNameInput
+): Promise<SuggestProductNameOutput> {
   return suggestProductNameFlow(input);
 }
 
@@ -43,10 +49,11 @@ const suggestProductNamePrompt = ai.definePrompt({
 
 Barcode: {{{barcode}}}
 
-Suggest a product name:`, 
+Suggest a product name:`,
 });
 
-const suggestProductNameFlow = ai.defineFlow({
+const suggestProductNameFlow = ai.defineFlow(
+  {
     name: 'suggestProductNameFlow',
     inputSchema: SuggestProductNameInputSchema,
     outputSchema: SuggestProductNameOutputSchema,

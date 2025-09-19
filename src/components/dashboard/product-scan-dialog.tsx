@@ -5,15 +5,14 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { BrowserQRCodeReader } from '@zxing/library';
+import { BrowserQRCodeReader, BarcodeFormat } from '@zxing/library';
 import { X, Zap, ZapOff, CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { QrCodeData } from "@/lib/types";
 
 interface ProductScanDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onScan: (decodedData: QrCodeData) => void;
+  onScan: (decodedText: string) => void;
 }
 
 export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductScanDialogProps) {
@@ -92,25 +91,12 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
   };
 
   const handleDecode = (text: string) => {
-    let scannedData: Partial<QrCodeData> = {};
-    try {
-        scannedData = JSON.parse(text);
-        if (!scannedData.serialNumber || !scannedData.uid) {
-            throw new Error("Invalid QR data");
-        }
-        setLastScanResult({ success: true, message: "Code Scanned! Prefilling..." });
-        setTimeout(() => {
-            onScan(scannedData as QrCodeData);
-            onClose();
-            setLastScanResult(null);
-        }, 1000);
-    } catch(e) {
-        setLastScanResult({ success: false, message: 'Invalid QR Code for this operation.' });
-        setTimeout(() => {
-            setLastScanResult(null);
-            isScanning.current = true;
-        }, 1500);
-    }
+    setLastScanResult({ success: true, message: "Code Scanned! Prefilling..." });
+    setTimeout(() => {
+        onScan(text);
+        onClose();
+        setLastScanResult(null);
+    }, 1000);
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,16 +138,16 @@ export default function ProductScanDialog({ isOpen, onClose, onScan }: ProductSc
             <video ref={videoRef} className="w-full h-full object-cover" autoPlay muted playsInline />
 
             <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                <div className="relative w-[60vw] max-w-[400px] aspect-square">
+                <div className="relative w-[80vw] max-w-[500px] h-[20vh] max-h-[200px]">
                     {/* Corner brackets */}
                     <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg"></div>
                     <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg"></div>
                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg"></div>
                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg"></div>
                 </div>
-                <p className="mt-4 text-center">Scan an existing product's QR code.</p>
+                <p className="mt-4 text-center">Scan a product barcode.</p>
                 <div className="mt-2 px-4 py-1 bg-black/30 rounded-full">
-                    <span className="text-sm font-medium">QR CODE</span>
+                    <span className="text-sm font-medium">BARCODE</span>
                 </div>
             </div>
 

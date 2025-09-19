@@ -173,7 +173,7 @@ export default function DashboardClient() {
             <AlertCircle className="h-4 w-4 text-primary" />
             <AlertTitle className="text-primary">Welcome to Stockpile Scan!</AlertTitle>
             <AlertDescription>
-              Get started by adding your first product. Click the "Add Product" button to open the form. You can even scan a barcode to pre-fill the details!
+              Get started by adding your first product. Click the "Add Product" button to open the form.
             </AlertDescription>
           </Alert>
         )}

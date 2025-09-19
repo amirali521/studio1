@@ -16,15 +16,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2, Camera } from "lucide-react";
-import { Product, SerializedProductItem, QrCodeData } from "@/lib/types";
-import { useAuth } from "@/contexts/auth-context";
-import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
+import { PlusCircle, Trash2, Camera, Wand2, Loader2 } from "lucide-react";
+import { Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import ProductScanDialog from "./product-scan-dialog";
+import { suggestProductName } from "@/ai/flows/suggest-product-name";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
+  barcode: z.string().optional(),
   description: z.string().min(1, "Description is required."),
   purchasePrice: z.coerce.number().min(0, "Purchase price must be non-negative."),
   price: z.coerce.number().min(0, "Selling price must be non-negative."),
@@ -56,19 +56,19 @@ export default function ProductForm({
   initialData,
   isEditing = false
 }: ProductFormProps) {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const { data: products } = useFirestoreCollection<Product>("products");
-  const { data: serializedItems } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSuggestingName, setIsSuggestingName] = useState(false);
 
   const transformedInitialData = initialData ? {
     ...initialData,
+    barcode: "",
     customFields: initialData.customFields 
       ? Object.entries(initialData.customFields).map(([key, value]) => ({ key, value })) 
       : []
   } : {
       name: "",
+      barcode: "",
       description: "",
       purchasePrice: 0,
       price: 0,
@@ -92,6 +92,8 @@ export default function ProductForm({
           : []
       };
       form.reset(transformedData);
+    } else {
+        form.reset(transformedInitialData)
     }
   }, [initialData, form]);
 
@@ -100,49 +102,50 @@ export default function ProductForm({
     name: "customFields",
   });
 
-  const handleScan = (scannedData: QrCodeData) => {
-    if (!scannedData.serialNumber) {
-        toast({ variant: "destructive", title: "Scan Error", description: "Invalid QR code." });
-        return;
-    }
-    
-    if (user && scannedData.uid !== user.uid) {
-        toast({ variant: "destructive", title: "Scan Error", description: "This item belongs to another user." });
-        return;
-    }
-    
-    const scannedItem = serializedItems.find(item => item.serialNumber === scannedData.serialNumber);
-    if (!scannedItem) {
-        toast({ variant: "destructive", title: "Scan Error", description: "Item not found in inventory." });
-        return;
-    }
-
-    const productToPrefill = products.find(p => p.id === scannedItem.productId);
-    if (!productToPrefill) {
-        toast({ variant: "destructive", title: "Scan Error", description: "Could not find the associated product." });
-        return;
-    }
-
-    const transformedData = {
-        ...productToPrefill,
-        quantity: 1, // Default quantity to 1 for the new entry
-        customFields: productToPrefill.customFields
-          ? Object.entries(productToPrefill.customFields).map(([key, value]) => ({ key, value }))
-          : [],
-    };
-    form.reset(transformedData);
-
-    toast({ title: "Product Prefilled", description: `Form filled with data from ${productToPrefill.name}.` });
+  const handleScan = (scannedData: string) => {
+    form.setValue("barcode", scannedData);
+    toast({ title: "Barcode Scanned", description: "You can now ask the AI to suggest a name." });
     setIsScannerOpen(false);
   };
   
   const handleFormSubmit = (data: ProductFormData) => {
-    const customFieldsObject = data.customFields?.reduce((acc, field) => {
+    const {barcode, ...restData} = data;
+    const customFieldsObject = restData.customFields?.reduce((acc, field) => {
         if(field.key) acc[field.key] = field.value;
         return acc;
     }, {} as Record<string, string>);
     
-    onSubmit({ ...data, customFields: customFieldsObject});
+    onSubmit({ ...restData, customFields: customFieldsObject});
+  }
+
+  const handleSuggestName = async () => {
+    const barcode = form.getValues("barcode");
+    if (!barcode) {
+        toast({
+            variant: "destructive",
+            title: "No Barcode",
+            description: "Please scan a barcode first to suggest a name."
+        });
+        return;
+    }
+    setIsSuggestingName(true);
+    try {
+        const result = await suggestProductName({ barcode });
+        form.setValue("name", result.productName);
+        toast({
+            title: "Name Suggested!",
+            description: "The AI has suggested a product name for you."
+        });
+    } catch(e) {
+        console.error(e);
+        toast({
+            variant: "destructive",
+            title: "AI Error",
+            description: "Could not suggest a name at this time."
+        });
+    } finally {
+        setIsSuggestingName(false);
+    }
   }
 
   return (
@@ -150,10 +153,30 @@ export default function ProductForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
           {!isEditing && (
-             <Button type="button" variant="outline" className="w-full" onClick={() => setIsScannerOpen(true)}>
-                <Camera className="mr-2 h-4 w-4" />
-                Scan Existing Product to Prefill
-            </Button>
+            <div className="p-4 border rounded-lg bg-muted/50 space-y-3">
+                 <div className="flex gap-2">
+                    <FormField
+                        control={form.control}
+                        name="barcode"
+                        render={({ field }) => (
+                        <FormItem className="flex-1">
+                            <FormLabel>Barcode</FormLabel>
+                            <FormControl>
+                            <Input {...field} placeholder="Scan a barcode..." />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+                    <Button type="button" variant="outline" size="icon" className="self-end" onClick={() => setIsScannerOpen(true)}>
+                        <Camera className="h-4 w-4" />
+                    </Button>
+                </div>
+                 <Button type="button" className="w-full" onClick={handleSuggestName} disabled={isSuggestingName}>
+                    {isSuggestingName ? <Loader2 className="mr-2 animate-spin"/> : <Wand2 className="mr-2" />}
+                    Suggest Name with AI
+                </Button>
+            </div>
           )}
 
           <FormField

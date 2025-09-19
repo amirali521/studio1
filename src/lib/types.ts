@@ -72,3 +72,13 @@ export interface GroupChat {
     createdBy: string; // UID of the creator
     createdAt: string;
 }
+
+export interface GroupInvitation {
+  id: string;
+  groupId: string;
+  groupName: string;
+  inviterId: string;
+  inviterName: string;
+  status: 'pending' | 'accepted' | 'declined';
+  createdAt: string;
+}
