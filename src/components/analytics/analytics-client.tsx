@@ -205,7 +205,7 @@ export default function AnalyticsClient() {
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="min-w-0">
                  <ProductPerformanceChart sales={filteredSales} products={products} serializedItems={serializedItems}/>
             </CardContent>
         </Card>
