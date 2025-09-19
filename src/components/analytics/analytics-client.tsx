@@ -91,13 +91,13 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
             <h2 className="text-lg font-semibold shrink-0">Filters</h2>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                  <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                    <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectTrigger className="w-full sm:w-auto">
                         <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>

@@ -60,17 +60,17 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
 
   if (chartData.length === 0) {
       return (
-          <div className="flex justify-center items-center h-[280px] text-muted-foreground">
+          <div className="flex justify-center items-center h-[350px] text-muted-foreground">
               No sales data for the selected period.
           </div>
       )
   }
 
   return (
-    <div className="h-[280px] w-full">
+    <div className="h-[350px] w-full">
          <ChartContainer
             config={{}}
-            className="mx-auto aspect-square h-full"
+            className="mx-auto aspect-square h-full w-full"
         >
             <ResponsiveContainer width="100%" height="100%">
                  <PieChart>
@@ -106,14 +106,14 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
                                         y={viewBox.cy}
                                         className="fill-foreground text-3xl font-bold"
                                     >
-                                        {formatCurrency(totalRevenue, currency)}
+                                        {formatCurrency(totalRevenue, currency).split('.')[0]}
                                     </tspan>
                                     <tspan
                                         x={viewBox.cx}
                                         y={(viewBox.cy || 0) + 24}
                                         className="fill-muted-foreground"
                                     >
-                                        Total Revenue
+                                        Revenue
                                     </tspan>
                                     </text>
                                 )

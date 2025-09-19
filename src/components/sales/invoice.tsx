@@ -39,7 +39,7 @@ export const Invoice = forwardRef<HTMLDivElement, InvoiceProps>(
     const { saleId, date, items, subtotal, tax, discount, total } = sale;
 
     return (
-      <div ref={ref} className="p-8 font-sans bg-white text-black w-[302px] mx-auto">
+      <div ref={ref} className="p-4 font-sans bg-white text-black w-full max-w-xs mx-auto">
         <div className="text-center space-y-2">
           <Logo className="justify-center" />
           {shopDetails.name && <p className="text-sm font-bold pt-2">{shopDetails.name}</p>}
