@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { Trash2, Edit, ArrowUpDown } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Trash2, Edit, ArrowUp, ArrowDown, Wand2 } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatNumberCompact } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,11 +27,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useCurrency } from "@/contexts/currency-context";
-import { doc, writeBatch } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 type ProductWithStock = Product & { quantity: number };
-type SortKey = keyof ProductWithStock;
+type SortKey = keyof ProductWithStock | null;
 
 interface ProductsTableProps {
   products: ProductWithStock[];
@@ -48,38 +47,116 @@ export default function ProductsTable({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const { currency } = useCurrency();
 
-  const handleSort = (key: SortKey) => {
+  const handleSort = (key: keyof ProductWithStock) => {
     if (sortKey === key) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      if (sortOrder === "desc") {
+        setSortOrder("asc");
+      } else {
+        setSortKey(null); // Return to default sort
+        setSortOrder("desc");
+      }
     } else {
       setSortKey(key);
-      setSortOrder("asc");
+      setSortOrder("desc");
     }
   };
 
-  const sortedProducts = [...products].sort((a, b) => {
-    const aValue = a[sortKey];
-    const bValue = b[sortKey];
+  const sortedProducts = useMemo(() => {
+    const sortableProducts = [...products];
+    if (sortKey) {
+        sortableProducts.sort((a, b) => {
+            const aValue = a[sortKey];
+            const bValue = b[sortKey];
 
-    if (aValue === undefined || bValue === undefined) return 0;
-    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
+            if (aValue === undefined || aValue === null) return 1;
+            if (bValue === undefined || bValue === null) return -1;
+            
+            if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
+    } else {
+       sortableProducts.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    return sortableProducts;
+  }, [products, sortKey, sortOrder]);
 
-  const renderSortArrow = (key: SortKey) => {
-    if (sortKey !== key) return <ArrowUpDown className="ml-2 h-4 w-4" />;
+
+  const renderSortArrow = (key: keyof ProductWithStock) => {
+    if (sortKey !== key) return null;
     return sortOrder === "asc" ? (
-      <ArrowUpDown className="ml-2 h-4 w-4" />
+      <ArrowUp className="ml-2 h-4 w-4" />
     ) : (
-      <ArrowUpDown className="ml-2 h-4 w-4" />
+      <ArrowDown className="ml-2 h-4 w-4" />
     );
   };
+  
+  const lowStockProducts = products.filter(p => p.quantity > 0 && p.quantity <= 10);
+  const bestSellingProducts = [...products].sort((a,b) => b.price - a.price).slice(0, 3);
+  const totalStockValue = products.reduce((acc, p) => acc + p.purchasePrice * p.quantity, 0);
+  const totalStockRevenue = products.reduce((acc, p) => acc + p.price * p.quantity, 0);
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline">Inventory</CardTitle>
+          <Popover>
+              <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm">
+                      <Wand2 className="mr-2 h-4 w-4" />
+                      AI Insights
+                  </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                  <div className="grid gap-4">
+                      <div className="space-y-2">
+                          <h4 className="font-medium leading-none">Inventory Insights</h4>
+                          <p className="text-sm text-muted-foreground">
+                              Quick insights based on your current inventory.
+                          </p>
+                      </div>
+                      <div className="grid gap-2">
+                           <div className="rounded-lg border bg-background p-3">
+                                <h3 className="font-semibold text-sm">Potential Revenue</h3>
+                                <p className="text-2xl font-bold text-primary">{formatCurrency(totalStockRevenue, currency)}</p>
+                                <p className="text-xs text-muted-foreground">from {formatNumberCompact(products.reduce((acc, p) => acc + p.quantity, 0))} items</p>
+                            </div>
+                            <div className="rounded-lg border bg-background p-3">
+                                <h3 className="font-semibold text-sm">Total Stock Cost</h3>
+                                 <p className="text-2xl font-bold">{formatCurrency(totalStockValue, currency)}</p>
+                            </div>
+                          <div className="rounded-lg border bg-background p-4">
+                              <h3 className="font-semibold">Low Stock Alert</h3>
+                              <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>
+                              {lowStockProducts.length > 0 ? (
+                                  <ul className="space-y-1 text-sm">
+                                      {lowStockProducts.map(p => (
+                                          <li key={p.id} className="flex justify-between">
+                                              <span>{p.name}</span>
+                                              <span className="font-bold text-destructive">{p.quantity} left</span>
+                                          </li>
+                                      ))}
+                                  </ul>
+                              ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
+                          </div>
+                           <div className="rounded-lg border bg-background p-4">
+                              <h3 className="font-semibold">Top Value Products</h3>
+                              <p className="text-sm text-muted-foreground mb-2">Your most valuable items currently in stock.</p>
+                               {bestSellingProducts.length > 0 ? (
+                                  <ul className="space-y-1 text-sm">
+                                      {bestSellingProducts.map(p => (
+                                          <li key={p.id} className="flex justify-between">
+                                              <span>{p.name}</span>
+                                              <span className="font-bold text-primary">{formatCurrency(p.price, currency)}</span>
+                                          </li>
+                                      ))}
+                                  </ul>
+                              ) : <p className="text-sm text-muted-foreground">No products in inventory.</p>}
+                          </div>
+                      </div>
+                  </div>
+              </PopoverContent>
+          </Popover>
       </CardHeader>
       <CardContent>
         {products.length > 0 ? (
@@ -88,7 +165,7 @@ export default function ProductsTable({
               <TableHeader>
                 <TableRow>
                   <TableHead
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted"
                     onClick={() => handleSort("name")}
                   >
                     <div className="flex items-center">
@@ -96,7 +173,7 @@ export default function ProductsTable({
                     </div>
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted"
                     onClick={() => handleSort("quantity")}
                   >
                     <div className="flex items-center">
@@ -104,7 +181,7 @@ export default function ProductsTable({
                     </div>
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted"
                     onClick={() => handleSort("price")}
                   >
                     <div className="flex items-center">

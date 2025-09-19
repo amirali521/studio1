@@ -184,9 +184,6 @@ export default function DashboardClient({ openAutofillDialog }: { openAutofillDi
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
   
-  const lowStockProducts = productsWithStock.filter(p => p.quantity > 0 && p.quantity <= 10);
-  const bestSellingProducts = productsWithStock.sort((a,b) => b.price - a.price).slice(0, 3);
-
 
   return (
     <>
@@ -201,55 +198,7 @@ export default function DashboardClient({ openAutofillDialog }: { openAutofillDi
           </Alert>
         )}
         
-        <div className="flex items-center justify-between mb-4">
-            <Popover>
-                <PopoverTrigger asChild>
-                    <Button variant="outline">
-                        <Wand2 className="mr-2 h-4 w-4" />
-                        AI Insights
-                    </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                    <div className="grid gap-4">
-                        <div className="space-y-2">
-                            <h4 className="font-medium leading-none">AI Insights</h4>
-                            <p className="text-sm text-muted-foreground">
-                                Quick insights based on your current inventory.
-                            </p>
-                        </div>
-                        <div className="grid gap-2">
-                            <div className="rounded-lg border bg-background p-4">
-                                <h3 className="font-semibold">Low Stock Alert</h3>
-                                <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>
-                                {lowStockProducts.length > 0 ? (
-                                    <ul className="space-y-1 text-sm">
-                                        {lowStockProducts.map(p => (
-                                            <li key={p.id} className="flex justify-between">
-                                                <span>{p.name}</span>
-                                                <span className="font-bold text-destructive">{p.quantity} left</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
-                            </div>
-                             <div className="rounded-lg border bg-background p-4">
-                                <h3 className="font-semibold">Top Value Products</h3>
-                                <p className="text-sm text-muted-foreground mb-2">Your most valuable items currently in stock.</p>
-                                 {bestSellingProducts.length > 0 ? (
-                                    <ul className="space-y-1 text-sm">
-                                        {bestSellingProducts.map(p => (
-                                            <li key={p.id} className="flex justify-between">
-                                                <span>{p.name}</span>
-                                                <span className="font-bold text-primary">{formatCurrency(p.price, currency)}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : <p className="text-sm text-muted-foreground">No products in inventory.</p>}
-                            </div>
-                        </div>
-                    </div>
-                </PopoverContent>
-            </Popover>
+        <div className="flex items-center justify-end mb-4">
             <div className="flex gap-2">
                 <Button variant="outline" onClick={openAutofillDialog}>
                     <Wand2 className="mr-2 h-4 w-4" />
