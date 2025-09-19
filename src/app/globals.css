@@ -7,6 +7,10 @@ body {
 }
 
 @layer base {
+  html {
+    @apply text-[14px] sm:text-[16px];
+  }
+
   :root {
     --background: 240 10% 97%;
     --foreground: 224 71% 4%;
