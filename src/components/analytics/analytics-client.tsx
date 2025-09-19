@@ -91,14 +91,14 @@ export default function AnalyticsClient() {
   }
 
   return (
-    <div className="space-y-4 p-2 sm:p-4">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
              <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
              <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger>
                     <SelectValue placeholder="Select a product" />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,7 +143,7 @@ export default function AnalyticsClient() {
       </Card>
 
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        <Card className="col-span-2 md:col-span-1">
+        <Card className="col-span-2">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +170,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatNumberCompact(totalItemsSold)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="col-span-2 md:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Sale Value</CardTitle>
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
@@ -179,7 +179,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card className="col-span-2 md:col-span-3 lg:col-span-1">
+         <Card className="col-span-2 md:col-span-3 lg:col-span-full">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Selling Product</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
