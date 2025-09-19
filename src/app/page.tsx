@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -53,7 +54,7 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-background font-body overflow-x-hidden">
+    <div className="flex flex-col min-h-[100dvh] bg-background font-body">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="w-[800px] h-[800px] bg-primary/20 rounded-full blur-3xl" />
       </div>
@@ -64,7 +65,7 @@ export default function LandingPage() {
           <div className="w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
       </div>
       
-      <header className="w-full sticky top-0 left-0 z-20 bg-card/80 backdrop-blur-sm">
+      <header className="w-full fixed top-0 left-0 z-20 bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
           <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
             <ScanBarcode className="h-7 w-7 text-primary" />
@@ -78,7 +79,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col pt-20">
         <section className="w-full mt-16">
             <div className="container mx-auto px-4">
                 <div className="relative bg-card/10 backdrop-blur-lg rounded-2xl shadow-lg p-4 pt-4 md:p-12 md:pt-4 pb-5 md:pb-7 overflow-hidden w-full">
