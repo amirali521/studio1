@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
-import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, MessageSquare, Facebook, Twitter, Instagram } from "lucide-react";
+import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, Facebook, Twitter, Instagram } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnimatedLandingHero from "@/components/animated-landing-hero";
 
@@ -35,11 +35,6 @@ const features = [
         icon: Undo2,
         title: "Easy Returns",
         description: "Handle customer returns smoothly. Scan a sold item's QR code to instantly process a return and restock it."
-    },
-    {
-        icon: MessageSquare,
-        title: "Community Chat",
-        description: "Connect with other business owners, ask questions, and share insights in the community chat platform."
     }
 ]
 
