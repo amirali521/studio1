@@ -61,13 +61,13 @@ const manageFriendRequestFlow = ai.defineFlow(
     const { action, currentUserId, senderId, currentUserProfile, senderProfile } = input;
 
     try {
-      // 1. Delete the friend requests from both users' subcollections
-      const currentUserRequestRef = doc(db, 'users', currentUserId, 'friendRequests', senderId);
-      const senderRequestRef = doc(db, 'users', senderId, 'friendRequests', currentUserId);
-      batch.delete(currentUserRequestRef);
-      batch.delete(senderRequestRef);
+      // The friend request document only exists in the recipient's (current user's) subcollection.
+      const requestRef = doc(db, 'users', currentUserId, 'friendRequests', senderId);
+      
+      // We always delete the request, whether it's accepted or declined.
+      batch.delete(requestRef);
 
-      // 2. If the request is accepted, create friend documents for both users
+      // If the request is accepted, create friend documents for both users.
       if (action === 'accept') {
         const timestamp = new Date().toISOString();
 
@@ -98,10 +98,9 @@ const manageFriendRequestFlow = ai.defineFlow(
       };
     } catch (error: any) {
       console.error('Error in manageFriendRequestFlow:', error);
-      // In case of an error, it's better to return a structured error response
       return {
         success: false,
-        message: 'An error occurred while processing the request.',
+        message: error.message || 'An unexpected error occurred while processing the request.',
       };
     }
   }

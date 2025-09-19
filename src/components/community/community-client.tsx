@@ -153,8 +153,11 @@ export default function CommunityClient() {
 
   }, [friends, groupChats, allUsers, friendsSearchTerm]);
 
-  const incomingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'incoming'), [friendRequests]);
-  const outgoingRequests = useMemo(() => friendRequests.filter(req => req.status === 'pending' && req.direction === 'outgoing'), [friendRequests]);
+  const incomingRequests = useMemo(() => friendRequests, [friendRequests]);
+  const outgoingRequests = useMemo(() => {
+    const outgoingIds = friendRequests.map(r => r.id);
+    return allUsers.filter(u => outgoingIds.includes(u.id));
+  }, [friendRequests, allUsers]);
 
   // Event Handlers
   const handleSendRequest = async (recipient: AppUser) => {
@@ -164,22 +167,9 @@ export default function CommunityClient() {
       const batch = writeBatch(db);
       const timestamp = new Date().toISOString();
       
-      // Create outgoing request in sender's subcollection
-      const senderRequestRef = doc(db, "users", user.uid, "friendRequests", recipient.id);
-      batch.set(senderRequestRef, { 
-          direction: 'outgoing', 
-          status: 'pending', 
-          displayName: recipient.displayName, 
-          email: recipient.email, 
-          photoURL: recipient.photoURL, 
-          createdAt: timestamp 
-      });
-      
-      // Create incoming request in recipient's subcollection
+      // Create request in recipient's subcollection
       const recipientRequestRef = doc(db, "users", recipient.id, "friendRequests", user.uid);
       batch.set(recipientRequestRef, { 
-          direction: 'incoming', 
-          status: 'pending', 
           displayName: user.displayName, 
           email: user.email, 
           photoURL: user.photoURL, 
@@ -197,6 +187,9 @@ export default function CommunityClient() {
   const handleRequestResponse = async (sender: FriendRequest, accept: boolean) => {
     if (!user || !sender.id) return;
     try {
+      const senderProfile = allUsers.find(u => u.id === sender.id);
+      if (!senderProfile) throw new Error("Sender profile not found.");
+
       const response = await manageFriendRequest({
         action: accept ? 'accept' : 'decline',
         currentUserId: user.uid,
@@ -207,9 +200,9 @@ export default function CommunityClient() {
           photoURL: user.photoURL,
         },
         senderProfile: {
-          displayName: sender.displayName,
-          email: sender.email,
-          photoURL: sender.photoURL,
+          displayName: senderProfile.displayName,
+          email: senderProfile.email,
+          photoURL: senderProfile.photoURL,
         },
       });
 
