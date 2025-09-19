@@ -13,7 +13,7 @@ export default function DashboardPage() {
       <AppHeader title={`Welcome, ${user?.displayName || "User"}`}>
         <UserProfile />
       </AppHeader>
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+      <main className="flex-1 overflow-y-auto p-1 sm:p-2">
         <DashboardClient />
       </main>
     </div>

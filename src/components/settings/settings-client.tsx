@@ -55,7 +55,7 @@ export default function SettingsClient() {
   }
 
   return (
-    <main className="flex-1 p-4 sm:p-6 space-y-6">
+    <div className="flex-1 space-y-6">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle className="font-headline">Preferences</CardTitle>
@@ -113,6 +113,6 @@ export default function SettingsClient() {
         </CardContent>
       </Card>
       <ImportExport />
-    </main>
+    </div>
   );
 }

@@ -9,7 +9,7 @@ export default function AdminPage() {
       <AppHeader title="Admin Panel">
         <UserProfile />
       </AppHeader>
-      <main className="flex-1 p-4 sm:p-6">
+      <main className="flex-1 p-1 sm:p-2">
         <AdminClient />
       </main>
     </>
