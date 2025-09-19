@@ -13,6 +13,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const COLORS = [
     "hsl(var(--chart-1))",
@@ -30,6 +31,7 @@ interface ProductPerformanceChartProps {
 
 export default function ProductPerformanceChart({ sales, products, serializedItems }: ProductPerformanceChartProps) {
   const { currency } = useCurrency();
+  const isMobile = useIsMobile();
 
   const chartData = useMemo(() => {
     if (sales.length === 0) return [];
@@ -84,8 +86,8 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        innerRadius="60%"
-                        outerRadius="80%"
+                        innerRadius={isMobile ? "50%" : "60%"}
+                        outerRadius={isMobile ? "70%" : "80%"}
                         paddingAngle={5}
                         >
                         {chartData.map((entry, index) => (
