@@ -75,7 +75,7 @@ export default function SalesChart({ data, dateRange }: SalesChartProps) {
           tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
         />
         <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--secondary))', radius: 4 }}/>
-        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} />
       </BarChart>
     </ResponsiveContainer>
   );

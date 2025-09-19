@@ -87,7 +87,7 @@ export default function ProductPerformanceChart({ sales, products, serializedIte
                         cx="50%"
                         cy="50%"
                         innerRadius={isMobile ? "50%" : "60%"}
-                        outerRadius={isMobile ? "70%" : "80%"}
+                        outerRadius={isMobile ? "70%" : "70%"}
                         paddingAngle={5}
                         >
                         {chartData.map((entry, index) => (
