@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -22,7 +21,6 @@ const navItems = [
   { href: "/barcodes", icon: QrCode, label: "Barcodes" },
   { href: "/sales", icon: ShoppingCart, label: "POS" },
   { href: "/returns", icon: Undo2, label: "Returns" },
-  { href: "/community", icon: MessageSquare, label: "Community"},
   { href: "/settings", icon: Settings, label: "Settings"},
 ];
 
