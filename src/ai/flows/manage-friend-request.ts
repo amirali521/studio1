@@ -14,7 +14,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { getFirestore, doc, writeBatch } from 'firebase-admin/firestore';
+import { getFirestore, doc } from 'firebase-admin/firestore';
 import { initializeApp, getApps } from 'firebase-admin/app';
 
 // Initialize Firebase Admin SDK if it hasn't been already
@@ -57,7 +57,7 @@ const manageFriendRequestFlow = ai.defineFlow(
   },
   async (input) => {
     const db = getFirestore();
-    const batch = writeBatch(db);
+    const batch = db.batch();
     const { action, currentUserId, senderId, currentUserProfile, senderProfile } = input;
 
     try {
