@@ -15,13 +15,13 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import ResponsiveProductDialog from "./responsive-product-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/currency-context";
-import AutofillDialog, { AutofillData } from "./autofill-dialog";
+import { AutofillData } from "./autofill-dialog";
 
 
-export default function DashboardClient({ openProductDialog, setAutofillData }: { openProductDialog: (isOpen: boolean) => void, setAutofillData: (data: AutofillData) => void }) {
+export default function DashboardClient({ openAutofillDialog }: { openAutofillDialog: () => void }) {
   const { user } = useAuth();
   const router = useRouter();
   const { currency } = useCurrency();
@@ -37,8 +37,6 @@ export default function DashboardClient({ openProductDialog, setAutofillData }: 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [autofillData, setLocalAutofillData] = useState<AutofillData | null>(null);
-  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
-
 
   useEffect(() => {
     if (autofillData) {
@@ -236,6 +234,12 @@ export default function DashboardClient({ openProductDialog, setAutofillData }: 
                     ) : <p className="text-sm text-muted-foreground">No products in inventory.</p>}
                 </div>
             </CardContent>
+            <CardFooter className="border-t px-6 py-4">
+                 <Button variant="outline" onClick={openAutofillDialog}>
+                    <Wand2 className="mr-2 h-4 w-4" />
+                    Auto-fill with AI
+                </Button>
+            </CardFooter>
         </Card>
 
         <div className="flex items-center justify-end mb-4">
@@ -267,18 +271,7 @@ export default function DashboardClient({ openProductDialog, setAutofillData }: 
           isEditing={true}
           initialData={editingProduct}
         />
-        
-         <AutofillDialog
-            isOpen={isAutofillOpen}
-            onClose={() => setIsAutofillOpen(false)}
-            onAutofill={(data) => {
-              setLocalAutofillData(data);
-              setIsAutofillOpen(false);
-              setIsAddDialogOpen(true);
-            }}
-        />
       </div>
     </>
   );
 }
-
