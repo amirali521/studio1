@@ -69,7 +69,7 @@ export default function LandingPage() {
           <div className="w-[600px] h-[600px] bg-primary/10 rounded-full blur-3xl" />
       </div>
       
-      <header className="w-full absolute top-0 left-0 z-20">
+      <header className="w-full sticky top-0 left-0 z-20 bg-card/80 backdrop-blur-sm">
         <div className="container mx-auto flex h-20 items-center justify-between px-4">
           <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
             <ScanBarcode className="h-7 w-7 text-primary" />
