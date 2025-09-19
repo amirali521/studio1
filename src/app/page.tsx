@@ -44,17 +44,6 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const meta = document.createElement('meta');
-    meta.name = 'google-site-verification';
-    meta.content = 'LFrxc8MX3bfV2x9--yAcAivXcKA5eZYoB08oXs0rOm0';
-    document.head.appendChild(meta);
-
-    return () => {
-      document.head.removeChild(meta);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!loading && user) {
       router.push("/dashboard");
     }
