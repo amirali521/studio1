@@ -82,3 +82,11 @@ export interface GroupInvitation {
   status: 'pending' | 'accepted' | 'declined';
   createdAt: string;
 }
+
+export interface AutofillProduct {
+  name: string;
+  description: string;
+  quantity: number;
+  price: number;
+  purchasePrice: number;
+}

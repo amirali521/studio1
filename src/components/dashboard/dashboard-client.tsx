@@ -2,25 +2,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PlusCircle, Loader2 } from "lucide-react";
+import { PlusCircle, Loader2, AlertCircle, Wand2 } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Product, SerializedProductItem } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import ProductsTable from "@/components/dashboard/products-table";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { AlertCircle } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { writeBatch, collection, query, where, getDocs, doc } from "firebase/firestore";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import ResponsiveProductDialog from "./responsive-product-dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/currency-context";
+import AutofillDialog, { AutofillData } from "./autofill-dialog";
 
 
-export default function DashboardClient() {
+export default function DashboardClient({ openProductDialog, setAutofillData }: { openProductDialog: (isOpen: boolean) => void, setAutofillData: (data: AutofillData) => void }) {
   const { user } = useAuth();
   const router = useRouter();
+  const { currency } = useCurrency();
   const { 
     data: products, 
     loading: productsLoading, 
@@ -32,10 +36,26 @@ export default function DashboardClient() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [autofillData, setLocalAutofillData] = useState<AutofillData | null>(null);
+  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
+
+
+  useEffect(() => {
+    if (autofillData) {
+      setIsAddDialogOpen(true);
+    }
+  }, [autofillData]);
+  
+  useEffect(() => {
+    if (!isAddDialogOpen) {
+      setLocalAutofillData(null);
+    }
+  }, [isAddDialogOpen]);
 
   const { toast } = useToast();
 
   const handleAddProduct = () => {
+    setLocalAutofillData(null);
     setIsAddDialogOpen(true);
   };
   
@@ -60,7 +80,7 @@ export default function DashboardClient() {
         const productRef = doc(db, "users", user.uid, "products", productId);
         
         const serializedItemsCollectionRef = collection(db, "users", user.uid, "serializedItems");
-        const q = query(serializedItemsCollectionRef, where("productId", "==", productId), where("status", "==", "in_stock"));
+        const q = query(serializedItemsCollectionRef, where("productId", "==", productId));
         const querySnapshot = await getDocs(q);
 
         batch.delete(productRef);
@@ -164,25 +184,67 @@ export default function DashboardClient() {
   if (isLoading) {
     return <div className="flex justify-center items-center h-full"><Loader2 className="h-8 w-8 animate-spin" /></div>
   }
+  
+  const lowStockProducts = productsWithStock.filter(p => p.quantity > 0 && p.quantity <= 10);
+  const bestSellingProducts = productsWithStock.sort((a,b) => b.price - a.price).slice(0, 3);
+
 
   return (
     <>
-      <div className="flex-1 p-1 sm:p-2">
+      <div className="space-y-4">
          {products.length === 0 && (
           <Alert className="mb-4 bg-primary/10 border-primary/20">
             <AlertCircle className="h-4 w-4 text-primary" />
             <AlertTitle className="text-primary">Welcome to Stockpile Scan!</AlertTitle>
             <AlertDescription>
-              Get started by adding your first product. Click the "Add Product" button to open the form.
+              Get started by adding your first product. Click the "Add Product" or "Auto-fill with AI" button to open the form.
             </AlertDescription>
           </Alert>
         )}
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline flex items-center gap-2"><Wand2 className="text-primary"/> AI Insights</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 md:grid-cols-2">
+                <div className="rounded-lg border p-4">
+                    <h3 className="font-semibold">Low Stock Alert</h3>
+                    <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>
+                    {lowStockProducts.length > 0 ? (
+                        <ul className="space-y-1 text-sm">
+                            {lowStockProducts.map(p => (
+                                <li key={p.id} className="flex justify-between">
+                                    <span>{p.name}</span>
+                                    <span className="font-bold text-destructive">{p.quantity} left</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
+                </div>
+                 <div className="rounded-lg border p-4">
+                    <h3 className="font-semibold">Top Value Products</h3>
+                    <p className="text-sm text-muted-foreground mb-2">Your most valuable items currently in stock.</p>
+                     {bestSellingProducts.length > 0 ? (
+                        <ul className="space-y-1 text-sm">
+                            {bestSellingProducts.map(p => (
+                                <li key={p.id} className="flex justify-between">
+                                    <span>{p.name}</span>
+                                    <span className="font-bold text-primary">{formatCurrency(p.price, currency)}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p className="text-sm text-muted-foreground">No products in inventory.</p>}
+                </div>
+            </CardContent>
+        </Card>
+
         <div className="flex items-center justify-end mb-4">
             <Button onClick={handleAddProduct}>
             <PlusCircle className="mr-2" />
             Add Product
             </Button>
         </div>
+
         <ProductsTable
           products={productsWithStock}
           onDelete={handleDeleteProduct}
@@ -192,6 +254,7 @@ export default function DashboardClient() {
           isOpen={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
           onSubmit={handleAddFormSubmit}
+          initialData={autofillData}
         />
 
         <ResponsiveProductDialog
@@ -204,7 +267,18 @@ export default function DashboardClient() {
           isEditing={true}
           initialData={editingProduct}
         />
+        
+         <AutofillDialog
+            isOpen={isAutofillOpen}
+            onClose={() => setIsAutofillOpen(false)}
+            onAutofill={(data) => {
+              setLocalAutofillData(data);
+              setIsAutofillOpen(false);
+              setIsAddDialogOpen(true);
+            }}
+        />
       </div>
     </>
   );
 }
+

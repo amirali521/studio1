@@ -16,13 +16,15 @@ import {
 } from "@/components/ui/drawer";
 import ProductForm from "./product-form";
 import type { Product } from "@/lib/types";
+import { AutofillData } from "./autofill-dialog";
+
 
 interface ResponsiveProductDialogProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSubmit: (data: any) => void;
   isEditing?: boolean;
-  initialData?: Product | null;
+  initialData?: (Product | AutofillData) | null;
 }
 
 export default function ResponsiveProductDialog({
@@ -68,3 +70,4 @@ export default function ResponsiveProductDialog({
     </Dialog>
   );
 }
+

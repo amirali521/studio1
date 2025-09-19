@@ -8,6 +8,8 @@ import { SidebarInset } from "@/components/ui/sidebar";
 import { AuthProvider } from "@/contexts/auth-context";
 import { CurrencyProvider } from "@/contexts/currency-context";
 import { ShopSettingsProvider } from "@/contexts/shop-settings-context";
+import { DashboardActionsProvider } from "@/contexts/dashboard-actions-context";
+
 
 export const metadata: Metadata = {
   title: "Stockpile Scan - Inventory Management & POS",
@@ -42,17 +44,19 @@ export default function RootLayout({
         <AuthProvider>
           <ShopSettingsProvider>
             <CurrencyProvider>
-              <SidebarProvider>
-                <div className="flex min-h-screen">
-                  <AppSidebar />
-                  <div className="flex-1 flex flex-col h-screen">
-                    <div className="flex-1 overflow-y-auto px-1 sm:px-0">
-                      {children}
+              <DashboardActionsProvider>
+                <SidebarProvider>
+                  <div className="flex min-h-screen">
+                    <AppSidebar />
+                    <div className="flex-1 flex flex-col h-screen">
+                      <div className="flex-1 overflow-y-auto px-1 sm:px-0">
+                        {children}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Toaster />
-              </SidebarProvider>
+                  <Toaster />
+                </SidebarProvider>
+              </DashboardActionsProvider>
             </CurrencyProvider>
           </ShopSettingsProvider>
         </AuthProvider>

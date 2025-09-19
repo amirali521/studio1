@@ -21,6 +21,7 @@ import { Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import ProductScanDialog from "./product-scan-dialog";
 import { suggestProductName } from "@/ai/flows/suggest-product-name";
+import type { AutofillData } from './autofill-dialog';
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required."),
@@ -46,7 +47,7 @@ type ProductFormData = z.infer<typeof productSchema>;
 interface ProductFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
-  initialData?: Product;
+  initialData?: (Product | AutofillData) | null;
   isEditing?: boolean;
 }
 
@@ -60,41 +61,45 @@ export default function ProductForm({
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isSuggestingName, setIsSuggestingName] = useState(false);
 
-  const transformedInitialData = initialData ? {
-    ...initialData,
-    barcode: "",
-    customFields: initialData.customFields 
-      ? Object.entries(initialData.customFields).map(([key, value]) => ({ key, value })) 
-      : []
-  } : {
-      name: "",
-      barcode: "",
-      description: "",
-      purchasePrice: 0,
-      price: 0,
-      quantity: 1,
-      discount: 0,
-      tax: 0,
-      customFields: [],
-  };
-  
+  const getTransformedData = (data: Product | AutofillData | null) => {
+    if (!data) return {
+        name: "",
+        barcode: "",
+        description: "",
+        purchasePrice: 0,
+        price: 0,
+        quantity: 1,
+        discount: 0,
+        tax: 0,
+        customFields: [],
+    };
+
+    if ('createdAt' in data) { // It's a Product
+         return {
+            ...data,
+            barcode: "",
+            customFields: data.customFields 
+            ? Object.entries(data.customFields).map(([key, value]) => ({ key, value })) 
+            : []
+        };
+    } else { // It's AutofillData
+        return {
+          ...data,
+          barcode: "",
+          discount: 0,
+          tax: 0,
+          customFields: [],
+        };
+    }
+  }
+
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
-    defaultValues: transformedInitialData
+    defaultValues: getTransformedData(initialData)
   });
   
   useEffect(() => {
-    if (initialData) {
-       const transformedData = {
-        ...initialData,
-        customFields: initialData.customFields 
-          ? Object.entries(initialData.customFields).map(([key, value]) => ({ key, value })) 
-          : []
-      };
-      form.reset(transformedData);
-    } else {
-        form.reset(transformedInitialData)
-    }
+    form.reset(getTransformedData(initialData));
   }, [initialData, form]);
 
   const { fields, append, remove } = useFieldArray({
@@ -333,3 +338,4 @@ export default function ProductForm({
     </>
   );
 }
+
