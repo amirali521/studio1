@@ -15,6 +15,12 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { getFirestore, doc, writeBatch } from 'firebase-admin/firestore';
+import { initializeApp, getApps } from 'firebase-admin/app';
+
+// Initialize Firebase Admin SDK if it hasn't been already
+if (getApps().length === 0) {
+  initializeApp();
+}
 
 const ManageFriendRequestInputSchema = z.object({
   action: z.enum(['accept', 'decline']),
