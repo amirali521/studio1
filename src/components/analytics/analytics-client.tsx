@@ -93,11 +93,13 @@ export default function AnalyticsClient() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="p-4 flex flex-col sm:flex-row gap-4 justify-between items-center">
-            <h2 className="text-lg font-semibold shrink-0">Filters</h2>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <CardHeader>
+             <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col sm:flex-row gap-4 justify-start items-center">
+            <div className="flex flex-col sm:flex-row gap-2 w-full">
                  <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                    <SelectTrigger className="w-full sm:w-auto">
+                    <SelectTrigger className="w-full sm:w-[240px]">
                         <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>
@@ -127,7 +129,7 @@ export default function AnalyticsClient() {
                         )}
                     </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
+                    <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                         initialFocus
                         mode="range"
@@ -142,7 +144,7 @@ export default function AnalyticsClient() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -179,7 +181,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatCurrency(avgSaleValue, currency)}</div>
           </CardContent>
         </Card>
-         <Card className="sm:col-span-2 lg:col-span-1">
+         <Card className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Top Selling Product</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -205,7 +207,7 @@ export default function AnalyticsClient() {
                 <CardTitle>Product Performance</CardTitle>
                 <CardDescription>Sales distribution by product.</CardDescription>
             </CardHeader>
-            <CardContent className="min-w-0">
+            <CardContent>
                  <ProductPerformanceChart sales={filteredSales} products={products} serializedItems={serializedItems}/>
             </CardContent>
         </Card>
