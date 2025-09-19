@@ -51,7 +51,6 @@ export function InvoiceDialog({ sale, children }: InvoiceDialogProps) {
       const canvas = await html2canvas(invoiceRef.current, {
         scale: 2, // Higher resolution
         useCORS: true,
-        backgroundColor: '#ffffff'
       });
       
       canvas.toBlob(async (blob) => {
@@ -93,7 +92,7 @@ export function InvoiceDialog({ sale, children }: InvoiceDialogProps) {
           <DialogTitle className="font-headline">Receipt</DialogTitle>
         </DialogHeader>
         
-        <div className="bg-gray-100 p-4 rounded-md max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto bg-muted/50 p-4 rounded-md">
             <Invoice ref={invoiceRef} sale={sale} />
         </div>
         
