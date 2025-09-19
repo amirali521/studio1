@@ -143,7 +143,7 @@ export default function AnalyticsClient() {
       </Card>
 
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-        <Card className="col-span-2">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -170,7 +170,7 @@ export default function AnalyticsClient() {
             <div className="text-2xl font-bold">{formatNumberCompact(totalItemsSold)}</div>
           </CardContent>
         </Card>
-        <Card className="col-span-2 md:col-span-1">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Sale Value</CardTitle>
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
@@ -196,7 +196,7 @@ export default function AnalyticsClient() {
             <CardTitle>Sales Over Time</CardTitle>
             <CardDescription>Daily revenue from sales.</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
+          <CardContent className="pl-2 min-w-0">
             <SalesChart data={filteredSales} dateRange={dateRange}/>
           </CardContent>
         </Card>
