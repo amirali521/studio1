@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2, Archive, BarChart, Banknote } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
-import { formatCurrency, formatNumberCompact } from "@/lib/utils";
+import { formatCurrency, formatNumberCompact, formatCurrencyCompact } from "@/lib/utils";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 import SalesChart from "./sales-chart";
 import SalesHistoryTable from "../sales/sales-history-table";
@@ -215,7 +215,7 @@ export default function AnalyticsClient() {
             <Archive className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(inventoryCost, currency)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyCompact(inventoryCost, currency)}</div>
           </CardContent>
         </Card>
          <Card>
@@ -224,7 +224,7 @@ export default function AnalyticsClient() {
             <BarChart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(potentialRevenue, currency)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyCompact(potentialRevenue, currency)}</div>
           </CardContent>
         </Card>
          <Card>
@@ -233,7 +233,7 @@ export default function AnalyticsClient() {
             <Banknote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(potentialProfit, currency)}</div>
+            <div className="text-2xl font-bold">{formatCurrencyCompact(potentialProfit, currency)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -292,3 +292,5 @@ export default function AnalyticsClient() {
     </>
   );
 }
+
+    
