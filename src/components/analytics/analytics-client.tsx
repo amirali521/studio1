@@ -6,7 +6,7 @@ import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { type Sale, type Product, type SerializedProductItem } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2, Archive, BarChart, Banknote } from "lucide-react";
+import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2, Archive, BarChart, Banknote, Check } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency, formatNumberCompact, formatCurrencyCompact } from "@/lib/utils";
 import { subDays, startOfDay, endOfDay } from "date-fns";
@@ -16,10 +16,11 @@ import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ProfitTrendChart from "./profit-trend-chart";
 import ProductPerformanceChart from "./product-performance-chart";
 import AiAnalysisDialog from "./ai-analysis-dialog";
+import { cn } from "@/lib/utils";
 
 export default function AnalyticsClient() {
   const { data: sales, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
@@ -33,7 +34,39 @@ export default function AnalyticsClient() {
     from: subDays(new Date(), 29),
     to: new Date(),
   });
-  const [selectedProductId, setSelectedProductId] = useState<string>('all');
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>(['all']);
+
+  const handleProductSelection = (productId: string) => {
+    setSelectedProductIds(prev => {
+        if (productId === 'all') {
+            return prev.includes('all') ? [] : ['all'];
+        }
+
+        const newSelection = prev.filter(id => id !== 'all');
+        
+        if (newSelection.includes(productId)) {
+            const filtered = newSelection.filter(id => id !== productId);
+            // If empty, select 'all'
+            return filtered.length === 0 ? ['all'] : filtered;
+        } else {
+            return [...newSelection, productId];
+        }
+    });
+  };
+
+  const isAllSelected = selectedProductIds.includes('all');
+  
+  const getSelectedProductsText = () => {
+    if (isAllSelected || selectedProductIds.length === 0) {
+      return "All Products";
+    }
+    if (selectedProductIds.length === 1) {
+      const productName = products.find(p => p.id === selectedProductIds[0])?.name;
+      return productName || "1 selected";
+    }
+    return `${selectedProductIds.length} products selected`;
+  };
+
 
   const filteredSales = useMemo(() => {
     const fromDate = dateRange?.from ? startOfDay(dateRange.from) : undefined;
@@ -44,14 +77,16 @@ export default function AnalyticsClient() {
       const dateCondition = (!fromDate || saleDate >= fromDate) && (!toDate || saleDate <= toDate);
       if (!dateCondition) return false;
       
-      if (selectedProductId === 'all') return true;
+      if (isAllSelected) return true;
+
+      if (selectedProductIds.length === 0) return false;
 
       return sale.items.some(item => {
           const serialized = serializedItems.find(si => si.serialNumber === item.serialNumber);
-          return serialized?.productId === selectedProductId;
+          return serialized && selectedProductIds.includes(serialized.productId);
       });
     });
-  }, [sales, dateRange, selectedProductId, serializedItems]);
+  }, [sales, dateRange, selectedProductIds, serializedItems, isAllSelected]);
   
   const { 
       totalRevenue, 
@@ -125,15 +160,34 @@ export default function AnalyticsClient() {
              </Button>
         </CardHeader>
         <CardContent className="flex flex-col sm:flex-row gap-4">
-             <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                <SelectTrigger className="w-full sm:flex-1">
-                    <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">All Products</SelectItem>
-                    {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-            </Select>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full sm:flex-1 justify-start text-left font-normal">
+                         <span>{getSelectedProductsText()}</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-64">
+                    <DropdownMenuLabel>Filter by Product</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuCheckboxItem
+                        checked={isAllSelected}
+                        onSelect={(e) => e.preventDefault()}
+                        onCheckedChange={() => handleProductSelection('all')}
+                    >
+                        All Products
+                    </DropdownMenuCheckboxItem>
+                    {products.map(p => (
+                        <DropdownMenuCheckboxItem
+                            key={p.id}
+                            checked={selectedProductIds.includes(p.id)}
+                            onSelect={(e) => e.preventDefault()}
+                            onCheckedChange={() => handleProductSelection(p.id)}
+                        >
+                            {p.name}
+                        </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
             <Popover>
                 <PopoverTrigger asChild>
                 <Button
