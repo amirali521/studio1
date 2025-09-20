@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -52,7 +53,7 @@ Based on the data and the user's query, provide a comprehensive analysis. Calcul
 6.  **Inventory Stock Value (Purchase Price)**: The total cost of all items currently 'in_stock'. (Sum of 'purchasePrice' for each product, multiplied by its stock quantity).
 7.  **Inventory Stock Value (Selling Price)**: The total potential revenue from all items currently 'in_stock'. (Sum of 'price' for each product, multiplied by its stock quantity).
 
-Present your analysis in a clear, easy-to-understand Markdown format. Use headings, bold text, and lists to structure your response. Address the user's query directly and use the calculated metrics to support your answer.
+Present your analysis as a Markdown-formatted string within a JSON object. Address the user's query directly and use the calculated metrics to support your answer. Your final output MUST be a valid JSON object with a single key "analysis" containing the Markdown string.
 `,
 });
 
