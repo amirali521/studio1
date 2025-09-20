@@ -34,7 +34,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
   const sortedSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   return (
-    <Card>
+    <Card id="sales-history">
       <CardHeader>
         <CardTitle className="font-headline">Sales History</CardTitle>
         <CardDescription>

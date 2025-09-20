@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Trash2, XCircle, Loader2, Printer, Camera } from "lucide-react";
+import { Trash2, XCircle, Loader2, Printer, Camera, History } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, Product, SerializedProductItem, SaleItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import Link from "next/link";
-import SalesHistoryDialog from "./sales-history-dialog";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { useAuth } from "@/contexts/auth-context";
@@ -397,7 +396,12 @@ export default function SalesClient() {
                   </InvoiceDialog>
                 )}
 
-                <SalesHistoryDialog sales={sales} />
+                <Button variant="outline" className="w-full" asChild>
+                    <Link href="/analytics#sales-history">
+                        <History className="mr-2"/>
+                        View Sales History
+                    </Link>
+                </Button>
             </CardContent>
         </Card>
       </div>
