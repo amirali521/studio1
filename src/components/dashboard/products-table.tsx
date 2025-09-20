@@ -109,7 +109,7 @@ export default function ProductsTable({
         <div className="flex items-center gap-2">
            <Popover>
               <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="text-xs tracking-tight">
                       <Wand2 className="mr-2 h-4 w-4" />
                       AI Insights
                   </Button>
@@ -143,7 +143,7 @@ export default function ProductsTable({
           </Popover>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="text-xs tracking-tight">
                 Sort By {renderSortArrow(sortKey as SortKey)}
               </Button>
             </DropdownMenuTrigger>
