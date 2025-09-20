@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Trash2, Edit, ArrowUp, ArrowDown, Wand2, ChevronsUpDown } from "lucide-react";
+import { Trash2, Edit, ArrowUp, ArrowDown, Wand2, ChevronsUpDown, MoreHorizontal } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +33,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 type ProductWithStock = Product & { quantity: number };
@@ -53,6 +58,7 @@ export default function ProductsTable({
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const { currency } = useCurrency();
+  const isMobile = useIsMobile();
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -101,60 +107,111 @@ export default function ProductsTable({
   };
   
   const lowStockProducts = products.filter(p => p.quantity > 0 && p.quantity <= 10);
+
+  const AiInsightsPopoverContent = () => (
+     <PopoverContent className="w-80">
+        <div className="grid gap-4">
+            <div className="space-y-2">
+                <h4 className="font-medium leading-none">Inventory Insights</h4>
+                <p className="text-sm text-muted-foreground">
+                    Quick insights based on your current stock levels.
+                </p>
+            </div>
+            <div className="grid gap-2">
+                <div className="rounded-lg border bg-background p-4">
+                    <h3 className="font-semibold">Low Stock Alert</h3>
+                    <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>
+                    {lowStockProducts.length > 0 ? (
+                        <ul className="space-y-1 text-sm">
+                            {lowStockProducts.map(p => (
+                                <li key={p.id} className="flex justify-between">
+                                    <span className="truncate pr-2">{p.name}</span>
+                                    <span className="font-bold text-destructive">{p.quantity} left</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
+                </div>
+            </div>
+        </div>
+    </PopoverContent>
+  );
+
+  const sortOptions = [
+      { key: 'name', label: 'Name' },
+      { key: 'quantity', label: 'In Stock' },
+      { key: 'price', label: 'Price' },
+      { key: 'createdAt', label: 'Date Added' },
+  ];
   
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-headline">Inventory</CardTitle>
-        <div className="flex items-center gap-2">
-           <Popover>
-              <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-xs tracking-tight">
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      AI Insights
-                  </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                  <div className="grid gap-4">
-                      <div className="space-y-2">
-                          <h4 className="font-medium leading-none">Inventory Insights</h4>
-                          <p className="text-sm text-muted-foreground">
-                              Quick insights based on your current stock levels.
-                          </p>
-                      </div>
-                      <div className="grid gap-2">
-                          <div className="rounded-lg border bg-background p-4">
-                              <h3 className="font-semibold">Low Stock Alert</h3>
-                              <p className="text-sm text-muted-foreground mb-2">These items are running low (10 or fewer in stock).</p>
-                              {lowStockProducts.length > 0 ? (
-                                  <ul className="space-y-1 text-sm">
-                                      {lowStockProducts.map(p => (
-                                          <li key={p.id} className="flex justify-between">
-                                              <span className="truncate pr-2">{p.name}</span>
-                                              <span className="font-bold text-destructive">{p.quantity} left</span>
-                                          </li>
-                                      ))}
-                                  </ul>
-                              ) : <p className="text-sm text-muted-foreground">All products have sufficient stock.</p>}
-                          </div>
-                      </div>
-                  </div>
-              </PopoverContent>
-          </Popover>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="text-xs tracking-tight">
-                Sort By {renderSortArrow(sortKey as SortKey)}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleSort('name')}>Name</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('quantity')}>In Stock</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('price')}>Price</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSort('createdAt')}>Date Added</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+
+        {isMobile ? (
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                     <Popover>
+                        <PopoverTrigger asChild>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Wand2 className="mr-2 h-4 w-4" />
+                                AI Insights
+                            </DropdownMenuItem>
+                        </PopoverTrigger>
+                        <AiInsightsPopoverContent />
+                    </Popover>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <ArrowDown className="mr-2 h-4 w-4" />
+                            Sort By
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                             {sortOptions.map(option => (
+                                <DropdownMenuItem key={option.key} onClick={() => handleSort(option.key as SortKey)}>
+                                    {option.label}
+                                    {sortKey === option.key && (
+                                        sortOrder === 'asc' ? <ArrowUp className="ml-auto h-4 w-4" /> : <ArrowDown className="ml-auto h-4 w-4" />
+                                    )}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        ) : (
+            <div className="flex items-center gap-2">
+            <Popover>
+                <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-xs tracking-tight">
+                        <Wand2 className="mr-2 h-4 w-4" />
+                        AI Insights
+                    </Button>
+                </PopoverTrigger>
+                <AiInsightsPopoverContent />
+            </Popover>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="text-xs tracking-tight">
+                    Sort By {renderSortArrow(sortKey as SortKey)}
+                </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    {sortOptions.map(option => (
+                        <DropdownMenuItem key={option.key} onClick={() => handleSort(option.key as SortKey)}>
+                            {option.label}
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+            </div>
+        )}
       </CardHeader>
       <CardContent>
         {products.length > 0 ? (
@@ -163,17 +220,22 @@ export default function ProductsTable({
               <TableHeader>
                 <TableRow>
                   <TableHead>Product</TableHead>
-                  <TableHead>In Stock</TableHead>
-                  <TableHead>Price</TableHead>
+                  <TableHead className="hidden sm:table-cell">In Stock</TableHead>
+                  <TableHead className="hidden sm:table-cell">Price</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedProducts.map((product) => (
                   <TableRow key={product.id}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.quantity}</TableCell>
-                    <TableCell>{formatCurrency(product.price, currency)}</TableCell>
+                    <TableCell className="font-medium">
+                        <div>{product.name}</div>
+                        <div className="sm:hidden text-sm text-muted-foreground">
+                            {product.quantity} in stock - {formatCurrency(product.price, currency)}
+                        </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">{product.quantity}</TableCell>
+                    <TableCell className="hidden sm:table-cell">{formatCurrency(product.price, currency)}</TableCell>
                     <TableCell className="text-right space-x-1">
                        <Button variant="ghost" size="icon" onClick={() => onEdit(product)}>
                             <Edit className="h-4 w-4" />
