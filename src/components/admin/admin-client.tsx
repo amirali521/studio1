@@ -171,14 +171,14 @@ export default function AdminClient() {
                                                     <Avatar className="h-9 w-9">
                                                         <AvatarImage src={appUser.photoURL || undefined} alt={appUser.displayName || 'User'} />
                                                         <AvatarFallback>{getInitials(appUser.displayName)}</AvatarFallback>
+                                                         {appUser.hasUnreadAdminMessages && (
+                                                          <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-ring pointer-events-none" />
+                                                         )}
                                                     </Avatar>
                                                     <span 
                                                         className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background" 
                                                         style={{ backgroundColor: appUser.isOnline ? '#22c55e' : '#ef4444' }} 
                                                     />
-                                                    {appUser.hasUnreadAdminMessages && (
-                                                         <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
-                                                    )}
                                                 </div>
                                                 <span>{appUser.displayName || 'No Name'}</span>
                                             </div>
