@@ -172,7 +172,7 @@ export default function AdminClient() {
                                                         <AvatarImage src={appUser.photoURL || undefined} alt={appUser.displayName || 'User'} />
                                                         <AvatarFallback>{getInitials(appUser.displayName)}</AvatarFallback>
                                                          {appUser.hasUnreadAdminMessages && (
-                                                          <span className="absolute inset-0 rounded-full bg-primary/20 animate-pulse-ring pointer-events-none" />
+                                                          <span className="absolute -inset-0.5 rounded-full animate-pulse-ring pointer-events-none" />
                                                          )}
                                                     </Avatar>
                                                     <span 
