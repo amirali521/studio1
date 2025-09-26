@@ -72,8 +72,8 @@ export default function AdminChatClient() {
   }
 
   return (
-    <div className="flex flex-col flex-1">
-        <div className="mb-4 flex justify-between items-center">
+    <div className="flex flex-col flex-1 h-full">
+        <div className="mb-4 flex justify-between items-center flex-shrink-0">
             <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users
@@ -99,7 +99,7 @@ export default function AdminChatClient() {
                 </AlertDialogContent>
             </AlertDialog>
         </div>
-        <Card className="flex-1 flex flex-col max-h-[calc(100vh-12rem)]">
+        <Card className="flex-1 flex flex-col min-h-0">
             <CardHeader>
                 <CardTitle className="font-headline">Chat with {chatPartner.displayName || "User"}</CardTitle>
                 <CardDescription>

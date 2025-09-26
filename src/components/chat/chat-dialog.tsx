@@ -53,7 +53,7 @@ export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps
   
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg p-0">
+      <DialogContent className="sm:max-w-lg p-0 flex flex-col h-[80vh] max-h-[700px]">
         <DialogHeader className="p-6 pb-4 flex flex-row justify-between items-start">
           <div className="space-y-1.5">
             <DialogTitle className="font-headline">Chat with Support</DialogTitle>
@@ -81,7 +81,7 @@ export default function ChatDialog({ isOpen, onClose, adminId }: ChatDialogProps
               </AlertDialogContent>
           </AlertDialog>
         </DialogHeader>
-        <div className="h-[60vh] sm:h-[50vh] flex flex-col px-6 pb-6">
+        <div className="flex-1 flex flex-col min-h-0 px-6 pb-6">
           <Card className="flex-1 flex flex-col">
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
                <ChatInterface chatPartnerId={adminId} isGroup={false} />
