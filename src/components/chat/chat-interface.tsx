@@ -7,7 +7,7 @@ import type { ChatMessage, AppUser, GroupChat } from "@/lib/types";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Loader2, Send, Trash2, XCircle } from "lucide-react";
+import { Loader2, Send, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
@@ -26,7 +26,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { deleteSubcollection } from "@/lib/firebase-utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
@@ -143,7 +142,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     if (!user) return null;
 
     return (
-        <div className="flex flex-col h-full bg-secondary/30 rounded-lg">
+        <div className="flex flex-col h-full rounded-lg">
             <ScrollArea className="flex-1 p-4" viewportRef={viewportRef}>
                 <div className="space-y-6">
                     {messages.map(msg => {
@@ -158,7 +157,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                     </Avatar>
                                 )}
 
-                                {isSender && (
+                                {isSender && isAdmin && (
                                      <AlertDialog>
                                         <AlertDialogTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
