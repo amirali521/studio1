@@ -5,6 +5,7 @@ export interface AppUser extends FirebaseUser {
     id: string; // Add id to AppUser for easier identification
     isAdmin?: boolean;
     lastLogin?: string;
+    hasUnreadAdminMessages?: boolean;
 }
 export interface Product {
   id: string; // This will be the Firestore document ID

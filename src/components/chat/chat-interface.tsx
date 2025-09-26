@@ -14,7 +14,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, writeBatch } from "firebase/firestore";
+import { doc, getDoc, writeBatch, updateDoc } from "firebase/firestore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,11 +50,11 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
         if (isGroup) {
             return `groupChats/${chatPartnerId}/messages`;
         }
-        if (isAdmin) {
-             return `chats/${chatPartnerId}/messages`;
-        }
-         // Assumes it's a user chatting with the admin
-        return `chats/${user.uid}/messages`;
+        // If the current user is an admin, they are viewing the chat of `chatPartnerId`.
+        // If the current user is a normal user, they are chatting with the admin,
+        // so their chat is stored under their own UID. `chatPartnerId` would be the admin's UID.
+        const chatOwnerId = isAdmin ? chatPartnerId : user.uid;
+        return `chats/${chatOwnerId}/messages`;
     }, [user, chatPartnerId, isAdmin, isGroup]);
 
     const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
@@ -94,6 +94,12 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
         try {
             await addMessage(messageData);
             setNewMessage("");
+
+            // If a regular user sends a message to support, set a notification flag for the admin
+            if (!isAdmin && !isGroup) {
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, { hasUnreadAdminMessages: true });
+            }
         } catch (error) {
             console.error("Error sending message:", error);
         }
@@ -226,9 +232,9 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                         const isSelected = selectedMessages.includes(msg.id);
                         return (
                              <div key={msg.id} className={cn("flex items-end gap-3 group", isSender ? "justify-end" : "justify-start")}>
-                                {selectionMode && (
-                                    <Checkbox 
-                                        className="shrink-0" 
+                                {selectionMode && !isSender && (
+                                     <Checkbox 
+                                        className="shrink-0 self-center" 
                                         checked={isSelected} 
                                         onCheckedChange={() => handleToggleSelection(msg.id)}
                                     />
@@ -265,6 +271,13 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                         <AvatarImage src={user.photoURL || undefined} />
                                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                                     </Avatar>
+                                )}
+                                {selectionMode && isSender && (
+                                     <Checkbox 
+                                        className="shrink-0 self-center" 
+                                        checked={isSelected} 
+                                        onCheckedChange={() => handleToggleSelection(msg.id)}
+                                    />
                                 )}
                             </div>
                         )

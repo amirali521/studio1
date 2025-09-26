@@ -14,11 +14,14 @@ import { MessageSquare, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { formatNumberCompact } from "@/lib/utils";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 interface AppUser extends Partial<FirebaseUser> {
     id: string;
     lastLogin?: string;
     isOnline?: boolean;
+    hasUnreadAdminMessages?: boolean;
 }
 
 export default function AdminClient() {
@@ -54,8 +57,15 @@ export default function AdminClient() {
 
   const filteredUsers = useMemo(() => {
     const sortedUsers = [...processedUsers].sort((a, b) => {
+        // 1. Unread messages first
+        if (a.hasUnreadAdminMessages && !b.hasUnreadAdminMessages) return -1;
+        if (!a.hasUnreadAdminMessages && b.hasUnreadAdminMessages) return 1;
+
+        // 2. Online status
         if (a.isOnline && !b.isOnline) return -1;
         if (!a.isOnline && b.isOnline) return 1;
+
+        // 3. Last login time
         return (b.lastLogin || '').localeCompare(a.lastLogin || '');
     });
 
@@ -67,6 +77,17 @@ export default function AdminClient() {
       u.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [processedUsers, searchTerm]);
+  
+  const handleChatClick = async (userId: string) => {
+    // Clear the notification dot when admin opens chat
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, { hasUnreadAdminMessages: false });
+    } catch (error) {
+        console.error("Error clearing notification dot:", error);
+    }
+    router.push(`/admin/chat/${userId}`);
+  };
 
   if (loading || usersLoading || !isAdmin) {
     return <LoadingScreen />;
@@ -106,7 +127,7 @@ export default function AdminClient() {
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">App Users</CardTitle>
-                <CardDescription>Select a user to start a conversation.</CardDescription>
+                <CardDescription>Select a user to start a conversation. Users with new messages are at the top.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="mb-4">
@@ -141,14 +162,20 @@ export default function AdminClient() {
                                                         <AvatarImage src={appUser.photoURL || undefined} alt={appUser.displayName || 'User'} />
                                                         <AvatarFallback>{getInitials(appUser.displayName)}</AvatarFallback>
                                                     </Avatar>
-                                                    <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background" style={{ backgroundColor: appUser.isOnline ? '#22c55e' : '#ef4444' }} />
+                                                    <span 
+                                                        className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full border-2 border-background" 
+                                                        style={{ backgroundColor: appUser.isOnline ? '#22c55e' : '#ef4444' }} 
+                                                    />
+                                                    {appUser.hasUnreadAdminMessages && (
+                                                         <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-orange-500 border-2 border-background" />
+                                                    )}
                                                 </div>
                                                 <span>{appUser.displayName || 'No Name'}</span>
                                             </div>
                                         </TableCell>
                                         <TableCell>{appUser.email}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="outline" size="sm" onClick={() => router.push(`/admin/chat/${appUser.id}`)}>
+                                            <Button variant="outline" size="sm" onClick={() => handleChatClick(appUser.id)}>
                                                 <MessageSquare className="mr-2 h-4 w-4" />
                                                 Chat
                                             </Button>
