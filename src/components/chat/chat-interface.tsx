@@ -159,7 +159,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                </div>
                                 {isSender && (
                                      <Avatar className="h-8 w-8">
-                                        <AvatarImage src={participant.photoURL || undefined} />
+                                        <AvatarImage src={user.photoURL || undefined} />
                                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                                     </Avatar>
                                 )}
