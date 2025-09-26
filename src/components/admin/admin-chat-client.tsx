@@ -7,30 +7,16 @@ import { useEffect, useMemo } from "react";
 import LoadingScreen from "../layout/loading-screen";
 import ChatInterface from "../chat/chat-interface";
 import { Button } from "../ui/button";
-import { ArrowLeft, Trash2, XCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { AppUser } from "@/lib/types";
-import { deleteSubcollection } from "@/lib/firebase-utils";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
 
 
 export default function AdminChatClient() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const { toast } = useToast();
   const chatUserId = params.userId as string;
   const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
 
@@ -44,16 +30,6 @@ export default function AdminChatClient() {
     }
   }, [user, loading, isAdmin, router]);
   
-  const handleClearChat = async () => {
-    try {
-        await deleteSubcollection(`chats/${chatUserId}/messages`);
-        toast({ title: "Chat Cleared", description: "All messages in this conversation have been deleted." });
-    } catch(e) {
-        toast({ variant: "destructive", title: "Error", description: "Could not clear chat history." });
-        console.error(e);
-    }
-  }
-
   if (loading || usersLoading || !isAdmin) {
     return <LoadingScreen />;
   }
@@ -78,26 +54,6 @@ export default function AdminChatClient() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users
             </Button>
-             <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive">
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Clear Chat
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Clear chat history?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will permanently delete all messages in this conversation. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleClearChat} variant="destructive">Clear History</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </div>
         <Card className="flex-1 flex flex-col min-h-0">
             <CardHeader>
@@ -106,7 +62,7 @@ export default function AdminChatClient() {
                     You are viewing the conversation with {chatPartner.email}.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col min-h-0">
+            <CardContent className="flex-1 flex flex-col min-h-0 p-0 sm:p-0">
                  <ChatInterface chatPartnerId={chatUserId} isGroup={false} />
             </CardContent>
         </Card>

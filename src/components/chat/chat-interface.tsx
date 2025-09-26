@@ -7,14 +7,14 @@ import type { ChatMessage, AppUser, GroupChat } from "@/lib/types";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Loader2, Send, Trash2 } from "lucide-react";
+import { Loader2, Send, Trash2, X, CheckSquare, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { doc, getDoc, writeBatch } from "firebase/firestore";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "../ui/checkbox";
 
 interface ChatInterfaceProps {
     chatPartnerId: string;
@@ -39,6 +40,10 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     const viewportRef = useRef<HTMLDivElement>(null);
     const [groupMembers, setGroupMembers] = useState<Record<string, { displayName: string | null, photoURL: string | null }>>({});
     const { toast } = useToast();
+
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
+
 
     const collectionPath = useMemo(() => {
         if (!user) return null;
@@ -71,10 +76,10 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(collectionPath);
     
     useEffect(() => {
-        if (viewportRef.current) {
+        if (viewportRef.current && !selectionMode) {
             viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
         }
-    }, [messages]);
+    }, [messages, selectionMode]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,17 +98,48 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
             console.error("Error sending message:", error);
         }
     };
-
-    const handleDeleteMessage = async (messageId: string) => {
-        if (!collectionPath) return;
-        try {
-            await deleteDoc(doc(db, collectionPath, messageId));
-        } catch (error) {
-            console.error("Error deleting message:", error);
-            toast({ variant: "destructive", title: "Error", description: "Could not delete message."})
+    
+    const handleToggleSelection = (messageId: string) => {
+        if (!selectionMode) {
+            setSelectionMode(true);
         }
+        setSelectedMessages(prev => 
+            prev.includes(messageId) 
+            ? prev.filter(id => id !== messageId)
+            : [...prev, messageId]
+        );
     }
     
+    const handleSelectAll = () => {
+        if (selectedMessages.length === messages.length) {
+            setSelectedMessages([]);
+        } else {
+            setSelectedMessages(messages.map(msg => msg.id));
+        }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (!collectionPath || selectedMessages.length === 0) return;
+        const batch = writeBatch(db);
+        selectedMessages.forEach(id => {
+            const docRef = doc(db, collectionPath, id);
+            batch.delete(docRef);
+        });
+        try {
+            await batch.commit();
+            toast({ title: `${selectedMessages.length} message(s) deleted.`});
+            setSelectionMode(false);
+            setSelectedMessages([]);
+        } catch (error) {
+             toast({ variant: "destructive", title: "Error", description: "Could not delete messages."})
+        }
+    };
+    
+    const exitSelectionMode = () => {
+        setSelectionMode(false);
+        setSelectedMessages([]);
+    }
+
     const getParticipantInfo = (senderId: string) => {
         if (isGroup) {
             const member = groupMembers[senderId];
@@ -142,49 +178,77 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     if (!user) return null;
 
     return (
-        <div className="flex flex-col h-full rounded-lg">
+        <div className="flex flex-col h-full rounded-lg bg-background">
+            {selectionMode && (
+                <div className="flex-shrink-0 flex items-center justify-between p-2 border-b bg-secondary/50">
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={exitSelectionMode}>
+                            <X className="h-5 w-5" />
+                        </Button>
+                        <span className="font-semibold text-lg">{selectedMessages.length}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox 
+                            id="select-all"
+                            checked={messages.length > 0 && selectedMessages.length === messages.length}
+                            onCheckedChange={handleSelectAll}
+                        />
+                        <label htmlFor="select-all" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                            All
+                        </label>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" disabled={selectedMessages.length === 0}>
+                                    <Trash2 className="h-5 w-5 text-destructive" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete {selectedMessages.length} message(s)?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone and will permanently remove the selected messages.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteSelected} variant="destructive">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
+                </div>
+            )}
             <ScrollArea className="flex-1 p-4" viewportRef={viewportRef}>
                 <div className="space-y-6">
                     {messages.map(msg => {
                         const isSender = msg.senderId === user.uid;
                         const participant = getParticipantInfo(msg.senderId);
+                        const isSelected = selectedMessages.includes(msg.id);
                         return (
                              <div key={msg.id} className={cn("flex items-end gap-3 group", isSender ? "justify-end" : "justify-start")}>
+                                {selectionMode && (
+                                    <Checkbox 
+                                        className="shrink-0" 
+                                        checked={isSelected} 
+                                        onCheckedChange={() => handleToggleSelection(msg.id)}
+                                    />
+                                )}
                                 {!isSender && (
-                                     <Avatar className="h-8 w-8">
+                                     <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleToggleSelection(msg.id)}>
                                         <AvatarImage src={participant.photoURL || undefined} />
                                         <AvatarFallback>{getInitials(participant.displayName)}</AvatarFallback>
                                     </Avatar>
                                 )}
-
-                                {isSender && isAdmin && (
-                                     <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Message?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This action cannot be undone and will permanently remove this message.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDeleteMessage(msg.id)} variant="destructive">Delete</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                )}
-
+                               
                                <div className={cn(
-                                    "max-w-xs md:max-w-md p-3 rounded-lg flex flex-col",
+                                    "max-w-xs md:max-w-md p-3 rounded-lg flex flex-col cursor-pointer",
                                     isSender 
                                         ? "bg-primary text-primary-foreground rounded-br-none" 
-                                        : "bg-background text-foreground rounded-bl-none border"
-                               )}>
+                                        : "bg-muted text-foreground rounded-bl-none",
+                                    isSelected && "ring-2 ring-blue-500"
+                               )}
+                               onClick={() => handleToggleSelection(msg.id)}
+                               >
                                    {!isSender && isGroup && (
                                        <p className="text-xs font-semibold mb-1 text-primary">{participant.displayName}</p>
                                    )}
@@ -197,7 +261,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                    </p>
                                </div>
                                 {isSender && (
-                                     <Avatar className="h-8 w-8">
+                                     <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleToggleSelection(msg.id)}>
                                         <AvatarImage src={user.photoURL || undefined} />
                                         <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                                     </Avatar>
@@ -207,20 +271,22 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                     })}
                 </div>
             </ScrollArea>
-            <div className="p-4 bg-background/80 border-t">
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-                    <Input 
-                        value={newMessage} 
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type a message..."
-                        className="flex-1"
-                        disabled={!collectionPath}
-                    />
-                    <Button type="submit" size="icon" disabled={!newMessage.trim() || !collectionPath}>
-                        <Send />
-                    </Button>
-                </form>
-            </div>
+            {!selectionMode && (
+                <div className="p-4 bg-muted/50 border-t">
+                    <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                        <Input 
+                            value={newMessage} 
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Type a message..."
+                            className="flex-1"
+                            disabled={!collectionPath}
+                        />
+                        <Button type="submit" size="icon" disabled={!newMessage.trim() || !collectionPath}>
+                            <Send />
+                        </Button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 }
