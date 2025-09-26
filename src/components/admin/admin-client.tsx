@@ -16,6 +16,7 @@ import { Input } from "../ui/input";
 import { formatNumberCompact } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import AdminChatDialog from "./admin-chat-dialog";
 
 interface AppUser extends Partial<FirebaseUser> {
     id: string;
@@ -29,6 +30,8 @@ export default function AdminClient() {
   const router = useRouter();
   const { data: users, loading: usersLoading } = useFirestoreCollection("users");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -86,8 +89,14 @@ export default function AdminClient() {
     } catch (error) {
         console.error("Error clearing notification dot:", error);
     }
-    router.push(`/admin/chat/${userId}`);
+    setSelectedUserId(userId);
+    setIsChatOpen(true);
   };
+  
+  const handleCloseDialog = () => {
+    setIsChatOpen(false);
+    setSelectedUserId(null);
+  }
 
   if (loading || usersLoading || !isAdmin) {
     return <LoadingScreen />;
@@ -100,6 +109,7 @@ export default function AdminClient() {
 
 
   return (
+     <>
      <main className="flex-1 space-y-6">
         <Card>
             <CardContent className="p-4">
@@ -195,5 +205,13 @@ export default function AdminClient() {
             </CardContent>
         </Card>
      </main>
+     {selectedUserId && (
+        <AdminChatDialog 
+            isOpen={isChatOpen}
+            onClose={handleCloseDialog}
+            chatPartnerId={selectedUserId}
+        />
+     )}
+     </>
   );
 }
