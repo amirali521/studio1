@@ -48,8 +48,8 @@ export default function AdminChatClient() {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full">
-        <div className="mb-4 flex justify-between items-center flex-shrink-0">
+    <div className="flex flex-col h-full">
+        <div className="mb-4">
             <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users
@@ -62,8 +62,10 @@ export default function AdminChatClient() {
                     You are viewing the conversation with {chatPartner.email}.
                 </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col min-h-0 p-0 sm:p-0">
-                 <ChatInterface chatPartnerId={chatUserId} isGroup={false} />
+            <CardContent className="flex-1 flex flex-col min-h-0 p-2 sm:p-6 pt-0">
+                <div className="flex-1 flex flex-col min-h-0 bg-secondary/20 rounded-lg">
+                    <ChatInterface chatPartnerId={chatUserId} isGroup={false} />
+                </div>
             </CardContent>
         </Card>
     </div>
