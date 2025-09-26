@@ -7,14 +7,27 @@ import type { ChatMessage, AppUser, GroupChat } from "@/lib/types";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Trash2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { deleteSubcollection } from "@/lib/firebase-utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
     chatPartnerId: string;
@@ -26,24 +39,20 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     const [newMessage, setNewMessage] = useState("");
     const viewportRef = useRef<HTMLDivElement>(null);
     const [groupMembers, setGroupMembers] = useState<Record<string, { displayName: string | null, photoURL: string | null }>>({});
+    const { toast } = useToast();
 
-    // Determine collection path based on whether it's a group or individual chat
     const collectionPath = useMemo(() => {
         if (!user) return null;
         if (isGroup) {
             return `groupChats/${chatPartnerId}/messages`;
         }
-        // Admin chat (user to admin or vice-versa)
-        if (isAdmin || (user && chatPartnerId === "iNqXkJFtSIQVFTLWz6v5rvA9Lii1")) { // Using admin UID from config
-            const chatId = isAdmin ? chatPartnerId : user.uid;
-            return `chats/${chatId}/messages`;
+        if (isAdmin) {
+             return `chats/${chatPartnerId}/messages`;
         }
-        // Community chat (peer-to-peer)
-        const chatId = [user.uid, chatPartnerId].sort().join("_");
-        return `chats/${chatId}/messages`;
+         // Assumes it's a user chatting with the admin
+        return `chats/${user.uid}/messages`;
     }, [user, chatPartnerId, isAdmin, isGroup]);
-    
-    // Fetch all users to get display names and avatars for 1-on-1 chats
+
     const { data: users, loading: usersLoading } = useFirestoreCollection<AppUser>("users");
 
     useEffect(() => {
@@ -60,7 +69,6 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
         fetchGroupMembers();
     }, [isGroup, chatPartnerId]);
 
-
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(collectionPath);
     
     useEffect(() => {
@@ -71,14 +79,12 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim() || !user) return;
+        if (!newMessage.trim() || !user || !collectionPath) return;
 
         const messageData: Omit<ChatMessage, 'id'> = {
             text: newMessage,
             senderId: user.uid,
             timestamp: new Date().toISOString(),
-            senderName: user.displayName,
-            senderPhotoURL: user.photoURL,
         };
 
         try {
@@ -88,6 +94,16 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
             console.error("Error sending message:", error);
         }
     };
+
+    const handleDeleteMessage = async (messageId: string) => {
+        if (!collectionPath) return;
+        try {
+            await deleteDoc(doc(db, collectionPath, messageId));
+        } catch (error) {
+            console.error("Error deleting message:", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not delete message."})
+        }
+    }
     
     const getParticipantInfo = (senderId: string) => {
         if (isGroup) {
@@ -104,7 +120,9 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                 photoURL: user.photoURL,
             }
         }
+
         const participant = users.find(u => u.id === senderId);
+        
         return {
             displayName: participant?.displayName || "User",
             photoURL: participant?.photoURL,
@@ -115,7 +133,6 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
         if (!name) return "U";
         return name.split(" ").map((n) => n[0]).join("").toUpperCase();
     };
-
 
     const loading = authLoading || messagesLoading || (usersLoading && !isGroup);
 
@@ -133,13 +150,36 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                         const isSender = msg.senderId === user.uid;
                         const participant = getParticipantInfo(msg.senderId);
                         return (
-                             <div key={msg.id} className={cn("flex items-end gap-3", isSender ? "justify-end" : "justify-start")}>
+                             <div key={msg.id} className={cn("flex items-end gap-3 group", isSender ? "justify-end" : "justify-start")}>
                                 {!isSender && (
                                      <Avatar className="h-8 w-8">
                                         <AvatarImage src={participant.photoURL || undefined} />
                                         <AvatarFallback>{getInitials(participant.displayName)}</AvatarFallback>
                                     </Avatar>
                                 )}
+
+                                {isSender && (
+                                     <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Trash2 className="h-4 w-4 text-destructive" />
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Message?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This action cannot be undone and will permanently remove this message.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDeleteMessage(msg.id)} variant="destructive">Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+
                                <div className={cn(
                                     "max-w-xs md:max-w-md p-3 rounded-lg flex flex-col",
                                     isSender 
@@ -175,8 +215,9 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type a message..."
                         className="flex-1"
+                        disabled={!collectionPath}
                     />
-                    <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+                    <Button type="submit" size="icon" disabled={!newMessage.trim() || !collectionPath}>
                         <Send />
                     </Button>
                 </form>

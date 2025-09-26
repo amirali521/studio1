@@ -48,10 +48,13 @@ export function useFirestoreSubcollection<T extends { id?: string }>(
     return () => unsubscribe();
   }, [path]);
 
-  const addItem = async (item: Omit<T, "id">) => {
+  const addItem = async (item: Omit<T, "id" | 'timestamp'>) => {
     if (!path) throw new Error("Subcollection path is not defined");
     const collectionRef = collection(db, path);
-    return await addDoc(collectionRef, item);
+    return await addDoc(collectionRef, {
+        ...item,
+        timestamp: new Date().toISOString()
+    });
   };
 
   return { data, loading, addItem };

@@ -60,8 +60,6 @@ export interface ChatMessage {
     text: string;
     senderId: string;
     timestamp: string;
-    senderName?: string;
-    senderPhotoURL?: string | null;
 }
 
 export interface GroupChat {
