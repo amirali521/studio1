@@ -48,8 +48,8 @@ export default function AdminChatClient() {
   }
 
   return (
-    <div className="flex flex-col h-full">
-        <div className="mb-4">
+    <div className="w-full max-w-2xl h-[70vh] flex flex-col gap-4">
+        <div>
             <Button variant="outline" onClick={() => router.push('/admin')}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Users

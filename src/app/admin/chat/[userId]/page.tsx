@@ -9,7 +9,7 @@ export default function AdminChatPage() {
       <AppHeader title="Admin Chat">
         <UserProfile />
       </AppHeader>
-      <main className="flex-1 p-1 sm:p-2 min-h-0">
+      <main className="flex-1 flex items-center justify-center p-1 sm:p-2">
         <AdminChatClient />
       </main>
     </div>
