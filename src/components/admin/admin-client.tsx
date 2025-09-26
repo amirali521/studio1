@@ -17,13 +17,8 @@ import { formatNumberCompact } from "@/lib/utils";
 import { db } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import AdminChatDialog from "./admin-chat-dialog";
+import type { AppUser } from "@/lib/types";
 
-interface AppUser extends Partial<FirebaseUser> {
-    id: string;
-    lastLogin?: string;
-    isOnline?: boolean;
-    hasUnreadAdminMessages?: boolean;
-}
 
 export default function AdminClient() {
   const { user, loading, isAdmin } = useAuth();
@@ -215,5 +210,3 @@ export default function AdminClient() {
      </>
   );
 }
-
-    
