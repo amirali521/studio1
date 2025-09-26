@@ -76,10 +76,10 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
     const { data: messages, loading: messagesLoading, addItem: addMessage } = useFirestoreSubcollection<ChatMessage>(collectionPath);
     
     useEffect(() => {
-        if (viewportRef.current && !selectionMode) {
+        if (viewportRef.current) {
             viewportRef.current.scrollTo({ top: viewportRef.current.scrollHeight, behavior: 'smooth' });
         }
-    }, [messages, selectionMode]);
+    }, [messages]);
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
