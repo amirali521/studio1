@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Brush } from "recharts";
 import { format, eachDayOfInterval, startOfWeek, startOfMonth, getWeek, formatISO } from "date-fns";
 import { useMemo } from "react";
 import { type Sale } from "@/lib/types";
@@ -106,6 +106,13 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
             strokeWidth={2} 
             dot={{ r: 4, fill: "hsl(var(--chart-2))" }}
             activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
+          />
+          <Brush 
+            dataKey="name" 
+            height={30} 
+            stroke="hsl(var(--primary))"
+            fill="hsl(var(--background))"
+            travellerWidth={20}
           />
         </LineChart>
       </ResponsiveContainer>

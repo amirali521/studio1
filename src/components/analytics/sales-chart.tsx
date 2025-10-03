@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Brush } from "recharts";
 import { format, eachDayOfInterval, startOfWeek, startOfMonth, getWeek, formatISO } from "date-fns";
 import { useMemo } from "react";
 import { type Sale } from "@/lib/types";
@@ -99,7 +99,14 @@ export default function SalesChart({ data, dateRange, timeGrouping = 'day' }: Sa
             tickFormatter={(value) => formatCurrency(Number(value), currency).split('.')[0]}
           />
           <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--secondary))', radius: 4 }}/>
-          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} />
+          <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={20} barCategoryGap="20%" />
+          <Brush 
+            dataKey="name" 
+            height={30} 
+            stroke="hsl(var(--primary))"
+            fill="hsl(var(--background))"
+            travellerWidth={20}
+           />
         </BarChart>
       </ResponsiveContainer>
     </div>
