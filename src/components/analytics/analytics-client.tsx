@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo } from "react";
@@ -19,10 +20,6 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import ProfitTrendChart from "./profit-trend-chart";
 import ProductPerformanceChart from "./product-performance-chart";
 import AiAnalysisDialog from "./ai-analysis-dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-
-export type TimeGrouping = 'day' | 'week' | 'month';
 
 export default function AnalyticsClient() {
   const { data: sales, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
@@ -37,8 +34,6 @@ export default function AnalyticsClient() {
     to: new Date(),
   });
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>(['all']);
-  const [timeGrouping, setTimeGrouping] = useState<TimeGrouping>('day');
-
 
   const handleProductSelection = (productId: string) => {
     setSelectedProductIds(prev => {
@@ -162,7 +157,7 @@ export default function AnalyticsClient() {
                 Ask AI
              </Button>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -224,24 +219,6 @@ export default function AnalyticsClient() {
                 />
                 </PopoverContent>
             </Popover>
-            <RadioGroup
-                defaultValue="day"
-                onValueChange={(value: TimeGrouping) => setTimeGrouping(value)}
-                className="flex items-center space-x-2"
-            >
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="day" id="day" />
-                    <Label htmlFor="day">Day</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="week" id="week" />
-                    <Label htmlFor="week">Week</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="month" id="month" />
-                    <Label htmlFor="month">Month</Label>
-                </div>
-            </RadioGroup>
         </CardContent>
       </Card>
 
@@ -326,10 +303,10 @@ export default function AnalyticsClient() {
         <Card className="flex flex-col lg:col-span-3">
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
-            <CardDescription>Revenue from sales aggregated by {timeGrouping}. Scroll horizontally to see more.</CardDescription>
+            <CardDescription>Revenue from sales for the selected period.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 pl-0 min-w-0">
-            <SalesChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
+          <CardContent className="flex-1 pl-2">
+            <SalesChart data={filteredSales} dateRange={dateRange} />
           </CardContent>
         </Card>
         <Card className="flex flex-col lg:col-span-2">
@@ -346,10 +323,10 @@ export default function AnalyticsClient() {
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Profit Trend</CardTitle>
-              <CardDescription>Profit from sales aggregated by {timeGrouping}. Scroll horizontally to see more.</CardDescription>
+              <CardDescription>Profit from sales for the selected period.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 min-w-0 pl-0">
-              <ProfitTrendChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
+            <CardContent className="flex-1 min-w-0 pl-2">
+              <ProfitTrendChart data={filteredSales} dateRange={dateRange} />
             </CardContent>
           </Card>
        </div>
@@ -367,3 +344,5 @@ export default function AnalyticsClient() {
     </>
   );
 }
+
+    
