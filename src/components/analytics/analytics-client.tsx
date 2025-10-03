@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, TrendingUp, Package, DollarSign, Calendar as CalendarIcon, ClipboardList, ShoppingBag, Wand2, Archive, BarChart, Banknote, Check } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency, formatNumberCompact, formatCurrencyCompact } from "@/lib/utils";
-import { subDays, startOfDay, endOfDay } from "date-fns";
+import { subDays, startOfDay, endOfDay, differenceInDays, addDays } from "date-fns";
 import SalesChart from "./sales-chart";
 import SalesHistoryTable from "../sales/sales-history-table";
 import { DateRange } from "react-day-picker";
@@ -20,12 +20,14 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import ProfitTrendChart from "./profit-trend-chart";
 import ProductPerformanceChart from "./product-performance-chart";
 import AiAnalysisDialog from "./ai-analysis-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AnalyticsClient() {
   const { data: sales, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
   const { data: products, loading: productsLoading } = useFirestoreCollection<Product>("products");
   const { data: serializedItems, loading: itemsLoading } = useFirestoreCollection<SerializedProductItem>("serializedItems");
   const { currency } = useCurrency();
+  const { toast } = useToast();
   const loading = salesLoading || productsLoading || itemsLoading;
 
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
@@ -50,6 +52,21 @@ export default function AnalyticsClient() {
             return [...newSelection, productId];
         }
     });
+  };
+
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    if (range?.from && range.to) {
+      const diff = differenceInDays(range.to, range.from);
+      if (diff > 6) { // 7 days inclusive means 6 days difference
+        range.to = addDays(range.from, 6);
+        toast({
+            title: "Date Range Limited",
+            description: "You can only select a maximum of 7 days.",
+            variant: "destructive"
+        });
+      }
+    }
+    setDateRange(range);
   };
 
   const isAllSelected = selectedProductIds.includes('all');
@@ -214,7 +231,7 @@ export default function AnalyticsClient() {
                     mode="range"
                     defaultMonth={dateRange?.from}
                     selected={dateRange}
-                    onSelect={setDateRange}
+                    onSelect={handleDateRangeSelect}
                     numberOfMonths={2}
                 />
                 </PopoverContent>
@@ -305,7 +322,7 @@ export default function AnalyticsClient() {
             <CardTitle>Sales Over Time</CardTitle>
             <CardDescription>Revenue from sales for the selected period.</CardDescription>
           </CardHeader>
-          <CardContent className="flex-1 pl-2">
+          <CardContent className="flex-1 pl-0">
             <SalesChart data={filteredSales} dateRange={dateRange} />
           </CardContent>
         </Card>
@@ -325,7 +342,7 @@ export default function AnalyticsClient() {
               <CardTitle>Profit Trend</CardTitle>
               <CardDescription>Profit from sales for the selected period.</CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 min-w-0 pl-2">
+            <CardContent className="flex-1 min-w-0 pl-0">
               <ProfitTrendChart data={filteredSales} dateRange={dateRange} />
             </CardContent>
           </Card>
@@ -344,5 +361,3 @@ export default function AnalyticsClient() {
     </>
   );
 }
-
-    
