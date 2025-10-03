@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
@@ -110,7 +111,7 @@ export default function SalesChart({ data, dateRange, timeGrouping = 'day' }: Sa
 
   return (
     <div className="w-full h-[300px] sm:h-[350px] overflow-x-auto">
-       <div style={{ width: `${minWidth}px`, height: '100%'}}>
+       <div style={{ width: `${Math.max(minWidth, 300)}px`, height: '100%'}}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={4}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />

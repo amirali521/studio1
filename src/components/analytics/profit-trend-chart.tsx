@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
@@ -105,7 +106,7 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
 
   return (
     <div className="w-full h-[300px] sm:h-[350px] overflow-x-auto">
-      <div style={{ width: `${minWidth}px`, height: '100%'}}>
+      <div style={{ width: `${Math.max(minWidth, 300)}px`, height: '100%'}}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
