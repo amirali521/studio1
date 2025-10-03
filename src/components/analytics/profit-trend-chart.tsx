@@ -133,7 +133,7 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
               strokeWidth={2} 
               dot={{ r: 4, fill: "hsl(var(--chart-2))" }}
               activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
-              connectNulls // This will connect points across zero-value gaps
+              connectNulls
             />
           </LineChart>
         </ResponsiveContainer>
