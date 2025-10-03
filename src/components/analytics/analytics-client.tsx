@@ -327,7 +327,7 @@ export default function AnalyticsClient() {
         <Card className="flex flex-col lg:col-span-3">
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
-            <CardDescription>Revenue from sales aggregated by {timeGrouping}.</CardDescription>
+            <CardDescription>Revenue from sales aggregated by {timeGrouping}. Drag on the chart to zoom.</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pl-2 min-w-0">
             <SalesChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
@@ -347,7 +347,7 @@ export default function AnalyticsClient() {
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Profit Trend</CardTitle>
-              <CardDescription>Profit from sales aggregated by {timeGrouping}.</CardDescription>
+              <CardDescription>Profit from sales aggregated by {timeGrouping}. Drag on the chart to zoom.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 min-w-0 pl-2">
               <ProfitTrendChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
