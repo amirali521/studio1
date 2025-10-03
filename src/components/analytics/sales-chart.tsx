@@ -110,7 +110,7 @@ export default function SalesChart({ data, dateRange, timeGrouping = 'day' }: Sa
   const minWidth = chartData.length * (timeGrouping === 'day' ? 50 : (timeGrouping === 'week' ? 60 : 100));
 
   return (
-    <div className="w-full h-[300px] sm:h-[350px] relative overflow-x-auto">
+    <div className="w-full h-[300px] sm:h-[350px] overflow-x-auto">
        <div style={{ width: '100%', height: '100%', minWidth: `${minWidth}px`}}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} barGap={4}>
