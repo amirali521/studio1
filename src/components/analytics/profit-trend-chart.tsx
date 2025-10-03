@@ -2,45 +2,68 @@
 "use client";
 
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { format, eachDayOfInterval } from "date-fns";
+import { format, eachDayOfInterval, startOfWeek, startOfMonth, getWeek, formatISO } from "date-fns";
 import { useMemo } from "react";
 import { type Sale } from "@/lib/types";
 import { useCurrency } from "@/contexts/currency-context";
 import { formatCurrency } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { Card } from "../ui/card";
+import { TimeGrouping } from "./analytics-client";
+
 
 interface ProfitTrendChartProps {
   data: Sale[];
   dateRange?: DateRange;
+  timeGrouping?: TimeGrouping;
 }
 
-export default function ProfitTrendChart({ data, dateRange }: ProfitTrendChartProps) {
+export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day' }: ProfitTrendChartProps) {
   const { currency } = useCurrency();
   
   const chartData = useMemo(() => {
     if (data.length === 0 || !dateRange?.from) return [];
     
-    const interval = eachDayOfInterval({
-      start: dateRange.from,
-      end: dateRange.to || dateRange.from,
-    });
+    const profitByPeriod = data.reduce((acc, sale) => {
+      const saleDate = new Date(sale.date);
+      let periodKey: string;
 
-    const profitByDay = data.reduce((acc, sale) => {
-      const day = format(new Date(sale.date), "yyyy-MM-dd");
-      acc[day] = (acc[day] || 0) + sale.profit;
+      switch(timeGrouping) {
+        case 'week':
+          periodKey = formatISO(startOfWeek(saleDate, { weekStartsOn: 1 }));
+          break;
+        case 'month':
+          periodKey = format(saleDate, "yyyy-MM");
+          break;
+        case 'day':
+        default:
+          periodKey = format(saleDate, "yyyy-MM-dd");
+          break;
+      }
+
+      acc[periodKey] = (acc[periodKey] || 0) + sale.profit;
       return acc;
     }, {} as Record<string, number>);
 
-    return interval.map(day => {
-      const dayString = format(day, "yyyy-MM-dd");
-      return {
-        name: format(day, "MMM d"),
-        profit: profitByDay[dayString] || 0,
-      };
-    });
+    return Object.entries(profitByPeriod).map(([period, profit]) => {
+      const date = new Date(period);
+      let name: string;
+      switch(timeGrouping) {
+        case 'week':
+          name = `W${getWeek(date, { weekStartsOn: 1 })}`;
+          break;
+        case 'month':
+          name = format(date, "MMM yyyy");
+          break;
+        case 'day':
+        default:
+          name = format(date, "MMM d");
+          break;
+      }
+      return { name, profit };
+    }).sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime());
 
-  }, [data, dateRange]);
+  }, [data, dateRange, timeGrouping]);
   
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

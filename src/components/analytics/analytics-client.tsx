@@ -20,7 +20,10 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import ProfitTrendChart from "./profit-trend-chart";
 import ProductPerformanceChart from "./product-performance-chart";
 import AiAnalysisDialog from "./ai-analysis-dialog";
-import { cn } from "@/lib/utils";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+
+export type TimeGrouping = 'day' | 'week' | 'month';
 
 export default function AnalyticsClient() {
   const { data: sales, loading: salesLoading } = useFirestoreCollection<Sale>("sales");
@@ -35,6 +38,8 @@ export default function AnalyticsClient() {
     to: new Date(),
   });
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>(['all']);
+  const [timeGrouping, setTimeGrouping] = useState<TimeGrouping>('day');
+
 
   const handleProductSelection = (productId: string) => {
     setSelectedProductIds(prev => {
@@ -46,7 +51,6 @@ export default function AnalyticsClient() {
         
         if (newSelection.includes(productId)) {
             const filtered = newSelection.filter(id => id !== productId);
-            // If empty, select 'all'
             return filtered.length === 0 ? ['all'] : filtered;
         } else {
             return [...newSelection, productId];
@@ -159,10 +163,10 @@ export default function AnalyticsClient() {
                 Ask AI
              </Button>
         </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:flex-1 justify-start text-left font-normal">
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
                          <span>{getSelectedProductsText()}</span>
                     </Button>
                 </DropdownMenuTrigger>
@@ -193,7 +197,7 @@ export default function AnalyticsClient() {
                 <Button
                     id="date"
                     variant={"outline"}
-                    className="w-full sm:flex-1 justify-start text-left font-normal"
+                    className="w-full justify-start text-left font-normal"
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {dateRange?.from ? (
@@ -221,6 +225,24 @@ export default function AnalyticsClient() {
                 />
                 </PopoverContent>
             </Popover>
+            <RadioGroup
+                defaultValue="day"
+                onValueChange={(value: TimeGrouping) => setTimeGrouping(value)}
+                className="flex items-center space-x-2"
+            >
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="day" id="day" />
+                    <Label htmlFor="day">Day</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="week" id="week" />
+                    <Label htmlFor="week">Week</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="month" id="month" />
+                    <Label htmlFor="month">Month</Label>
+                </div>
+            </RadioGroup>
         </CardContent>
       </Card>
 
@@ -305,10 +327,10 @@ export default function AnalyticsClient() {
         <Card className="flex flex-col lg:col-span-3">
           <CardHeader>
             <CardTitle>Sales Over Time</CardTitle>
-            <CardDescription>Daily revenue from sales.</CardDescription>
+            <CardDescription>Revenue from sales aggregated by {timeGrouping}.</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pl-2 min-w-0">
-            <SalesChart data={filteredSales} dateRange={dateRange}/>
+            <SalesChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
           </CardContent>
         </Card>
         <Card className="flex flex-col lg:col-span-2">
@@ -325,10 +347,10 @@ export default function AnalyticsClient() {
           <Card className="flex flex-col">
             <CardHeader>
               <CardTitle>Profit Trend</CardTitle>
-              <CardDescription>Daily profit from sales.</CardDescription>
+              <CardDescription>Profit from sales aggregated by {timeGrouping}.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 min-w-0 pl-2">
-              <ProfitTrendChart data={filteredSales} dateRange={dateRange}/>
+              <ProfitTrendChart data={filteredSales} dateRange={dateRange} timeGrouping={timeGrouping} />
             </CardContent>
           </Card>
        </div>
@@ -346,5 +368,3 @@ export default function AnalyticsClient() {
     </>
   );
 }
-
-    
