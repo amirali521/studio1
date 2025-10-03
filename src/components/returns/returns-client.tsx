@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Loader2, Undo2, Camera } from "lucide-react";
+import { Loader2, Undo2, Camera, History } from "lucide-react";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
 import type { Sale, SerializedProductItem, QrCodeData } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
-import SalesHistoryDialog from "../sales/sales-history-dialog";
 import { useAuth } from "@/contexts/auth-context";
 import ReturnCameraScannerDialog from "./return-camera-scanner";
 
@@ -188,7 +187,12 @@ export default function ReturnsClient() {
                 <Camera className="mr-2"/>
                 Scan with Camera
             </Button>
-             <SalesHistoryDialog sales={sales} />
+             <Button variant="outline" className="w-full" asChild>
+                <Link href="/analytics#sales-history">
+                    <History className="mr-2"/>
+                    View Sales History
+                </Link>
+            </Button>
         </CardContent>
       </Card>
     </div>
