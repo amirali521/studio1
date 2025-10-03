@@ -2,7 +2,7 @@
 "use client";
 
 import { Line, LineChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
-import { format, getWeek, formatISO, startOfWeek, startOfMonth } from "date-fns";
+import { format, getWeek, startOfWeek, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, formatISO } from "date-fns";
 import { useMemo } from "react";
 import { type Sale } from "@/lib/types";
 import { useCurrency } from "@/contexts/currency-context";
@@ -21,7 +21,7 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
   const { currency } = useCurrency();
 
   const chartData = useMemo(() => {
-    if (data.length === 0 || !dateRange?.from) return [];
+    if (data.length === 0 || !dateRange?.from || !dateRange.to) return [];
     
     const profitByPeriod = data.reduce((acc, sale) => {
       const saleDate = new Date(sale.date);
@@ -32,7 +32,7 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
           periodKey = formatISO(startOfWeek(saleDate, { weekStartsOn: 1 }));
           break;
         case 'month':
-          periodKey = format(saleDate, "yyyy-MM");
+          periodKey = formatISO(startOfMonth(saleDate));
           break;
         case 'day':
         default:
@@ -44,23 +44,46 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
       return acc;
     }, {} as Record<string, number>);
 
-    return Object.entries(profitByPeriod).map(([period, profit], index) => {
-      const date = new Date(period);
-      let name: string;
-      switch(timeGrouping) {
+    let allPeriods: Date[];
+    switch (timeGrouping) {
         case 'week':
-          name = `W${getWeek(date, { weekStartsOn: 1 })}`;
-          break;
+            allPeriods = eachWeekOfInterval({ start: dateRange.from, end: dateRange.to }, { weekStartsOn: 1 });
+            break;
         case 'month':
-          name = format(date, "MMM yyyy");
-          break;
+            allPeriods = eachMonthOfInterval({ start: dateRange.from, end: dateRange.to });
+            break;
         case 'day':
         default:
-          name = format(date, "MMM d");
-          break;
-      }
-      return { name, profit, index };
-    }).sort((a,b) => new Date(a.name).getTime() - new Date(b.name).getTime());
+            allPeriods = eachDayOfInterval({ start: dateRange.from, end: dateRange.to });
+            break;
+    }
+
+    return allPeriods.map(periodDate => {
+        let periodKey: string;
+        let name: string;
+
+        switch (timeGrouping) {
+            case 'week':
+                periodKey = formatISO(periodDate);
+                name = `W${getWeek(periodDate, { weekStartsOn: 1 })}`;
+                break;
+            case 'month':
+                periodKey = formatISO(periodDate);
+                name = format(periodDate, "MMM yyyy");
+                break;
+            case 'day':
+            default:
+                periodKey = format(periodDate, "yyyy-MM-dd");
+                name = format(periodDate, "MMM d");
+                break;
+        }
+
+        return {
+            name,
+            profit: profitByPeriod[periodKey] || 0,
+            date: periodDate,
+        };
+    });
 
   }, [data, dateRange, timeGrouping]);
   
@@ -110,6 +133,7 @@ export default function ProfitTrendChart({ data, dateRange, timeGrouping = 'day'
               strokeWidth={2} 
               dot={{ r: 4, fill: "hsl(var(--chart-2))" }}
               activeDot={{ r: 6, stroke: "hsl(var(--background))", strokeWidth: 2 }}
+              connectNulls // This will connect points across zero-value gaps
             />
           </LineChart>
         </ResponsiveContainer>
