@@ -22,11 +22,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ChatDialog from "../chat/chat-dialog";
+import { useWebView } from "@/hooks/use-webview";
 
 export default function UserProfile() {
   const { user, isAdmin } = useAuth();
   const router = useRouter();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const isWebView = useWebView();
   
   const adminId = firebaseConfig.adminUid;
 
@@ -80,22 +82,24 @@ export default function UserProfile() {
               <span>Settings</span>
             </Link>
           </DropdownMenuItem>
-           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>
-              <Download className="mr-2 h-4 w-4" />
-              <span>Download App</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem asChild>
-                  <a href="https://drive.google.com/uc?export=download&id=1j42DXVobfu8poI4-d9gb_FbEXHr_E6ZG" download>Android</a>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <a href="https://drive.google.com/uc?export=download&id=12B6Rr8i1OM4T3qm1pRju2gnOMu5vNj9d" download>iOS</a>
-                </DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuPortal>
-          </DropdownMenuSub>
+           {!isWebView && (
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                <Download className="mr-2 h-4 w-4" />
+                <span>Download App</span>
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                <DropdownMenuSubContent>
+                    <DropdownMenuItem asChild>
+                    <a href="https://drive.google.com/uc?export=download&id=1j42DXVobfu8poI4-d9gb_FbEXHr_E6ZG" download>Android</a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                    <a href="https://drive.google.com/uc?export=download&id=12B6Rr8i1OM4T3qm1pRju2gnOMu5vNj9d" download>iOS</a>
+                    </DropdownMenuItem>
+                </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
+           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />

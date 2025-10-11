@@ -10,6 +10,7 @@ import LoadingScreen from "@/components/layout/loading-screen";
 import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, Facebook, Twitter, Instagram, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnimatedLandingHero from "@/components/animated-landing-hero";
+import { useWebView } from "@/hooks/use-webview";
 
 const features = [
     {
@@ -42,14 +43,19 @@ const features = [
 export default function LandingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const isWebView = useWebView();
 
   useEffect(() => {
+    if (isWebView) {
+      router.push("/signup");
+      return;
+    }
     if (!loading && user) {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isWebView]);
 
-  if (loading || user) {
+  if (loading || user || isWebView) {
     return <LoadingScreen />;
   }
 
@@ -117,30 +123,32 @@ export default function LandingPage() {
             </div>
         </section>
 
-        <section className="py-16 sm:py-20">
-            <div className="container mx-auto px-4">
-                <div className="text-center mb-12">
-                    <h2 className="font-headline text-3xl md:text-4xl font-bold">Download Our App</h2>
-                    <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
-                        Manage your inventory on the go with our mobile apps for Android and iOS.
-                    </p>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                    <Button asChild size="lg">
-                        <a href="https://drive.google.com/uc?export=download&id=1j42DXVobfu8poI4-d9gb_FbEXHr_E6ZG" download>
-                           <Download className="mr-2 h-5 w-5" />
-                           Download for Android
-                        </a>
-                    </Button>
-                     <Button asChild size="lg" variant="outline">
-                        <a href="https://drive.google.com/uc?export=download&id=12B6Rr8i1OM4T3qm1pRju2gnOMu5vNj9d" download>
-                           <Download className="mr-2 h-5 w-5" />
-                           Download for iOS
-                        </a>
-                    </Button>
-                </div>
-            </div>
-        </section>
+        {!isWebView && (
+          <section className="py-16 sm:py-20">
+              <div className="container mx-auto px-4">
+                  <div className="text-center mb-12">
+                      <h2 className="font-headline text-3xl md:text-4xl font-bold">Download Our App</h2>
+                      <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
+                          Manage your inventory on the go with our mobile apps for Android and iOS.
+                      </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                      <Button asChild size="lg">
+                          <a href="https://drive.google.com/uc?export=download&id=1j42DXVobfu8poI4-d9gb_FbEXHr_E6ZG" download>
+                             <Download className="mr-2 h-5 w-5" />
+                             Download for Android
+                          </a>
+                      </Button>
+                       <Button asChild size="lg" variant="outline">
+                          <a href="https://drive.google.com/uc?export=download&id=12B6Rr8i1OM4T3qm1pRju2gnOMu5vNj9d" download>
+                             <Download className="mr-2 h-5 w-5" />
+                             Download for iOS
+                          </a>
+                      </Button>
+                  </div>
+              </div>
+          </section>
+        )}
       </main>
 
       <footer className="bg-card">
