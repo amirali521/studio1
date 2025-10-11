@@ -9,10 +9,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, MessageSquare } from "lucide-react";
+import { LogOut, Settings, MessageSquare, Download } from "lucide-react";
 import { auth, firebaseConfig } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -76,6 +80,22 @@ export default function UserProfile() {
               <span>Settings</span>
             </Link>
           </DropdownMenuItem>
+           <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Download className="mr-2 h-4 w-4" />
+              <span>Download App</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem asChild>
+                  <a href="/apps/app-release.apk" download>Android</a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a href="/apps/app-release.ipa" download>iOS</a>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
