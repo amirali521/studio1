@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCurrency } from "@/contexts/currency-context";
 import { InvoiceDialog } from "./invoice-dialog";
 import { Button } from "../ui/button";
-import { Printer, Calendar as CalendarIcon, Download } from "lucide-react";
+import { Printer, Calendar as CalendarIcon, Download, Loader2 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -33,6 +33,8 @@ import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
+import html2canvas from "html2canvas";
+import { Invoice } from "./invoice";
 
 
 interface SalesHistoryTableProps {
@@ -43,31 +45,30 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
   const { currency } = useCurrency();
   const { toast } = useToast();
   const [exportDateRange, setExportDateRange] = useState<DateRange | undefined>();
+  const [isDownloadingReceipts, setIsDownloadingReceipts] = useState(false);
   const sortedSales = [...sales].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  const handleExport = (format: 'pdf' | 'csv') => {
+  const getFilteredSales = () => {
     if (!exportDateRange?.from || !exportDateRange?.to) {
-      toast({
-        variant: "destructive",
-        title: "Date Range Required",
-        description: "Please select a date range to export.",
-      });
-      return;
+      return sortedSales; // Return all sales if no range is selected
     }
-    
     const fromDate = startOfDay(exportDateRange.from);
     const toDate = endOfDay(exportDateRange.to);
 
-    const filteredSales = sales.filter(sale => {
+    return sortedSales.filter(sale => {
       const saleDate = new Date(sale.date);
       return saleDate >= fromDate && saleDate <= toDate;
     });
+  }
+
+  const handleExport = (format: 'pdf' | 'csv') => {
+    const filteredSales = getFilteredSales();
 
     if (filteredSales.length === 0) {
       toast({
         variant: "destructive",
         title: "No Data",
-        description: "There are no sales in the selected date range.",
+        description: "There are no sales in the selected date range to export.",
       });
       return;
     }
@@ -136,6 +137,89 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
     document.body.removeChild(link);
     toast({ title: "CSV Exported", description: "Your sales report has been downloaded." });
   };
+  
+  const handleDownloadAllReceipts = async () => {
+    const filteredSales = getFilteredSales();
+     if (filteredSales.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Receipts",
+        description: "There are no sales in the selected period to download receipts for.",
+      });
+      return;
+    }
+    setIsDownloadingReceipts(true);
+
+    try {
+        const doc = new jsPDF('p', 'px', 'a4'); // Use pixels for easier coordination with canvas
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        
+        // A4 aspect ratio
+        const a4Ratio = Math.sqrt(2);
+        
+        for (let i = 0; i < filteredSales.length; i++) {
+            const sale = filteredSales[i];
+            
+            // Create a temporary div to render the invoice for canvas capture
+            const invoiceContainer = document.createElement('div');
+            invoiceContainer.style.position = 'absolute';
+            invoiceContainer.style.left = '-9999px';
+            const invoiceRoot = document.createElement('div');
+            invoiceContainer.appendChild(invoiceRoot);
+            document.body.appendChild(invoiceContainer);
+
+            // This is a trick to use React's rendering to get the HTML
+            const { createRoot } = await import('react-dom/client');
+            const root = createRoot(invoiceRoot);
+            root.render(<Invoice sale={sale} />);
+            
+            // Give it a moment to render
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+            const canvas = await html2canvas(invoiceRoot.firstChild as HTMLElement, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            
+            if (i > 0) {
+                doc.addPage();
+            }
+
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            const ratio = imgWidth / imgHeight;
+
+            // Fit the image to the page width
+            let finalWidth = pageWidth - 20; // with margin
+            let finalHeight = finalWidth / ratio;
+
+            if(finalHeight > pageHeight - 20) {
+                finalHeight = pageHeight - 20;
+                finalWidth = finalHeight * ratio;
+            }
+
+            const x = (pageWidth - finalWidth) / 2;
+            const y = (pageHeight - finalHeight) / 2;
+            
+            doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, finalWidth, finalHeight);
+
+            // Cleanup
+            root.unmount();
+            document.body.removeChild(invoiceContainer);
+        }
+
+        doc.save(`receipts_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+        toast({ title: "Receipts PDF Downloaded", description: "A multi-page PDF with receipts has been saved." });
+
+    } catch (error) {
+        console.error("Error generating receipts PDF:", error);
+        toast({ variant: "destructive", title: "PDF Error", description: "Could not generate receipts PDF." });
+    } finally {
+        setIsDownloadingReceipts(false);
+    }
+  }
 
   const getItemsSoldDisplay = (items: Sale['items']) => {
     if (items.length === 1) {
@@ -209,21 +293,27 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                 />
                 </PopoverContent>
             </Popover>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="w-full sm:w-auto">
-                        <Download className="mr-2 h-4 w-4" /> Export
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleExport('csv')}>
-                        Download as CSV
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                        Download as PDF
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex gap-2">
+               <Button variant="outline" onClick={handleDownloadAllReceipts} disabled={isDownloadingReceipts} className="w-full">
+                 {isDownloadingReceipts ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                 Receipts
+              </Button>
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full">
+                          <Download className="mr-2 h-4 w-4" /> Data
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleExport('csv')}>
+                          Download as CSV
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                          Download as PDF
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
