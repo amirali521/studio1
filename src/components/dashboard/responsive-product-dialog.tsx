@@ -17,6 +17,7 @@ import {
 import ProductForm from "./product-form";
 import type { Product } from "@/lib/types";
 import { AutofillData } from "./autofill-dialog";
+import { ScrollArea } from "../ui/scroll-area";
 
 
 interface ResponsiveProductDialogProps {
@@ -53,7 +54,9 @@ export default function ResponsiveProductDialog({
           <DrawerHeader className="text-left">
             <DrawerTitle className="font-headline">{title}</DrawerTitle>
           </DrawerHeader>
-          <div className="p-4 pt-0">{form}</div>
+           <ScrollArea className="max-h-[80vh] overflow-y-auto">
+              <div className="p-4 pt-0">{form}</div>
+           </ScrollArea>
         </DrawerContent>
       </Drawer>
     );
@@ -65,9 +68,10 @@ export default function ResponsiveProductDialog({
         <DialogHeader>
           <DialogTitle className="font-headline">{title}</DialogTitle>
         </DialogHeader>
-        {form}
+        <ScrollArea className="max-h-[70vh] pr-6">
+          {form}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
 }
-

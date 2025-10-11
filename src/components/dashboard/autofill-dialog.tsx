@@ -10,6 +10,7 @@ import { Loader2, Mic, Image as ImageIcon, Send, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { autofillProductDetails } from '@/ai/flows/autofill-product-details';
 import { useDashboardActions } from '@/contexts/dashboard-actions-context';
+import { ScrollArea } from '../ui/scroll-area';
 
 export type AutofillData = {
   name: string;
@@ -125,52 +126,54 @@ export default function AutofillDialog({ isOpen, onClose }: AutofillDialogProps)
             Describe the product(s) you want to add using text, your voice, or an image of handwritten notes.
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="text">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="text">Text</TabsTrigger>
-            <TabsTrigger value="voice">Voice</TabsTrigger>
-            <TabsTrigger value="image">Image</TabsTrigger>
-          </TabsList>
-          <TabsContent value="text" className="py-4">
-            <Textarea
-              placeholder="e.g., '30 t-shirts, size L, blue, bought for $5 each, selling for $15'"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              rows={5}
-            />
-          </TabsContent>
-          <TabsContent value="voice" className="py-4 flex flex-col items-center justify-center space-y-4 min-h-[140px]">
-             <Button
-                variant={isRecording ? 'destructive' : 'outline'}
-                size="icon"
-                className="h-16 w-16 rounded-full"
-                onClick={handleMicClick}
-              >
-                {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
-            </Button>
-            <p className="text-sm text-muted-foreground">{isRecording ? 'Recording... Click to stop.' : 'Click to start recording.'}</p>
-          </TabsContent>
-          <TabsContent value="image" className="py-4 flex flex-col items-center justify-center space-y-4 min-h-[140px]">
-             <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            {imageInput ? (
-                <div className="relative">
-                    <img src={imageInput} alt="Preview" className="max-h-32 rounded-md border" />
-                     <Button variant="destructive" size="sm" className="absolute -top-2 -right-2" onClick={() => setImageInput(null)}>Clear</Button>
-                </div>
-            ) : (
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    <ImageIcon className="mr-2" /> Upload Handwriting
-                </Button>
-            )}
-          </TabsContent>
-        </Tabs>
-        <DialogFooter>
+        <ScrollArea className="max-h-[70vh] pr-6">
+          <Tabs defaultValue="text">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="text">Text</TabsTrigger>
+              <TabsTrigger value="voice">Voice</TabsTrigger>
+              <TabsTrigger value="image">Image</TabsTrigger>
+            </TabsList>
+            <TabsContent value="text" className="py-4">
+              <Textarea
+                placeholder="e.g., '30 t-shirts, size L, blue, bought for $5 each, selling for $15'"
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                rows={5}
+              />
+            </TabsContent>
+            <TabsContent value="voice" className="py-4 flex flex-col items-center justify-center space-y-4 min-h-[140px]">
+              <Button
+                  variant={isRecording ? 'destructive' : 'outline'}
+                  size="icon"
+                  className="h-16 w-16 rounded-full"
+                  onClick={handleMicClick}
+                >
+                  {isRecording ? <Square className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+              </Button>
+              <p className="text-sm text-muted-foreground">{isRecording ? 'Recording... Click to stop.' : 'Click to start recording.'}</p>
+            </TabsContent>
+            <TabsContent value="image" className="py-4 flex flex-col items-center justify-center space-y-4 min-h-[140px]">
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              {imageInput ? (
+                  <div className="relative">
+                      <img src={imageInput} alt="Preview" className="max-h-32 rounded-md border" />
+                      <Button variant="destructive" size="sm" className="absolute -top-2 -right-2" onClick={() => setImageInput(null)}>Clear</Button>
+                  </div>
+              ) : (
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                      <ImageIcon className="mr-2" /> Upload Handwriting
+                  </Button>
+              )}
+            </TabsContent>
+          </Tabs>
+        </ScrollArea>
+        <DialogFooter className="pt-4">
           <Button type="button" onClick={handleSubmit} disabled={isProcessing}>
             {isProcessing ? <Loader2 className="mr-2 animate-spin" /> : <Send className="mr-2" />}
             Auto-fill
