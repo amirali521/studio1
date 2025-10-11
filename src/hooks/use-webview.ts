@@ -9,24 +9,30 @@ export function useWebView() {
   useEffect(() => {
     // This code will only run on the client side.
     if (typeof window !== "undefined") {
-        const userAgent = navigator.userAgent.toLowerCase();
-        
-        // Android-specific check for "wv" which is a strong indicator of a WebView.
-        const isAndroidWebView = userAgent.includes('; wv)');
+      const userAgent = navigator.userAgent.toLowerCase();
+      
+      const isIOS = /iphone|ipad|ipod/.test(userAgent);
 
-        // For iOS, it's trickier. A common heuristic is to check if it's an iOS device
-        // but not running in standalone (PWA) or Safari.
-        const isIOS = /iphone|ipad|ipod/.test(userAgent);
-        // @ts-ignore
-        const isIOSStandalone = !!window.navigator.standalone;
-        const isSafari = userAgent.includes('safari') && !userAgent.includes('crios') && !userAgent.includes('fxios');
-        
-        // If it's iOS and not standalone and not Safari, it's likely a WebView.
-        const isIOSWebView = isIOS && !isIOSStandalone && !isSafari;
-        
-        if (isAndroidWebView || isIOSWebView) {
-            setIsWebView(true);
-        }
+      // A reliable way to check for Android WebView
+      const isAndroidWebView = /; wv\)/.test(userAgent);
+
+      // A reliable way to check for iOS WebView
+      // Standard Safari on iOS will not have 'wv' but will have 'safari'.
+      // An iOS WebView will often identify as Safari but lack other browser chrome signals.
+      // A common heuristic is to check if it's an iOS device but NOT Safari.
+      // A standalone PWA will also not be a webview.
+      // @ts-ignore
+      const isIOSStandalone = !!window.navigator.standalone;
+      const isSafari = userAgent.includes('safari');
+      const isIOSChrome = userAgent.includes('crios');
+      const isIOSFirefox = userAgent.includes('fxios');
+      
+      // If it's iOS and not standalone, not regular Safari, and not another browser like Chrome or Firefox.
+      const isIOSWebView = isIOS && !isIOSStandalone && !isSafari && !isIOSChrome && !isIOSFirefox;
+      
+      if (isAndroidWebView || isIOSWebView) {
+        setIsWebView(true);
+      }
     }
   }, []);
 
