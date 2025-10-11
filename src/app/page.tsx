@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LoadingScreen from "@/components/layout/loading-screen";
-import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, Facebook, Twitter, Instagram } from "lucide-react";
+import { ScanBarcode, AreaChart, QrCode, ShoppingCart, Undo2, Facebook, Twitter, Instagram, Download } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnimatedLandingHero from "@/components/animated-landing-hero";
 
@@ -113,6 +113,31 @@ export default function LandingPage() {
                             </CardContent>
                         </Card>
                     ))}
+                </div>
+            </div>
+        </section>
+
+        <section className="py-16 sm:py-20">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-12">
+                    <h2 className="font-headline text-3xl md:text-4xl font-bold">Download Our App</h2>
+                    <p className="mt-2 text-muted-foreground max-w-2xl mx-auto">
+                        Manage your inventory on the go with our mobile apps for Android and iOS.
+                    </p>
+                </div>
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <Button asChild size="lg">
+                        <a href="/apps/app-release.apk" download>
+                           <Download className="mr-2 h-5 w-5" />
+                           Download for Android
+                        </a>
+                    </Button>
+                     <Button asChild size="lg" variant="outline">
+                        <a href="/apps/app-release.ipa" download>
+                           <Download className="mr-2 h-5 w-5" />
+                           Download for iOS
+                        </a>
+                    </Button>
                 </div>
             </div>
         </section>
