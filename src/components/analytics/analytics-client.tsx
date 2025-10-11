@@ -348,7 +348,7 @@ export default function AnalyticsClient() {
           </Card>
        </div>
        <div>
-            <SalesHistoryTable sales={filteredSales} />
+            <SalesHistoryTable sales={sales} />
        </div>
     </div>
     <AiAnalysisDialog
