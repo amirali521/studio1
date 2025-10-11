@@ -21,7 +21,7 @@ import Link from "next/link";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/contexts/auth-context";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import QRCode from 'qrcode';
 
 export default function BarcodeClient() {
   const { user } = useAuth();
@@ -88,7 +88,7 @@ export default function BarcodeClient() {
   };
   
   const handleDownloadPdf = async () => {
-    if (itemsToDisplay.length === 0) {
+    if (itemsToDisplay.length === 0 || !selectedProduct || !user) {
         toast({
             variant: "destructive",
             title: "No codes for PDF",
@@ -98,38 +98,64 @@ export default function BarcodeClient() {
     }
     setIsGeneratingPdf(true);
 
-    const grid = document.getElementById('qr-code-grid');
-    if (!grid) {
-        toast({
-            variant: "destructive",
-            title: "PDF Generation Error",
-            description: "Could not find the content to print.",
-        });
-        setIsGeneratingPdf(false);
-        return;
-    }
-
     try {
-        const canvas = await html2canvas(grid, {
-            scale: 2, // Higher scale for better quality
-            useCORS: true,
-            backgroundColor: null,
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
         });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10;
+        const itemWidth = 40;
+        const itemHeight = 50; // Increased height for text
+        const qrCodeSize = 35; // Size of QR code image in mm
         
-        const imgData = canvas.toDataURL('image/png');
-        const imgWidth = canvas.width;
-        const imgHeight = canvas.height;
+        const itemsPerRow = Math.floor((pageWidth - margin * 2) / itemWidth);
+        const itemsPerCol = Math.floor((pageHeight - margin * 2) / itemHeight);
 
-        // Create a PDF with a single page that fits the entire canvas
-        const pdf = new jsPDF({
-            orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
-            unit: 'px',
-            format: [imgWidth, imgHeight]
-        });
+        let x = margin;
+        let y = margin;
+        let pageItemCount = 0;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`${selectedProduct?.name || 'barcodes'}.pdf`);
+        for (const item of itemsToDisplay) {
+            if (pageItemCount >= itemsPerRow * itemsPerCol) {
+                doc.addPage();
+                x = margin;
+                y = margin;
+                pageItemCount = 0;
+            }
 
+            const qrData = JSON.stringify({ serialNumber: item.serialNumber, uid: user.uid });
+            const qrCodeDataURL = await QRCode.toDataURL(qrData, { 
+                errorCorrectionLevel: 'H',
+                type: 'image/png',
+                margin: 1,
+                width: 200, // Higher resolution for clarity
+            });
+
+            // Center content within the allocated item box
+            const centerX = x + itemWidth / 2;
+
+            doc.setFontSize(8);
+            doc.text(selectedProduct.name, centerX, y + 5, { align: 'center', maxWidth: itemWidth - 2 });
+
+            doc.addImage(qrCodeDataURL, 'PNG', centerX - qrCodeSize / 2, y + 7, qrCodeSize, qrCodeSize);
+
+            doc.setFontSize(7);
+            doc.setFont('courier');
+            doc.text(item.serialNumber, centerX, y + itemHeight - 5, { align: 'center' });
+
+            x += itemWidth;
+            if (x + itemWidth > pageWidth - margin) {
+                x = margin;
+                y += itemHeight;
+            }
+            pageItemCount++;
+        }
+
+        doc.save(`${selectedProduct.name}_QR_Codes.pdf`);
         toast({
             title: "PDF Generated",
             description: "Your PDF with all QR codes has been downloaded.",
