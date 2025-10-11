@@ -13,7 +13,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useFirestoreCollection } from "@/hooks/use-firestore-collection";
-import { db } from "@/lib/firebase";
+import { db, firebaseConfig } from "@/lib/firebase";
 import { doc, getDoc, writeBatch, updateDoc } from "firebase/firestore";
 import {
   AlertDialog,
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "../ui/checkbox";
+import SupportAvatarIcon from "../icons/support-avatar-icon";
 
 interface ChatInterfaceProps {
     chatPartnerId: string;
@@ -152,6 +153,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
             return {
                 displayName: member?.displayName || "Member",
                 photoURL: member?.photoURL,
+                isSenderAdmin: false,
             }
         }
         
@@ -159,6 +161,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
             return {
                 displayName: user.displayName || "You",
                 photoURL: user.photoURL,
+                isSenderAdmin: isAdmin,
             }
         }
 
@@ -167,6 +170,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
         return {
             displayName: participant?.displayName || "User",
             photoURL: participant?.photoURL,
+            isSenderAdmin: participant?.isAdmin ?? false,
         }
     }
     
@@ -230,6 +234,25 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                         const isSender = msg.senderId === user.uid;
                         const participant = getParticipantInfo(msg.senderId);
                         const isSelected = selectedMessages.includes(msg.id);
+                        
+                        const renderAvatar = () => {
+                          if (participant.isSenderAdmin) {
+                            return (
+                              <Avatar className="h-8 w-8 cursor-pointer bg-muted" onClick={() => handleToggleSelection(msg.id)}>
+                                <div className="flex h-full w-full items-center justify-center">
+                                  <SupportAvatarIcon className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              </Avatar>
+                            )
+                          }
+                          return (
+                            <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleToggleSelection(msg.id)}>
+                              <AvatarImage src={participant.photoURL || undefined} />
+                              <AvatarFallback>{getInitials(participant.displayName)}</AvatarFallback>
+                            </Avatar>
+                          )
+                        }
+
                         return (
                              <div key={msg.id} className={cn("flex items-end gap-3 group", isSender ? "justify-end" : "justify-start")}>
                                 {selectionMode && !isSender && (
@@ -239,12 +262,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                         onCheckedChange={() => handleToggleSelection(msg.id)}
                                     />
                                 )}
-                                {!isSender && (
-                                     <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleToggleSelection(msg.id)}>
-                                        <AvatarImage src={participant.photoURL || undefined} />
-                                        <AvatarFallback>{getInitials(participant.displayName)}</AvatarFallback>
-                                    </Avatar>
-                                )}
+                                {!isSender && renderAvatar()}
                                
                                <div className={cn(
                                     "max-w-xs md:max-w-md p-3 rounded-lg flex flex-col cursor-pointer",
@@ -266,12 +284,7 @@ export default function ChatInterface({ chatPartnerId, isGroup }: ChatInterfaceP
                                        {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
                                    </p>
                                </div>
-                                {isSender && (
-                                     <Avatar className="h-8 w-8 cursor-pointer" onClick={() => handleToggleSelection(msg.id)}>
-                                        <AvatarImage src={user.photoURL || undefined} />
-                                        <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                                    </Avatar>
-                                )}
+                                {isSender && renderAvatar()}
                                 {selectionMode && isSender && (
                                      <Checkbox 
                                         className="shrink-0 self-center" 
