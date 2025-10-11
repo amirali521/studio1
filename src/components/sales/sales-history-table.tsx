@@ -137,6 +137,35 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
     toast({ title: "CSV Exported", description: "Your sales report has been downloaded." });
   };
 
+  const getItemsSoldDisplay = (items: Sale['items']) => {
+    if (items.length === 1) {
+      const item = items[0];
+      const isReturned = item.status === 'returned';
+      return (
+         <Badge 
+            variant={isReturned ? 'destructive' : 'secondary'} 
+            className="font-normal whitespace-nowrap"
+          >
+            {item.productName} {isReturned && '(Returned)'}
+          </Badge>
+      )
+    }
+    
+    const returnedCount = items.filter(i => i.status === 'returned').length;
+    const soldCount = items.length - returnedCount;
+    
+    return (
+      <div className="flex flex-col gap-1 items-start">
+        <Badge variant="secondary" className="font-normal whitespace-nowrap">
+          {items.length} items
+        </Badge>
+        <span className="text-xs text-muted-foreground">
+          ({soldCount} sold, {returnedCount} returned)
+        </span>
+      </div>
+    );
+  }
+
   return (
     <Card id="sales-history">
       <CardHeader className="flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
@@ -220,17 +249,7 @@ export default function SalesHistoryTable({ sales }: SalesHistoryTableProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1 items-start">
-                        {sale.items.map((item, index) => (
-                          <Badge 
-                            key={index} 
-                            variant={item.status === 'returned' ? 'destructive' : 'secondary'} 
-                            className="font-normal whitespace-nowrap"
-                          >
-                             {item.productName} {item.status === 'returned' && '(Returned)'}
-                          </Badge>
-                        ))}
-                      </div>
+                      {getItemsSoldDisplay(sale.items)}
                     </TableCell>
                     <TableCell className="font-mono text-green-600 hidden sm:table-cell">{formatCurrency(sale.profit, currency)}</TableCell>
                     <TableCell className="text-right font-mono">

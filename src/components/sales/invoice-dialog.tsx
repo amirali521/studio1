@@ -37,7 +37,7 @@ export function InvoiceDialog({ sale, children }: InvoiceDialogProps) {
   const handleShare = async () => {
     if (!invoiceRef.current) return;
 
-    if (!navigator.share) {
+    if (!navigator.share || !navigator.canShare) {
       toast({
         variant: "destructive",
         title: "Sharing Not Supported",
@@ -49,31 +49,48 @@ export function InvoiceDialog({ sale, children }: InvoiceDialogProps) {
     setIsSharing(true);
     try {
       const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, // Higher resolution
+        scale: 2, 
         useCORS: true,
+        backgroundColor: '#ffffff',
       });
       
       canvas.toBlob(async (blob) => {
-        if (blob) {
-          const file = new File([blob], `receipt-${sale.saleId}.png`, { type: "image/png" });
-          try {
-            await navigator.share({
-              title: `Receipt for Sale #${sale.saleId.slice(0,8)}`,
-              text: `Here is your receipt. Total: ${sale.total}`,
-              files: [file],
-            });
-          } catch (error) {
-            // This can happen if the user cancels the share dialog
-            console.log("Sharing was cancelled or failed", error);
-          }
-        } else {
-           throw new Error("Could not create image blob.");
+        if (!blob) {
+            throw new Error("Could not create image blob.");
         }
-         setIsSharing(false);
+        
+        const file = new File([blob], `receipt-${sale.saleId}.png`, { type: "image/png" });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                title: `Receipt for Sale #${sale.saleId.slice(0,8)}`,
+                text: `Here is your receipt.`,
+                files: [file],
+                });
+            } catch (error: any) {
+                // This can happen if the user cancels the share dialog.
+                if (error.name !== 'AbortError') {
+                    console.error("Sharing failed:", error);
+                    toast({
+                        variant: "destructive",
+                        title: "Sharing Error",
+                        description: "Could not share the receipt.",
+                    });
+                }
+            }
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Cannot Share File",
+                description: "Your browser cannot share this file type.",
+            });
+        }
+        setIsSharing(false);
       }, "image/png");
 
     } catch (error) {
-      console.error("Error sharing receipt:", error);
+      console.error("Error generating receipt image:", error);
       toast({
         variant: "destructive",
         title: "Sharing Error",
