@@ -3,43 +3,30 @@
 
 import { useState, useEffect } from 'react';
 
-// Common identifiers found in WebView user agent strings.
-const WEBVIEW_IDENTIFIERS = [
-  // Android
-  'wv',
-  'WebView',
-  'Crosswalk',
-  // iOS
-  'AppleWebKit', // It's generic, but we can combine it with other checks
-  // Other
-  'Mobile', // Often present
-  'Android',
-  'iPhone',
-  'iPad',
-];
-
 export function useWebView() {
   const [isWebView, setIsWebView] = useState(false);
 
   useEffect(() => {
-    // This code only runs on the client.
-    const userAgent = navigator.userAgent;
+    // This code will only run on the client side.
+    if (typeof window !== "undefined") {
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        // Android-specific check for "wv" which is a strong indicator of a WebView.
+        const isAndroidWebView = userAgent.includes('; wv)');
 
-    // A more specific check for Android WebView
-    const isAndroidWebView = /wv\)/.test(userAgent);
-
-    // A way to infer iOS WebView: it's an iOS device but not Safari.
-    const isIOS = /iPhone|iPad|iPod/.test(userAgent);
-    const isSafari = /Safari/.test(userAgent) && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(userAgent);
-    const isIOSWebView = isIOS && !isSafari;
-    
-    // A more generic check that might catch other WebViews
-    const hasGenericIdentifier = WEBVIEW_IDENTIFIERS.some(id => userAgent.includes(id));
-    const seemsLikeWebView = hasGenericIdentifier && !/Chrome|Firefox|Safari/.test(userAgent.split(') ')[0]);
-
-
-    if (isAndroidWebView || isIOSWebView || seemsLikeWebView) {
-      setIsWebView(true);
+        // For iOS, it's trickier. A common heuristic is to check if it's an iOS device
+        // but not running in standalone (PWA) or Safari.
+        const isIOS = /iphone|ipad|ipod/.test(userAgent);
+        // @ts-ignore
+        const isIOSStandalone = !!window.navigator.standalone;
+        const isSafari = userAgent.includes('safari') && !userAgent.includes('crios') && !userAgent.includes('fxios');
+        
+        // If it's iOS and not standalone and not Safari, it's likely a WebView.
+        const isIOSWebView = isIOS && !isIOSStandalone && !isSafari;
+        
+        if (isAndroidWebView || isIOSWebView) {
+            setIsWebView(true);
+        }
     }
   }, []);
 
