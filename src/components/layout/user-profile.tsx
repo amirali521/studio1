@@ -16,13 +16,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, MessageSquare, Download } from "lucide-react";
+import { LogOut, Settings, Download } from "lucide-react";
 import { auth, firebaseConfig } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import ChatDialog from "../chat/chat-dialog";
 import { useWebView } from "@/hooks/use-webview";
+import SupportAvatarIcon from "../icons/support-avatar-icon";
 
 export default function UserProfile() {
   const { user, isAdmin } = useAuth();
@@ -72,7 +73,7 @@ export default function UserProfile() {
           <DropdownMenuSeparator />
           {!isAdmin && adminId && (
              <DropdownMenuItem onClick={() => setIsChatOpen(true)}>
-                <MessageSquare className="mr-2 h-4 w-4" />
+                <SupportAvatarIcon className="mr-2 h-4 w-4" />
                 <span>Chat Support</span>
             </DropdownMenuItem>
           )}

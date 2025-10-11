@@ -3,36 +3,11 @@ export default function SupportAvatarIcon({ className }: { className?: string })
     <svg
       className={className}
       viewBox="0 0 24 24"
-      fill="none"
+      fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M20.5901 22C20.5901 18.13 16.7401 15 12.0001 15C7.26008 15 3.41008 18.13 3.41008 22"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M18 19V15C18 13.8954 17.1046 13 16 13H15"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M6 19V15C6 13.8954 6.89543 13 8 13H9"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C13.84 22 15.58 21.56 17.07 20.82C17.39 20.66 17.77 20.73 18.02 20.98L20.02 22.98C20.59 23.55 21.53 23.11 21.53 22.28V18.5C22.45 17.27 23 15.74 23 14.11C22.99 7.42 18.07 2.01 12.01 2H12ZM11.99 15.5C11.16 15.5 10.5 14.83 10.5 14C10.5 13.17 11.17 12.5 11.99 12.5C12.82 12.5 13.5 13.17 13.5 14C13.5 14.83 12.83 15.5 11.99 15.5ZM16.5 15.5C15.67 15.5 15 14.83 15 14C15 13.17 15.67 12.5 16.5 12.5C17.33 12.5 18 13.17 18 14C18 14.83 17.33 15.5 16.5 15.5ZM7.5 15.5C6.67 15.5 6 14.83 6 14C6 13.17 6.67 12.5 7.5 12.5C8.33 12.5 9 13.17 9 14C9 14.83 8.33 15.5 7.5 15.5Z"
       />
     </svg>
   );
