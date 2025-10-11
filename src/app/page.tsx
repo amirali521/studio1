@@ -127,13 +127,13 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
                     <Button asChild size="lg">
-                        <a href="https://storage.googleapis.com/your-project-id.appspot.com/app-release.apk" download>
+                        <a href="https://drive.google.com/uc?export=download&id=1j42DXVobfu8poI4-d9gb_FbEXHr_E6ZG" download>
                            <Download className="mr-2 h-5 w-5" />
                            Download for Android
                         </a>
                     </Button>
                      <Button asChild size="lg" variant="outline">
-                        <a href="https://storage.googleapis.com/your-project-id.appspot.com/app-release.ipa" download>
+                        <a href="https://drive.google.com/uc?export=download&id=12B6Rr8i1OM4T3qm1pRju2gnOMu5vNj9d" download>
                            <Download className="mr-2 h-5 w-5" />
                            Download for iOS
                         </a>
