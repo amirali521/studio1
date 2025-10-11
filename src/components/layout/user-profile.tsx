@@ -88,10 +88,10 @@ export default function UserProfile() {
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
                 <DropdownMenuItem asChild>
-                  <a href="/apps/app-release.apk" download>Android</a>
+                  <a href="https://storage.googleapis.com/your-project-id.appspot.com/app-release.apk" download>Android</a>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <a href="/apps/app-release.ipa" download>iOS</a>
+                  <a href="https://storage.googleapis.com/your-project-id.appspot.com/app-release.ipa" download>iOS</a>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
